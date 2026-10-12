@@ -1,0 +1,16 @@
+name: Lean 4 Verification
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leanprover/lean-action@v1
+        with:
+          build: false
+      - name: Verify theorem
+        run: lake env lean Main.lean
