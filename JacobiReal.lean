@@ -36,4 +36,12 @@ theorem jacobiReal_transpose {n : ℕ}
   ext i j
   exact (jacobiRealEntry_symmetric a b j i)
 
+theorem jacobiReal_conjTranspose {n : ℕ}
+    (a b : Fin n → ℝ) :
+    (jacobiReal n a b).conjTranspose = jacobiReal n a b := by
+  rw [Matrix.conjTranspose_apply]
+  ext i j
+  simp only [Matrix.transpose_apply]
+  exact jacobiRealEntry_symmetric a b j i
+
 end Lanzarini
