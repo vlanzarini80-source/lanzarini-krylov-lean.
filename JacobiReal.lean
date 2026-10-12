@@ -1,3 +1,4 @@
+
 import Mathlib
 
 namespace Lanzarini
@@ -32,16 +33,20 @@ theorem jacobiRealEntry_symmetric {n : ℕ}
 
 theorem jacobiReal_transpose {n : ℕ}
     (a b : Fin n → ℝ) :
-    (jacobiReal n a b).transpose = jacobiReal n a b := by
+    (jacobiReal n a b).transpose =
+      jacobiReal n a b := by
   ext i j
-  exact (jacobiRealEntry_symmetric a b j i)
+  exact jacobiRealEntry_symmetric a b j i
 
 theorem jacobiReal_conjTranspose {n : ℕ}
     (a b : Fin n → ℝ) :
-    (jacobiReal n a b).conjTranspose = jacobiReal n a b := by
-  rw [Matrix.conjTranspose_apply]
+    (jacobiReal n a b).conjTranspose =
+      jacobiReal n a b := by
   ext i j
-  simp only [Matrix.transpose_apply]
+  simp only [Matrix.conjTranspose_apply]
+  change star (jacobiRealEntry a b j i) =
+    jacobiRealEntry a b i j
+  rw [star_trivial]
   exact jacobiRealEntry_symmetric a b j i
 
 end Lanzarini
