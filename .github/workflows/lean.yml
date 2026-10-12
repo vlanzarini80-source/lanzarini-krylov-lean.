@@ -15,5 +15,5 @@ jobs:
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
       - name: Verify theorem
         run: |
-  lean Main.lean
-  lean Jacobi2.lean 
+          lean Main.lean
+          lean Jacobi2.lean
