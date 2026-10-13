@@ -22,7 +22,8 @@ noncomputable def jacobiEvolutionGenerator
     jacobiComplex n a b
 
 /--
-La matrice di Jacobi complessa è autoaggiunta.
+La matrice di Jacobi complessa è autoaggiunta:
+H† = H.
 -/
 theorem jacobiComplex_conjTranspose
     (n : ℕ) (a b : Fin n → ℝ) :
@@ -33,9 +34,9 @@ theorem jacobiComplex_conjTranspose
   change star ((algebraMap ℝ ℂ)
     (jacobiReal n a b j i)) =
     (algebraMap ℝ ℂ) (jacobiReal n a b i j)
-  rw [← map_star]
-  rw [star_trivial]
-  congr 1
+  simp only [Complex.star_def]
+  norm_cast
   exact jacobiRealEntry_symmetric a b j i
+
 
 end Lanzarini
