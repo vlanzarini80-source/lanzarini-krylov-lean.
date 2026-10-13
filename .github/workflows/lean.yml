@@ -21,12 +21,14 @@ jobs:
           lake update
           lake exe cache get
 
+      
       - name: Verify all theorems
         run: |
           set -e
           lake env lean Main.lean
           lake env lean Jacobi2.lean
           lake env lean JacobiGeneral.lean
-          lake env lean JacobiReal.lean
-          lake env lean JacobiEvolution.lean
+          lake env lean -o JacobiReal.olean JacobiReal.lean
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean JacobiEvolution.lean
+
   
