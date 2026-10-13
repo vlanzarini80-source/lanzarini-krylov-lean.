@@ -1,3 +1,4 @@
+
 name: Lean 4 Verification
 
 on:
@@ -7,6 +8,7 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -21,7 +23,6 @@ jobs:
           lake update
           lake exe cache get
 
-      
       - name: Verify all theorems
         run: |
           set -e
@@ -29,6 +30,5 @@ jobs:
           lake env lean Jacobi2.lean
           lake env lean JacobiGeneral.lean
           lake env lean -o JacobiReal.olean JacobiReal.lean
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean JacobiEvolution.lean
-          lake env lean MatrixExpProbe.lean
-  
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o JacobiEvolution.olean JacobiEvolution.lean
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean MatrixExpProbe.lean
