@@ -2,20 +2,12 @@
 import Mathlib
 import JacobiEvolution
 
-/-!
-Verifica dell'esponenziale di matrice
-in mathlib 4.24.0.
--/
-
-#check NormedSpace.exp
-#check NormedSpace.exp_zero
-#check Matrix.exp_conjTranspose
-#check Matrix.exp_neg
-
 namespace Lanzarini
 
 /--
-Propagatore quantistico:
+Propagatore quantistico associato alla
+matrice di Jacobi reale H:
+
 U(t) = exp(-i t H).
 -/
 noncomputable def jacobiPropagator
@@ -23,6 +15,25 @@ noncomputable def jacobiPropagator
     Matrix (Fin n) (Fin n) ℂ :=
   NormedSpace.exp ℂ
     (jacobiEvolutionGenerator n a b t)
+
+/--
+Al tempo zero il generatore è nullo.
+-/
+theorem jacobiEvolutionGenerator_zero
+    (n : ℕ) (a b : Fin n → ℝ) :
+    jacobiEvolutionGenerator n a b 0 = 0 := by
+  simp [jacobiEvolutionGenerator]
+
+/--
+Il propagatore al tempo zero
+è la matrice identità.
+-/
+theorem jacobiPropagator_zero
+    (n : ℕ) (a b : Fin n → ℝ) :
+    jacobiPropagator n a b 0 = 1 := by
+  rw [jacobiPropagator]
+  rw [jacobiEvolutionGenerator_zero]
+  exact NormedSpace.exp_zero
 
 end Lanzarini
  
