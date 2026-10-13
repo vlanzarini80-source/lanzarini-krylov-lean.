@@ -36,4 +36,18 @@ theorem jacobiComplex_conjTranspose
     congrArg (fun x : ℝ => (x : ℂ))
       (jacobiRealEntry_symmetric a b j i)
 
+/-
+P50: controllo preliminare dei lemmi mathlib.
+
+Questi comandi non dimostrano un nuovo teorema.
+Servono a verificare quali strumenti sono
+disponibili nella versione Lean/mathlib del progetto.
+-/
+
+#check Matrix.conjTranspose_apply
+#check Matrix.conjTranspose_smul
+#check star_smul
+#check Complex.conj_I
+#check star_neg
+
 end Lanzarini
