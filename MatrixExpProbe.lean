@@ -3,8 +3,8 @@ import Mathlib
 import JacobiEvolution
 
 /-!
-Controllo dell'API dell'esponenziale di matrice.
-Nessuna dimostrazione del teorema P49 è presupposta.
+Verifica dell'esponenziale di matrice
+in mathlib 4.24.0.
 -/
 
 #check NormedSpace.exp
@@ -14,9 +14,15 @@ Nessuna dimostrazione del teorema P49 è presupposta.
 
 namespace Lanzarini
 
+/--
+Propagatore quantistico:
+U(t) = exp(-i t H).
+-/
 noncomputable def jacobiPropagator
     (n : ℕ) (a b : Fin n → ℝ) (t : ℝ) :
     Matrix (Fin n) (Fin n) ℂ :=
-  NormedSpace.exp (jacobiEvolutionGenerator n a b t)
+  NormedSpace.exp ℂ
+    (jacobiEvolutionGenerator n a b t)
 
 end Lanzarini
+ 
