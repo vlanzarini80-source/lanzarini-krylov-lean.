@@ -30,13 +30,10 @@ theorem jacobiComplex_conjTranspose
     (jacobiComplex n a b).conjTranspose =
       jacobiComplex n a b := by
   ext i j
-  simp only [Matrix.conjTranspose_apply]
-  change star ((algebraMap ℝ ℂ)
-    (jacobiReal n a b j i)) =
-    (algebraMap ℝ ℂ) (jacobiReal n a b i j)
-  simp only [Complex.star_def]
-  norm_cast
-  exact jacobiRealEntry_symmetric a b j i
-
+  change star ((jacobiReal n a b j i : ℝ) : ℂ) =
+    ((jacobiReal n a b i j : ℝ) : ℂ)
+  simpa using
+    congrArg (fun x : ℝ => (x : ℂ))
+      (jacobiRealEntry_symmetric a b j i)
 
 end Lanzarini
