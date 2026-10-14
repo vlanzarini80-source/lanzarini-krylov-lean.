@@ -123,3 +123,12 @@ theorem jacobiInner_self
       (z := v j)).symm
 
 end Lanzarini
+
+-- P53.3: audit delle identita' matriciali
+-- necessarie alla conservazione della norma.
+#check Matrix.star_mulVec
+#check Matrix.dotProduct_mulVec
+#check Matrix.mulVec_mulVec
+#check Matrix.one_mulVec
+#check Matrix.star_dotProduct
+
