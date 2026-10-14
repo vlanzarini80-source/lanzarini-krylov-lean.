@@ -41,7 +41,9 @@ theorem krylovNumberOperator_mulVec
     (krylovNumberOperator n).mulVec psi =
       fun j : Fin n => ((j.val : ℝ) : ℂ) * psi j := by
   funext j
-  simp [krylovNumberOperator, Matrix.diagonal_mulVec]
+  exact Matrix.mulVec_diagonal
+    (fun k : Fin n => ((k.val : ℝ) : ℂ))
+    psi j
 
 /--
 P56.5: The expectation value of
@@ -58,11 +60,8 @@ theorem krylovComplexity_expectation
   rw [Complex.ofReal_sum]
   apply Finset.sum_congr rfl
   intro j hj
-  change
-    star (psi j) *
-      (((j.val : ℝ) : ℂ) * psi j) =
-    ((j.val : ℝ) : ℂ) *
-      (Complex.normSq (psi j) : ℂ)
+  dsimp only
+  rw [Complex.ofReal_mul]
   rw [Complex.normSq_eq_conj_mul_self]
   ring
 
