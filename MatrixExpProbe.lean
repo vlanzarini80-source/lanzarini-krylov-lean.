@@ -36,11 +36,7 @@ theorem jacobiPropagator_zero
   exact NormedSpace.exp_zero
 
 /--
-P52: il propagatore di una matrice
-di Jacobi reale e' unitario
-per ogni tempo reale.
-
-U(t)† * U(t) = I.
+P52: unitarieta' del propagatore.
 -/
 theorem jacobiPropagator_unitary
     (n : ℕ) (a b : Fin n → ℝ) (t : ℝ) :
@@ -61,6 +57,45 @@ theorem jacobiPropagator_unitary
     exact (Commute.refl G).neg_left
 
   rw [← Matrix.exp_add_of_commute ℂ (-G) G hc]
+  simp
+
+/--
+P53: stato quantistico ottenuto
+applicando il propagatore allo
+stato iniziale psi.
+-/
+noncomputable def jacobiState
+    (n : ℕ) (a b : Fin n → ℝ)
+    (t : ℝ) (psi : Fin n → ℂ) :
+    Fin n → ℂ :=
+  (jacobiPropagator n a b t).mulVec psi
+
+/--
+Prodotto scalare complesso esplicito,
+antilineare nel primo argomento.
+-/
+def jacobiInner
+    {n : ℕ} (v w : Fin n → ℂ) : ℂ :=
+  ∑ j : Fin n, star (v j) * w j
+
+/--
+Norma quadratica espressa come
+somma dei moduli quadratici.
+-/
+noncomputable def jacobiNormSq
+    {n : ℕ} (v : Fin n → ℂ) : ℝ :=
+  ∑ j : Fin n, Complex.normSq (v j)
+
+/--
+P53: al tempo zero lo stato
+coincide con quello iniziale.
+-/
+theorem jacobiState_zero
+    (n : ℕ) (a b : Fin n → ℝ)
+    (psi : Fin n → ℂ) :
+    jacobiState n a b 0 psi = psi := by
+  unfold jacobiState
+  rw [jacobiPropagator_zero]
   simp
 
 end Lanzarini
