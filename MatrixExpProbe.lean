@@ -117,9 +117,15 @@ theorem jacobiInner_self
       (z := v j)).symm
 
 /--
-P53.3a: l'evoluzione unitaria conserva
-il prodotto interno di uno stato
-con se stesso, per ogni tempo reale.
+P53.3a:
+Conservazione del prodotto interno
+di uno stato con se stesso.
+
+La dimostrazione utilizza:
+1. La definizione di prodotto interno.
+2. La trasposizione coniugata.
+3. L'associativita' matriciale.
+4. L'unitarieta' P52.
 -/
 theorem jacobiInner_state_self
     (n : ℕ) (a b : Fin n → ℝ)
@@ -127,33 +133,50 @@ theorem jacobiInner_state_self
     jacobiInner (jacobiState n a b t psi)
       (jacobiState n a b t psi) =
         jacobiInner psi psi := by
+
   unfold jacobiState
+  unfold jacobiInner
+
   let U := jacobiPropagator n a b t
-  change dotProduct (star (U *ᵥ psi)) (U *ᵥ psi) =
+
+  change
+    dotProduct
+      (star (U.mulVec psi))
+      (U.mulVec psi) =
     dotProduct (star psi) psi
+
   rw [Matrix.star_mulVec]
-  rw [← Matrix.dotProduct_mulVec]
-  rw [← Matrix.mulVec_mulVec]
+
+  rw [Matrix.dotProduct_mulVec]
+
+  rw [Matrix.vecMul_vecMul]
+
   have hU : U.conjTranspose * U = 1 := by
     exact jacobiPropagator_unitary n a b t
+
   rw [hU]
-  rw [Matrix.one_mulVec]
+
+  rw [Matrix.vecMul_one]
 
 /--
-P53.3b: conservazione della norma
-quadratica per ogni tempo reale.
+P53.3b:
+Conservazione della norma quadratica
+per ogni tempo reale.
 
-Non richiede che lo stato iniziale
-sia normalizzato.
+Non richiede la normalizzazione
+dello stato iniziale.
 -/
 theorem jacobiNormSq_state
     (n : ℕ) (a b : Fin n → ℝ)
     (t : ℝ) (psi : Fin n → ℂ) :
     jacobiNormSq (jacobiState n a b t psi) =
       jacobiNormSq psi := by
+
   have h :=
     jacobiInner_state_self n a b t psi
+
   rw [jacobiInner_self, jacobiInner_self] at h
+
   exact Complex.ofReal_injective h
 
 end Lanzarini
