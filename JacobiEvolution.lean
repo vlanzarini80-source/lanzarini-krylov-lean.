@@ -50,4 +50,23 @@ disponibili nella versione Lean/mathlib del progetto.
 #check Complex.conj_I
 #check star_neg
 
+/--
+P51: il generatore dell'evoluzione quantistica
+associato a una matrice di Jacobi reale
+è anti-autoaggiunto.
+-/
+theorem jacobiEvolutionGenerator_conjTranspose
+    (n : ℕ) (a b : Fin n → ℝ) (t : ℝ) :
+    (jacobiEvolutionGenerator n a b t).conjTranspose =
+      -jacobiEvolutionGenerator n a b t := by
+  unfold jacobiEvolutionGenerator
+  rw [Matrix.conjTranspose_smul]
+  rw [jacobiComplex_conjTranspose]
+  have hs :
+      star ((-(t : ℂ)) * Complex.I) =
+        -((-(t : ℂ)) * Complex.I) := by
+    simp [star_mul, Complex.conj_I]
+  rw [hs]
+  exact neg_smul _ _
+
 end Lanzarini
