@@ -6,7 +6,7 @@ namespace Lanzarini
 
 /--
 Propagatore quantistico associato alla
-matrice di Jacobi reale H:
+matrice di Jacobi reale H.
 
 U(t) = exp(-i t H).
 -/
@@ -17,7 +17,7 @@ noncomputable def jacobiPropagator
     (jacobiEvolutionGenerator n a b t)
 
 /--
-Al tempo zero il generatore è nullo.
+Il generatore al tempo zero e' nullo.
 -/
 theorem jacobiEvolutionGenerator_zero
     (n : ℕ) (a b : Fin n → ℝ) :
@@ -26,7 +26,7 @@ theorem jacobiEvolutionGenerator_zero
 
 /--
 Il propagatore al tempo zero
-è la matrice identità.
+e' la matrice identita'.
 -/
 theorem jacobiPropagator_zero
     (n : ℕ) (a b : Fin n → ℝ) :
@@ -35,22 +35,32 @@ theorem jacobiPropagator_zero
   rw [jacobiEvolutionGenerator_zero]
   exact NormedSpace.exp_zero
 
-/-
-P52: audit delle firme effettive dei
-lemmi per l'esponenziale matriciale.
--/
-
-#print Matrix.exp_conjTranspose
-#print Matrix.exp_add_of_commute
-#print Matrix.exp_neg
-
 /--
-Conferma del risultato P51.
+P52: il propagatore di una matrice
+di Jacobi reale e' unitario
+per ogni tempo reale.
+
+U(t)† * U(t) = I.
 -/
-theorem jacobiGenerator_skewAdjoint_check
+theorem jacobiPropagator_unitary
     (n : ℕ) (a b : Fin n → ℝ) (t : ℝ) :
-    (jacobiEvolutionGenerator n a b t).conjTranspose =
-      -jacobiEvolutionGenerator n a b t := by
-  exact jacobiEvolutionGenerator_conjTranspose n a b t
+    (jacobiPropagator n a b t).conjTranspose *
+      jacobiPropagator n a b t = 1 := by
+  let G := jacobiEvolutionGenerator n a b t
+
+  have hG : G.conjTranspose = -G := by
+    exact jacobiEvolutionGenerator_conjTranspose n a b t
+
+  change (NormedSpace.exp ℂ G).conjTranspose *
+    NormedSpace.exp ℂ G = 1
+
+  rw [← Matrix.exp_conjTranspose]
+  rw [hG]
+
+  have hc : Commute (-G) G := by
+    exact (Commute.refl G).neg_left
+
+  rw [← Matrix.exp_add_of_commute ℂ (-G) G hc]
+  simp
 
 end Lanzarini
