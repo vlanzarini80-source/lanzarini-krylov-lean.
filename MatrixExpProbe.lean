@@ -74,7 +74,7 @@ noncomputable def jacobiState
 Prodotto scalare complesso esplicito,
 antilineare nel primo argomento.
 -/
-def jacobiInner
+noncomputable def jacobiInner
     {n : ℕ} (v w : Fin n → ℂ) : ℂ :=
   ∑ j : Fin n, star (v j) * w j
 
