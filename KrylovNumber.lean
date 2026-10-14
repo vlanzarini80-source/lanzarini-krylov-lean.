@@ -33,17 +33,20 @@ noncomputable def krylovComplexityAt
   krylovComplexity (jacobiState n a b t psi)
 
 /--
-P56.4: The number operator acts diagonally.
+P56.4: The Krylov number operator
+acts diagonally on every state.
 -/
 theorem krylovNumberOperator_mulVec
     (n : ℕ) (psi : Fin n → ℂ) :
     (krylovNumberOperator n).mulVec psi =
       fun j : Fin n => ((j.val : ℝ) : ℂ) * psi j := by
+  funext j
   simp [krylovNumberOperator, Matrix.diagonal_mulVec]
 
 /--
-P56.5: Matrix expectation equals
-the explicit Krylov complexity sum.
+P56.5: The expectation value of
+the Krylov number operator equals
+the explicit finite complexity sum.
 -/
 theorem krylovComplexity_expectation
     {n : ℕ} (psi : Fin n → ℂ) :
@@ -55,13 +58,17 @@ theorem krylovComplexity_expectation
   rw [Complex.ofReal_sum]
   apply Finset.sum_congr rfl
   intro j hj
-  rw [Complex.ofReal_mul]
-  rw [← Complex.normSq_eq_conj_mul_self]
+  change
+    star (psi j) *
+      (((j.val : ℝ) : ℂ) * psi j) =
+    ((j.val : ℝ) : ℂ) *
+      (Complex.normSq (psi j) : ℂ)
+  rw [Complex.normSq_eq_conj_mul_self]
   ring
 
 /--
-P56.6: At time zero, the Krylov complexity
-equals its initial value.
+P56.6: At time zero, Krylov complexity
+equals the complexity of the initial state.
 -/
 theorem krylovComplexityAt_zero
     (n : ℕ) (a b : Fin n → ℝ)
