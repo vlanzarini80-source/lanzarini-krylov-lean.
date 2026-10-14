@@ -129,8 +129,8 @@ theorem jacobiInner_state_self
         jacobiInner psi psi := by
   unfold jacobiState
   let U := jacobiPropagator n a b t
-  change star (U *ᵥ psi) ⬝ᵥ (U *ᵥ psi) =
-    star psi ⬝ᵥ psi
+  change Matrix.dotProduct (star (U *ᵥ psi)) (U *ᵥ psi) =
+    Matrix.dotProduct (star psi) psi
   rw [Matrix.star_mulVec]
   rw [← Matrix.dotProduct_mulVec]
   rw [← Matrix.mulVec_mulVec]
