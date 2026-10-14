@@ -33,8 +33,8 @@ noncomputable def krylovComplexityAt
   krylovComplexity (jacobiState n a b t psi)
 
 /--
-P56.4: The number operator acts
-diagonally on every state.
+P56.4: The Krylov number operator
+acts diagonally on every state.
 -/
 theorem krylovNumberOperator_mulVec
     (n : ℕ) (psi : Fin n → ℂ) :
@@ -62,7 +62,7 @@ theorem krylovComplexity_expectation
   dsimp only
   rw [Complex.ofReal_mul]
   rw [Complex.normSq_eq_conj_mul_self]
-  simp only [mul_assoc, mul_comm, mul_left_comm]
+  simp [mul_assoc, mul_comm, mul_left_comm]
 
 /--
 P56.6: Krylov complexity at time zero
