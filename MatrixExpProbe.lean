@@ -5,9 +5,7 @@ import JacobiEvolution
 namespace Lanzarini
 
 /--
-Propagatore quantistico associato alla
-matrice di Jacobi reale H.
-
+Propagatore quantistico:
 U(t) = exp(-i t H).
 -/
 noncomputable def jacobiPropagator
@@ -17,7 +15,7 @@ noncomputable def jacobiPropagator
     (jacobiEvolutionGenerator n a b t)
 
 /--
-Il generatore al tempo zero e' nullo.
+Generatore nullo al tempo zero.
 -/
 theorem jacobiEvolutionGenerator_zero
     (n : ℕ) (a b : Fin n → ℝ) :
@@ -25,8 +23,7 @@ theorem jacobiEvolutionGenerator_zero
   simp [jacobiEvolutionGenerator]
 
 /--
-Il propagatore al tempo zero
-e' la matrice identita'.
+Propagatore identita' al tempo zero.
 -/
 theorem jacobiPropagator_zero
     (n : ℕ) (a b : Fin n → ℝ) :
@@ -69,15 +66,14 @@ noncomputable def jacobiState
   (jacobiPropagator n a b t).mulVec psi
 
 /--
-Prodotto scalare complesso,
-antilineare nel primo argomento.
+Prodotto interno complesso.
 -/
 noncomputable def jacobiInner
     {n : ℕ} (v w : Fin n → ℂ) : ℂ :=
   ∑ j : Fin n, star (v j) * w j
 
 /--
-Norma quadratica dello stato.
+Norma quadratica reale.
 -/
 noncomputable def jacobiNormSq
     {n : ℕ} (v : Fin n → ℂ) : ℝ :=
@@ -96,10 +92,8 @@ theorem jacobiState_zero
   simp
 
 /--
-P53.1: la norma quadratica al tempo
-zero coincide con quella iniziale.
-
-Nessuna ipotesi di normalizzazione.
+P53.1: conservazione della norma
+quadratica al tempo zero.
 -/
 theorem jacobiNormSq_state_zero
     (n : ℕ) (a b : Fin n → ℝ)
@@ -107,5 +101,25 @@ theorem jacobiNormSq_state_zero
     jacobiNormSq (jacobiState n a b 0 psi) =
       jacobiNormSq psi := by
   rw [jacobiState_zero]
+
+/--
+P53.2: il prodotto interno di un
+vettore con se stesso coincide
+con la norma quadratica.
+
+Valido per ogni dimensione finita
+e per ogni vettore complesso.
+-/
+theorem jacobiInner_self
+    {n : ℕ} (v : Fin n → ℂ) :
+    jacobiInner v v =
+      (jacobiNormSq v : ℂ) := by
+  unfold jacobiInner jacobiNormSq
+  rw [Complex.ofReal_sum]
+  apply Finset.sum_congr rfl
+  intro j hj
+  simpa using
+    (Complex.normSq_eq_conj_mul_self
+      (z := v j)).symm
 
 end Lanzarini
