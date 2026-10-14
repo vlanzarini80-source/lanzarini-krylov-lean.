@@ -36,18 +36,24 @@ theorem jacobiPropagator_zero
   exact NormedSpace.exp_zero
 
 /-
-P52: verifica preliminare dei prerequisiti
-per la dimostrazione di unitarietà.
+P52: audit dei lemmi dell'esponenziale
+di matrici.
 
-Nessuna ipotesi supplementare.
-Nessun sorry.
+I controlli seguenti non assumono
+l'unitarietà del propagatore.
 -/
 
-#check NormedSpace.exp
-#check Matrix.conjTranspose_mul
-#check jacobiEvolutionGenerator_conjTranspose
+#check Matrix.exp_conjTranspose
+#check Matrix.exp_add_of_commute
+#check Matrix.exp_neg
+#check NormedSpace.exp_zero
 
-example (n : ℕ) (a b : Fin n → ℝ) (t : ℝ) :
+/--
+Conferma del risultato P51 gia'
+dimostrato in JacobiEvolution.lean.
+-/
+theorem jacobiGenerator_skewAdjoint_check
+    (n : ℕ) (a b : Fin n → ℝ) (t : ℝ) :
     (jacobiEvolutionGenerator n a b t).conjTranspose =
       -jacobiEvolutionGenerator n a b t := by
   exact jacobiEvolutionGenerator_conjTranspose n a b t
