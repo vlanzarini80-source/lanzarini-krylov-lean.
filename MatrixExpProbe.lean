@@ -60,9 +60,7 @@ theorem jacobiPropagator_unitary
   simp
 
 /--
-P53: stato quantistico ottenuto
-applicando il propagatore allo
-stato iniziale psi.
+P53: stato quantistico evoluto.
 -/
 noncomputable def jacobiState
     (n : ℕ) (a b : Fin n → ℝ)
@@ -71,7 +69,7 @@ noncomputable def jacobiState
   (jacobiPropagator n a b t).mulVec psi
 
 /--
-Prodotto scalare complesso esplicito,
+Prodotto scalare complesso,
 antilineare nel primo argomento.
 -/
 noncomputable def jacobiInner
@@ -79,16 +77,15 @@ noncomputable def jacobiInner
   ∑ j : Fin n, star (v j) * w j
 
 /--
-Norma quadratica espressa come
-somma dei moduli quadratici.
+Norma quadratica dello stato.
 -/
 noncomputable def jacobiNormSq
     {n : ℕ} (v : Fin n → ℂ) : ℝ :=
   ∑ j : Fin n, Complex.normSq (v j)
 
 /--
-P53: al tempo zero lo stato
-coincide con quello iniziale.
+Lo stato al tempo zero coincide
+con lo stato iniziale.
 -/
 theorem jacobiState_zero
     (n : ℕ) (a b : Fin n → ℝ)
@@ -97,5 +94,18 @@ theorem jacobiState_zero
   unfold jacobiState
   rw [jacobiPropagator_zero]
   simp
+
+/--
+P53.1: la norma quadratica al tempo
+zero coincide con quella iniziale.
+
+Nessuna ipotesi di normalizzazione.
+-/
+theorem jacobiNormSq_state_zero
+    (n : ℕ) (a b : Fin n → ℝ)
+    (psi : Fin n → ℂ) :
+    jacobiNormSq (jacobiState n a b 0 psi) =
+      jacobiNormSq psi := by
+  rw [jacobiState_zero]
 
 end Lanzarini
