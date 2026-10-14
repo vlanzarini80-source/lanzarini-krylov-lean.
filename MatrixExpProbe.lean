@@ -92,8 +92,7 @@ theorem jacobiState_zero
   simp
 
 /--
-P53.1: conservazione della norma
-quadratica al tempo zero.
+P53.1: norma quadratica al tempo zero.
 -/
 theorem jacobiNormSq_state_zero
     (n : ℕ) (a b : Fin n → ℝ)
@@ -103,12 +102,7 @@ theorem jacobiNormSq_state_zero
   rw [jacobiState_zero]
 
 /--
-P53.2: il prodotto interno di un
-vettore con se stesso coincide
-con la norma quadratica.
-
-Valido per ogni dimensione finita
-e per ogni vettore complesso.
+P53.2: prodotto interno e norma quadratica.
 -/
 theorem jacobiInner_self
     {n : ℕ} (v : Fin n → ℂ) :
@@ -122,13 +116,44 @@ theorem jacobiInner_self
     (Complex.normSq_eq_conj_mul_self
       (z := v j)).symm
 
+/--
+P53.3a: l'evoluzione unitaria conserva
+il prodotto interno di uno stato
+con se stesso, per ogni tempo reale.
+-/
+theorem jacobiInner_state_self
+    (n : ℕ) (a b : Fin n → ℝ)
+    (t : ℝ) (psi : Fin n → ℂ) :
+    jacobiInner (jacobiState n a b t psi)
+      (jacobiState n a b t psi) =
+        jacobiInner psi psi := by
+  unfold jacobiState
+  let U := jacobiPropagator n a b t
+  change star (U *ᵥ psi) ⬝ᵥ (U *ᵥ psi) =
+    star psi ⬝ᵥ psi
+  rw [Matrix.star_mulVec]
+  rw [← Matrix.dotProduct_mulVec]
+  rw [← Matrix.mulVec_mulVec]
+  have hU : U.conjTranspose * U = 1 := by
+    exact jacobiPropagator_unitary n a b t
+  rw [hU]
+  rw [Matrix.one_mulVec]
+
+/--
+P53.3b: conservazione della norma
+quadratica per ogni tempo reale.
+
+Non richiede che lo stato iniziale
+sia normalizzato.
+-/
+theorem jacobiNormSq_state
+    (n : ℕ) (a b : Fin n → ℝ)
+    (t : ℝ) (psi : Fin n → ℂ) :
+    jacobiNormSq (jacobiState n a b t psi) =
+      jacobiNormSq psi := by
+  have h :=
+    jacobiInner_state_self n a b t psi
+  rw [jacobiInner_self, jacobiInner_self] at h
+  exact Complex.ofReal_injective h
+
 end Lanzarini
-
--- P53.3: audit delle identita' matriciali
--- necessarie alla conservazione della norma.
-#check Matrix.star_mulVec
-#check Matrix.dotProduct_mulVec
-#check Matrix.mulVec_mulVec
-#check Matrix.one_mulVec
-#check Matrix.star_dotProduct
-
