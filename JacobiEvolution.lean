@@ -36,20 +36,6 @@ theorem jacobiComplex_conjTranspose
     congrArg (fun x : ℝ => (x : ℂ))
       (jacobiRealEntry_symmetric a b j i)
 
-/-
-P50: controllo preliminare dei lemmi mathlib.
-
-Questi comandi non dimostrano un nuovo teorema.
-Servono a verificare quali strumenti sono
-disponibili nella versione Lean/mathlib del progetto.
--/
-
-#check Matrix.conjTranspose_apply
-#check Matrix.conjTranspose_smul
-#check star_smul
-#check Complex.conj_I
-#check star_neg
-
 /--
 P51: il generatore dell'evoluzione quantistica
 associato a una matrice di Jacobi reale
@@ -65,7 +51,7 @@ theorem jacobiEvolutionGenerator_conjTranspose
   have hs :
       star ((-(t : ℂ)) * Complex.I) =
         -((-(t : ℂ)) * Complex.I) := by
-    simp [star_mul, Complex.conj_I]
+    simp [star_mul, Complex.conj_I, mul_comm]
   rw [hs]
   exact neg_smul _ _
 
