@@ -35,5 +35,21 @@ theorem jacobiPropagator_zero
   rw [jacobiEvolutionGenerator_zero]
   exact NormedSpace.exp_zero
 
+/-
+P52: verifica preliminare dei prerequisiti
+per la dimostrazione di unitarietà.
+
+Nessuna ipotesi supplementare.
+Nessun sorry.
+-/
+
+#check NormedSpace.exp
+#check Matrix.conjTranspose_mul
+#check jacobiEvolutionGenerator_conjTranspose
+
+example (n : ℕ) (a b : Fin n → ℝ) (t : ℝ) :
+    (jacobiEvolutionGenerator n a b t).conjTranspose =
+      -jacobiEvolutionGenerator n a b t := by
+  exact jacobiEvolutionGenerator_conjTranspose n a b t
+
 end Lanzarini
- 
