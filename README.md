@@ -6,7 +6,7 @@
 **Author:** Valentino Lanzarini  
 **Status:** Research in progress  
 **Framework:** Lean 4 + mathlib  
-**Copyright:** © 2026 Valentino Lanzarini. **All rights reserved.**
+**Copyright:** © 2026 Valentino Lanzarini. All rights reserved.
 
 **Repository:**  
 https://github.com/vlanzarini80-source/lanzarini-krylov-lean.
@@ -18,182 +18,332 @@ https://doi.org/10.5281/zenodo.23163367
 
 ## 1. Project Overview
 
-This repository contains an ongoing formalization project associated with independent mathematical research on Krylov–Jacobi dynamics, quantum evolution, and local defects in Krylov speed-limit saturation.
+This repository contains an ongoing formalization of mathematical structures associated with independent research on Krylov–Jacobi dynamics, quantum evolution, and local defects in Krylov speed-limit saturation.
 
-The objective is to translate mathematical definitions and proofs into machine-checkable Lean 4 code, making assumptions and logical dependencies explicit.
+The objective is to translate mathematical statements into machine-checkable Lean 4 definitions and proofs, making assumptions and logical dependencies explicit.
 
-**Important:** Only statements accepted by the Lean compiler in a successful verification run are considered formally checked.
+The repository has successfully verified the foundational results through P56.
 
-The main research theorem has not yet been formally verified in Lean.
+**Important:** The central local-defect hierarchy theorem of the research preprint has not yet been formally verified in Lean.
+
+Successful compilation does not establish mathematical novelty, independent peer review, or correctness of statements not represented by the compiled theorems.
 
 ## 2. Mathematical Framework
 
 We consider a finite-dimensional real Jacobi matrix:
 
 $$
-H =
+H=
 \begin{pmatrix}
-a_0 & b_0 & 0 & \cdots & 0 \\
-b_0 & a_1 & b_1 & \ddots & \vdots \\
-0 & b_1 & a_2 & \ddots & 0 \\
-\vdots & \ddots & \ddots & \ddots & b_{n-2} \\
+a_0 & b_0 & 0 & \cdots & 0\\
+b_0 & a_1 & b_1 & \ddots & \vdots\\
+0 & b_1 & a_2 & \ddots & 0\\
+\vdots & \ddots & \ddots & \ddots & b_{n-2}\\
 0 & \cdots & 0 & b_{n-2} & a_{n-1}
 \end{pmatrix}.
 $$
 
-Here the diagonal entries and nearest-neighbor couplings are real.
-
-The real Jacobi matrix satisfies the symmetry identity:
+The matrix satisfies:
 
 $$
 H^{\mathsf T}=H.
 $$
 
-After embedding into complex matrices, the Hamiltonian self-adjointness property is:
+After embedding into complex matrices:
 
 $$
 H^\dagger=H.
 $$
 
-The quantum evolution generator is defined as:
+The quantum evolution generator is:
 
 $$
 G(t)=-itH.
 $$
 
-The corresponding propagator is:
+The propagator is:
 
 $$
 U(t)=\exp(-itH).
 $$
 
-The zero-time identities are:
+The Lean formalization proves:
 
 $$
-G(0)=0,
+U(0)=I,
 $$
 
-$$
-U(0)=I_n.
-$$
-
-These zero-time identities have passed a previous Lean verification run.
-
-A future formalization objective is to establish unitarity:
+and
 
 $$
-U(t)^\dagger U(t)=I_n.
+U(t)^\dagger U(t)=I.
 $$
 
-Unitarity is not yet a completed Lean theorem in this repository.
+The propagator is therefore unitary for every real time in the finite-dimensional setting considered.
 
-## 3. Current Formalization
+## 3. Verified Mathematical Results
 
-The repository includes:
+The following results have passed the configured Lean verification workflow.
 
-- Finite-dimensional real Jacobi matrix definitions.
-- Symmetry of Jacobi matrix entries.
-- Real matrix transpose and conjugate-transpose identities.
-- Complex representation of the Jacobi Hamiltonian.
-- Quantum evolution generator.
-- Matrix-exponential definition of the propagator.
-- Zero-time generator identity.
-- Zero-time propagator identity.
+### P51: Anti-self-adjoint generator
 
-The complex Hamiltonian self-adjointness proof is part of the ongoing development.
+The evolution generator satisfies:
 
-Its latest verification status must be checked in GitHub Actions.
+$$
+G(t)^\dagger=-G(t).
+$$
+
+Lean theorem:
+
+`jacobiEvolutionGenerator_conjTranspose`
+
+### P52: Unitary quantum propagator
+
+$$
+U(t)^\dagger U(t)=I.
+$$
+
+Lean theorem:
+
+`jacobiPropagator_unitary`
+
+### P53: Norm conservation
+
+For every initial state and real time:
+
+$$
+\|\psi(t)\|^2=\|\psi(0)\|^2.
+$$
+
+Lean theorem:
+
+`jacobiNormSq_state`
+
+No initial normalization assumption is required.
+
+### P54: Inner-product conservation
+
+For arbitrary states $\psi$ and $\phi$:
+
+$$
+\langle U(t)\psi,U(t)\phi\rangle
+=
+\langle\psi,\phi\rangle.
+$$
+
+Lean theorem:
+
+`jacobiInner_state_pair`
+
+### P55: Orthogonality preservation
+
+If:
+
+$$
+\langle\psi,\phi\rangle=0,
+$$
+
+then:
+
+$$
+\langle U(t)\psi,U(t)\phi\rangle=0.
+$$
+
+Lean theorem:
+
+`jacobiState_orthogonality`
+
+### P56: Krylov number operator and expectation
+
+The Krylov number operator is:
+
+$$
+N=\operatorname{diag}(0,1,\ldots,n-1).
+$$
+
+The Krylov complexity is:
+
+$$
+K(\psi)=
+\sum_{j=0}^{n-1}j|\psi_j|^2.
+$$
+
+The formalized expectation identity is:
+
+$$
+\langle\psi,N\psi\rangle=K(\psi).
+$$
+
+Lean theorems:
+
+- `krylovNumberOperator_mulVec`
+- `krylovComplexity_expectation`
+- `krylovComplexityAt_zero`
+
+The P56 verification passed GitHub Actions workflow run #53, commit `44fcec5`.
+
+These are verified foundational results. They do not yet establish the central asymptotic theorem of the research preprint.
 
 ## 4. Repository Structure
 
 | File | Purpose |
 | --- | --- |
-| `Main.lean` | Formalization entry and checks |
-| `Jacobi2.lean` | Jacobi-related formalization |
-| `JacobiGeneral.lean` | General Jacobi structures |
-| `JacobiReal.lean` | Real Jacobi matrix and symmetry |
-| `JacobiEvolution.lean` | Complex Hamiltonian and generator |
-| `MatrixExpProbe.lean` | Matrix exponential and zero-time identities |
-| `lean-toolchain` | Lean toolchain configuration |
-| `lakefile.toml` | Mathlib dependency configuration |
-| `.github/workflows/lean.yml` | Automated verification workflow |
+| `Main.lean` | Initial formal verification check |
+| `Jacobi2.lean` | Two-site Jacobi matrix and symmetry |
+| `JacobiGeneral.lean` | General integer Jacobi entries and symmetry |
+| `JacobiReal.lean` | Finite real Jacobi matrix and symmetry |
+| `JacobiEvolution.lean` | Complex Hamiltonian and evolution generator |
+| `MatrixExpProbe.lean` | Propagator, unitarity, norm and inner-product conservation |
+| `KrylovNumber.lean` | Number operator, Krylov complexity and expectation |
+| `lean-toolchain` | Lean compiler version |
+| `lakefile.toml` | Mathlib dependency |
+| `.github/workflows/lean.yml` | Automated theorem verification |
 
-## 5. Formal Verification
+## 5. Formal Verification Environment
 
 The project uses:
 
-- Lean 4
-- mathlib
+- Lean 4.24.0
+- Mathlib v4.24.0
 - Lake
 - GitHub Actions
 
-**Lean version:** 4.24.0  
-**Mathlib revision:** v4.24.0
+The verification workflow compiles the Lean source files in dependency order.
 
-The verification workflow is located at:
+Verification history:
 
-`.github/workflows/lean.yml`
+https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions
 
-A successful GitHub Actions run confirms that the configured Lean checks succeeded for the corresponding commit.
+A successful workflow run confirms that the configured Lean checks succeeded for the corresponding commit.
 
-It does not certify mathematical novelty, independent peer review, or claims not represented by verified Lean statements.
+For stronger reproducibility, dependency lockfiles and the precise commit revision should be retained when preparing an archival release.
 
-## 6. Krylov Research Framework
+## 6. Indexing Convention
 
-The broader research studies Krylov expectation, variance, and the loss of speed-limit saturation.
+The Lean formalization uses zero-based indices through `Fin n`.
 
-A central research quantity is:
+In the Lean Jacobi matrix, `b i` couples site `i` to site `i+1`.
+
+Some research formulas use one-based indexing for the Lanczos coefficients, where the first coupling is called $b_1$.
+
+Therefore, the correspondence between Lean indices and preprint indices must be explicitly established before formalizing the local-defect hierarchy.
+
+No equality between differently indexed coefficients should be assumed without a proved translation.
+
+## 7. Krylov Complexity and Variance
+
+The time-dependent Krylov complexity is:
 
 $$
-D(t)=1-\frac{\bigl(\dot K(t)\bigr)^2}{4b_1^2V(t)}.
+K(t)=
+\sum_{j=0}^{n-1}j|\psi_j(t)|^2.
 $$
 
-Where:
+Its second moment is:
 
-- $K(t)$ is the Krylov expectation.
-- $V(t)$ is the Krylov variance.
-- $b_1$ is the first Lanczos coupling in the research convention.
-- The expression requires appropriate assumptions, including a nonzero denominator.
+$$
+K_2(t)=
+\sum_{j=0}^{n-1}j^2|\psi_j(t)|^2.
+$$
 
-The indexing convention in the research formula may differ from the zero-based indexing used in the Lean matrix definitions.
+For normalized states, the variance is:
 
-**This deficit expression is research context, not a theorem already verified in this repository.**
+$$
+V(t)=K_2(t)-K(t)^2.
+$$
 
-## 7. Research Roadmap
+The current repository formalizes the complexity expectation, but not yet the second moment or variance.
 
-The planned formal verification stages are:
+These are planned next steps.
 
-1. Self-adjointness of the complex Jacobi Hamiltonian.
-2. Anti-self-adjointness of the evolution generator.
-3. Unitarity of the quantum propagator.
-4. Formal definition of Krylov expectation.
-5. Formal definition of Krylov variance.
-6. Formal definition of the speed-limit deficit.
-7. Verification of candidate local-defect identities.
-8. Verification of hypotheses and boundary cases.
-9. Formal verification of candidate research theorems.
+## 8. Krylov Speed-Limit Deficit
 
-These are research objectives, not completed claims.
+The broader research investigates:
 
-## 8. Scientific Status and Limitations
+$$
+D(t)=
+1-\frac{\dot K(t)^2}{4b_1^2V(t)}.
+$$
 
-**The main local-defect research theorem has not yet been formally verified in Lean.**
+This expression requires appropriate assumptions, including a nonzero denominator.
 
-This repository does not claim:
+Its formalization will require:
 
-- Resolution of an established open mathematical problem.
-- A complete Lean proof of the main research theorem.
+1. Time differentiability of the evolved state.
+2. Differentiability of Krylov complexity.
+3. A rigorous definition of variance.
+4. The applicable speed-limit inequality.
+5. Explicit treatment of zero-variance and boundary cases.
+
+The deficit formula is currently research context, not a verified Lean theorem in this repository.
+
+## 9. Local-Defect Hierarchy
+
+The research investigates local finite-difference defects of the squared Lanczos coefficients.
+
+Using the research convention:
+
+$$
+c_j=b_j^2,
+$$
+
+a third finite-difference defect is:
+
+$$
+\Omega_r=
+c_{r+3}-3c_{r+2}+3c_{r+1}-c_r.
+$$
+
+The goal is to formally investigate how local coefficient constraints affect short-time loss of Krylov speed-limit saturation.
+
+The exact assumptions, indexing, finite-dimensional boundary conditions, and asymptotic remainder terms must be formalized and checked.
+
+The main local-defect hierarchy is not yet a completed Lean theorem.
+
+## 10. Research Roadmap
+
+### Completed
+
+- P51: Anti-self-adjoint evolution generator.
+- P52: Unitary quantum propagator.
+- P53: Conservation of norm.
+- P54: Conservation of inner products.
+- P55: Preservation of orthogonality.
+- P56: Krylov number operator and expectation.
+
+### Next formalization targets
+
+- P57: Nonnegativity of Krylov complexity.
+- P58: Second Krylov moment.
+- P59: Variance for normalized states.
+- Time derivatives of quantum evolution and Krylov complexity.
+- Speed-limit inequality and deficit.
+- Local finite-difference defects.
+- Short-time expansions and remainder estimates.
+- Boundary-case verification.
+- Central local-defect hierarchy theorem.
+
+The P57–P59 labels are development targets, not completed proofs.
+
+## 11. Scientific Status and Limitations
+
+The repository does not currently claim:
+
+- A complete Lean proof of the central research theorem.
 - Independent peer-review certification.
 - Worldwide mathematical priority.
+- Resolution of an established open mathematical problem.
 - A new universal quantum speed limit.
 
-Formal proof verification and assessment of scientific originality are distinct processes.
+The verified foundational results and the proposed research contribution must be evaluated separately.
 
-The purpose of this project is to support reproducibility, mathematical scrutiny, and transparent research development.
+Formal proof verification establishes logical correctness of the encoded statements relative to the Lean environment and its dependencies.
 
-## 9. Related Research
+It does not independently establish the originality of those statements or their complete correspondence with the published research.
 
-**Local Defect Hierarchies for Krylov Speed-Limit Saturation in General Real Jacobi Dynamics**
+## 12. Research Preprint
+
+**Title:** Local Defect Hierarchies for Krylov Speed-Limit Saturation in General Real Jacobi Dynamics
 
 **Author:** Valentino Lanzarini
 
@@ -202,43 +352,27 @@ https://doi.org/10.5281/zenodo.23163367
 
 The preprint and this repository are related research artifacts.
 
-The repository does not currently formalize every statement in the preprint.
+The formalization is incomplete relative to the full mathematical content of the preprint.
 
-## 10. Reproducibility
+## 13. Copyright and Permissions
 
-The repository contains:
+Copyright © 2026 Valentino Lanzarini.
 
-- `lean-toolchain`
-- `lakefile.toml`
-- `.github/workflows/lean.yml`
+**All rights reserved.**
 
-The project uses the pinned Lean and mathlib environment.
-
-The verification commands are defined in the GitHub Actions workflow.
-
-Successful compilation establishes acceptance of the checked Lean declarations for that specific revision.
-
-## 11. Copyright and Permissions
-
-**Copyright © 2026 Valentino Lanzarini.**
-
-**ALL RIGHTS RESERVED.**
-
-This repository is publicly accessible for inspection and scientific discussion.
+The repository is publicly accessible for inspection and scientific discussion.
 
 No general open-source license is granted for the original source code or documentation.
 
 Except where applicable law or GitHub's Terms of Service permit otherwise, copying, modifying, redistributing, sublicensing, or commercially exploiting the original code or documentation requires prior permission from the copyright holder.
 
-Public visibility does not place the original materials in the public domain.
+Public visibility does not place original materials in the public domain.
 
-Copyright protects original expression, but does not grant exclusive ownership of mathematical facts, ideas, or theorems.
+Copyright protects original expression but does not grant exclusive ownership of mathematical facts, ideas, or theorems.
 
-Third-party software dependencies remain subject to their respective licenses.
+Third-party dependencies remain subject to their respective licenses.
 
-For permission requests, contact the repository owner through GitHub.
-
-## 12. AI-Assisted Research
+## 14. AI-Assisted Research
 
 This research and its formalization have been developed with assistance from artificial intelligence tools.
 
@@ -246,7 +380,7 @@ AI assistance is not presented as independent peer review or scientific certific
 
 Mathematical claims must be evaluated through explicit proofs, reproducible checks, and independent scientific scrutiny.
 
-## 13. Author
+## 15. Author
 
 **Valentino Lanzarini**
 
@@ -262,5 +396,4 @@ https://github.com/vlanzarini80-source/lanzarini-krylov-lean.
 
 ---
 
-**Copyright © 2026 Valentino Lanzarini. All rights reserved.**
- 
+Copyright © 2026 Valentino Lanzarini. All rights reserved.
