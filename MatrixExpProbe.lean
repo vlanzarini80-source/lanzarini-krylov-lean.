@@ -179,4 +179,40 @@ theorem jacobiNormSq_state
 
   exact Complex.ofReal_injective h
 
+
+/--
+P54: Conservation of the inner product
+between any two states under Jacobi evolution.
+
+No normalization or orthogonality assumptions.
+-/
+theorem jacobiInner_state_pair
+    (n : ℕ) (a b : Fin n → ℝ)
+    (t : ℝ) (psi phi : Fin n → ℂ) :
+    jacobiInner
+      (jacobiState n a b t psi)
+      (jacobiState n a b t phi) =
+    jacobiInner psi phi := by
+
+  unfold jacobiState
+  unfold jacobiInner
+
+  let U := jacobiPropagator n a b t
+
+  change
+    dotProduct
+      (star (U.mulVec psi))
+      (U.mulVec phi) =
+    dotProduct (star psi) phi
+
+  rw [Matrix.star_mulVec]
+  rw [Matrix.dotProduct_mulVec]
+  rw [Matrix.vecMul_vecMul]
+
+  have hU : U.conjTranspose * U = 1 := by
+    exact jacobiPropagator_unitary n a b t
+
+  rw [hU]
+  rw [Matrix.vecMul_one]
+
 end Lanzarini
