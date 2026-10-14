@@ -215,4 +215,24 @@ theorem jacobiInner_state_pair
   rw [hU]
   rw [Matrix.vecMul_one]
 
+
+/--
+P55: Orthogonality preservation under
+Jacobi quantum evolution.
+
+If two initial states are orthogonal,
+their evolved states remain orthogonal
+for every real time.
+-/
+theorem jacobiState_orthogonality
+    (n : ℕ) (a b : Fin n → ℝ)
+    (t : ℝ) (psi phi : Fin n → ℂ)
+    (horth : jacobiInner psi phi = 0) :
+    jacobiInner
+      (jacobiState n a b t psi)
+      (jacobiState n a b t phi) = 0 := by
+
+  rw [jacobiInner_state_pair]
+  exact horth
+
 end Lanzarini
