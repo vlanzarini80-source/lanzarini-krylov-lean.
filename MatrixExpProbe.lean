@@ -36,21 +36,16 @@ theorem jacobiPropagator_zero
   exact NormedSpace.exp_zero
 
 /-
-P52: audit dei lemmi dell'esponenziale
-di matrici.
-
-I controlli seguenti non assumono
-l'unitarietà del propagatore.
+P52: audit delle firme effettive dei
+lemmi per l'esponenziale matriciale.
 -/
 
-#check Matrix.exp_conjTranspose
-#check Matrix.exp_add_of_commute
-#check Matrix.exp_neg
-#check NormedSpace.exp_zero
+#print Matrix.exp_conjTranspose
+#print Matrix.exp_add_of_commute
+#print Matrix.exp_neg
 
 /--
-Conferma del risultato P51 gia'
-dimostrato in JacobiEvolution.lean.
+Conferma del risultato P51.
 -/
 theorem jacobiGenerator_skewAdjoint_check
     (n : ℕ) (a b : Fin n → ℝ) (t : ℝ) :
