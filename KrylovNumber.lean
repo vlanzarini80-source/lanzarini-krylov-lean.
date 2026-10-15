@@ -76,4 +76,32 @@ theorem krylovComplexityAt_zero
   unfold krylovComplexityAt
   rw [jacobiState_zero]
 
+/--
+P57.1: Krylov complexity is nonnegative
+for every finite-dimensional complex state.
+
+No normalization assumption is required.
+-/
+theorem krylovComplexity_nonneg
+    {n : ℕ} (psi : Fin n → ℂ) :
+    0 ≤ krylovComplexity psi := by
+  unfold krylovComplexity
+  apply Finset.sum_nonneg
+  intro j hj
+  positivity
+
+/--
+P57.2: Krylov complexity remains nonnegative
+at every real time under Jacobi evolution.
+
+No normalization assumption is required.
+-/
+theorem krylovComplexityAt_nonneg
+    (n : ℕ) (a b : Fin n → ℝ)
+    (t : ℝ) (psi : Fin n → ℂ) :
+    0 ≤ krylovComplexityAt n a b t psi := by
+  unfold krylovComplexityAt
+  exact krylovComplexity_nonneg
+    (jacobiState n a b t psi)
+
 end Lanzarini
