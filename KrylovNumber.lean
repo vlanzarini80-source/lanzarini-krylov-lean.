@@ -306,4 +306,52 @@ theorem krylovVarianceAt_nonneg
   apply krylovVariance_nonneg
   exact jacobiState_normalized n a b t psi hnorm
 
+/--
+P61.1: Characterization of zero Krylov variance
+through the centered second-moment sum.
+
+The state must be normalized.
+-/
+theorem krylovVariance_eq_zero_iff_centered
+    {n : ℕ} (psi : Fin n → ℂ)
+    (hnorm : jacobiNormSq psi = 1) :
+    krylovVariance psi = 0 ↔
+      (∑ j : Fin n,
+        ((j.val : ℝ) - krylovComplexity psi) ^ 2 *
+          Complex.normSq (psi j)) = 0 := by
+  rw [krylovVariance_centered psi hnorm]
+
+/--
+P61.2: Centered variance identity
+at every real time for normalized initial states.
+-/
+theorem krylovVarianceAt_centered
+    (n : ℕ) (a b : Fin n → ℝ)
+    (t : ℝ) (psi : Fin n → ℂ)
+    (hnorm : jacobiNormSq psi = 1) :
+    krylovVarianceAt n a b t psi =
+      ∑ j : Fin n,
+        ((j.val : ℝ) -
+          krylovComplexity (jacobiState n a b t psi)) ^ 2 *
+          Complex.normSq (jacobiState n a b t psi j) := by
+  unfold krylovVarianceAt
+  exact krylovVariance_centered
+    (jacobiState n a b t psi)
+    (jacobiState_normalized n a b t psi hnorm)
+
+/--
+P61.3: Zero variance at time t is equivalent
+to the vanishing of the centered sum.
+-/
+theorem krylovVarianceAt_eq_zero_iff_centered
+    (n : ℕ) (a b : Fin n → ℝ)
+    (t : ℝ) (psi : Fin n → ℂ)
+    (hnorm : jacobiNormSq psi = 1) :
+    krylovVarianceAt n a b t psi = 0 ↔
+      (∑ j : Fin n,
+        ((j.val : ℝ) -
+          krylovComplexity (jacobiState n a b t psi)) ^ 2 *
+          Complex.normSq (jacobiState n a b t psi j)) = 0 := by
+  rw [krylovVarianceAt_centered n a b t psi hnorm]
+
 end Lanzarini
