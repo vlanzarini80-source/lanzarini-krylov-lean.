@@ -77,8 +77,7 @@ theorem krylovComplexityAt_zero
   rw [jacobiState_zero]
 
 /--
-P57.1: Krylov complexity is nonnegative
-for every finite-dimensional complex state.
+P57.1: Nonnegativity of Krylov complexity.
 
 No normalization assumption is required.
 -/
@@ -88,11 +87,15 @@ theorem krylovComplexity_nonneg
   unfold krylovComplexity
   apply Finset.sum_nonneg
   intro j hj
-  positivity
+  have hindex : (0 : ℝ) ≤ (j.val : ℝ) :=
+    Nat.cast_nonneg _
+  have hnorm : 0 ≤ Complex.normSq (psi j) :=
+    Complex.normSq_nonneg _
+  exact mul_nonneg hindex hnorm
 
 /--
-P57.2: Krylov complexity remains nonnegative
-at every real time under Jacobi evolution.
+P57.2: Nonnegativity at every real time
+under Jacobi quantum evolution.
 
 No normalization assumption is required.
 -/
