@@ -107,4 +107,63 @@ theorem krylovComplexityAt_nonneg
   exact krylovComplexity_nonneg
     (jacobiState n a b t psi)
 
+/--
+P58.1: Second moment of the Krylov
+number distribution.
+
+No normalization assumption is required.
+-/
+noncomputable def krylovSecondMoment
+    {n : ℕ} (psi : Fin n → ℂ) : ℝ :=
+  ∑ j : Fin n,
+    ((j.val : ℝ) ^ 2) * Complex.normSq (psi j)
+
+/--
+P58.2: Second moment under Jacobi evolution.
+-/
+noncomputable def krylovSecondMomentAt
+    (n : ℕ) (a b : Fin n → ℝ)
+    (t : ℝ) (psi : Fin n → ℂ) : ℝ :=
+  krylovSecondMoment (jacobiState n a b t psi)
+
+/--
+P58.3: The second moment is nonnegative
+for every finite-dimensional complex state.
+-/
+theorem krylovSecondMoment_nonneg
+    {n : ℕ} (psi : Fin n → ℂ) :
+    0 ≤ krylovSecondMoment psi := by
+  unfold krylovSecondMoment
+  apply Finset.sum_nonneg
+  intro j hj
+  have hindex : (0 : ℝ) ≤ (j.val : ℝ) ^ 2 :=
+    sq_nonneg _
+  have hnorm : 0 ≤ Complex.normSq (psi j) :=
+    Complex.normSq_nonneg _
+  exact mul_nonneg hindex hnorm
+
+/--
+P58.4: The evolved second moment
+is nonnegative at every real time.
+-/
+theorem krylovSecondMomentAt_nonneg
+    (n : ℕ) (a b : Fin n → ℝ)
+    (t : ℝ) (psi : Fin n → ℂ) :
+    0 ≤ krylovSecondMomentAt n a b t psi := by
+  unfold krylovSecondMomentAt
+  exact krylovSecondMoment_nonneg
+    (jacobiState n a b t psi)
+
+/--
+P58.5: At time zero, the second moment
+equals its initial value.
+-/
+theorem krylovSecondMomentAt_zero
+    (n : ℕ) (a b : Fin n → ℝ)
+    (psi : Fin n → ℂ) :
+    krylovSecondMomentAt n a b 0 psi =
+      krylovSecondMoment psi := by
+  unfold krylovSecondMomentAt
+  rw [jacobiState_zero]
+
 end Lanzarini
