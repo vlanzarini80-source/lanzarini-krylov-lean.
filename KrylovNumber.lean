@@ -214,10 +214,10 @@ theorem jacobiState_normalized
   exact hnorm
 
 /--
-P60.1: The centered second-moment identity.
+P60.1: Centered second-moment identity.
 
 For a normalized state, Krylov variance
-equals a sum of nonnegative squared deviations.
+equals a sum of squared deviations.
 -/
 theorem krylovVariance_centered
     {n : ℕ} (psi : Fin n → ℂ)
@@ -228,15 +228,19 @@ theorem krylovVariance_centered
           Complex.normSq (psi j) := by
   let m : ℝ := krylovComplexity psi
   let p : Fin n → ℝ := fun j => Complex.normSq (psi j)
+
   have hp : (∑ j : Fin n, p j) = 1 := by
     exact hnorm
+
   have hm :
       (∑ j : Fin n, (j.val : ℝ) * p j) = m := by
     rfl
+
   have hsecond :
       (∑ j : Fin n, ((j.val : ℝ) ^ 2) * p j) =
         krylovSecondMoment psi := by
     rfl
+
   have hexpand :
       (∑ j : Fin n,
         ((j.val : ℝ) - m) ^ 2 * p j) =
@@ -252,22 +256,26 @@ theorem krylovVariance_centered
             intro j hj
             ring
       _ = _ := by
-        rw [Finset.sum_add_distrib]
-        rw [Finset.sum_sub_distrib]
-        simp only [← Finset.mul_sum]
-        ring
+        simp only [
+          Finset.sum_add_distrib,
+          Finset.sum_sub_distrib,
+          ← Finset.mul_sum
+        ]
+        all_goals ring
+
   rw [hexpand, hp, hm, hsecond]
+
   change krylovSecondMoment psi -
       (krylovComplexity psi) ^ 2 =
     krylovSecondMoment psi -
       2 * m * m + m ^ 2 * 1
-  change m = krylovComplexity psi at *
-  unfold krylovVariance
+
+  dsimp [m]
   ring
 
 /--
-P60.2: Krylov variance is nonnegative
-for every normalized state.
+P60.2: Nonnegativity of Krylov variance
+for every normalized complex state.
 -/
 theorem krylovVariance_nonneg
     {n : ℕ} (psi : Fin n → ℂ)
@@ -285,8 +293,9 @@ theorem krylovVariance_nonneg
   exact mul_nonneg hsquare hweight
 
 /--
-P60.3: Krylov variance remains nonnegative
-at every real time for normalized initial states.
+P60.3: Nonnegativity of Krylov variance
+at every real time under Jacobi evolution,
+assuming a normalized initial state.
 -/
 theorem krylovVarianceAt_nonneg
     (n : ℕ) (a b : Fin n → ℝ)
