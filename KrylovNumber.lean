@@ -213,4 +213,88 @@ theorem jacobiState_normalized
   rw [jacobiNormSq_state]
   exact hnorm
 
+/--
+P60.1: The centered second-moment identity.
+
+For a normalized state, Krylov variance
+equals a sum of nonnegative squared deviations.
+-/
+theorem krylovVariance_centered
+    {n : ℕ} (psi : Fin n → ℂ)
+    (hnorm : jacobiNormSq psi = 1) :
+    krylovVariance psi =
+      ∑ j : Fin n,
+        ((j.val : ℝ) - krylovComplexity psi) ^ 2 *
+          Complex.normSq (psi j) := by
+  let m : ℝ := krylovComplexity psi
+  let p : Fin n → ℝ := fun j => Complex.normSq (psi j)
+  have hp : (∑ j : Fin n, p j) = 1 := by
+    exact hnorm
+  have hm :
+      (∑ j : Fin n, (j.val : ℝ) * p j) = m := by
+    rfl
+  have hsecond :
+      (∑ j : Fin n, ((j.val : ℝ) ^ 2) * p j) =
+        krylovSecondMoment psi := by
+    rfl
+  have hexpand :
+      (∑ j : Fin n,
+        ((j.val : ℝ) - m) ^ 2 * p j) =
+      (∑ j : Fin n, ((j.val : ℝ) ^ 2) * p j) -
+        2 * m * (∑ j : Fin n, (j.val : ℝ) * p j) +
+        m ^ 2 * (∑ j : Fin n, p j) := by
+    calc
+      _ = ∑ j : Fin n,
+          (((j.val : ℝ) ^ 2) * p j -
+            (2 * m) * ((j.val : ℝ) * p j) +
+            (m ^ 2) * p j) := by
+            apply Finset.sum_congr rfl
+            intro j hj
+            ring
+      _ = _ := by
+        rw [Finset.sum_add_distrib]
+        rw [Finset.sum_sub_distrib]
+        simp only [← Finset.mul_sum]
+        ring
+  rw [hexpand, hp, hm, hsecond]
+  change krylovSecondMoment psi -
+      (krylovComplexity psi) ^ 2 =
+    krylovSecondMoment psi -
+      2 * m * m + m ^ 2 * 1
+  change m = krylovComplexity psi at *
+  unfold krylovVariance
+  ring
+
+/--
+P60.2: Krylov variance is nonnegative
+for every normalized state.
+-/
+theorem krylovVariance_nonneg
+    {n : ℕ} (psi : Fin n → ℂ)
+    (hnorm : jacobiNormSq psi = 1) :
+    0 ≤ krylovVariance psi := by
+  rw [krylovVariance_centered psi hnorm]
+  apply Finset.sum_nonneg
+  intro j hj
+  have hsquare :
+      0 ≤ ((j.val : ℝ) - krylovComplexity psi) ^ 2 :=
+    sq_nonneg _
+  have hweight :
+      0 ≤ Complex.normSq (psi j) :=
+    Complex.normSq_nonneg _
+  exact mul_nonneg hsquare hweight
+
+/--
+P60.3: Krylov variance remains nonnegative
+at every real time for normalized initial states.
+-/
+theorem krylovVarianceAt_nonneg
+    (n : ℕ) (a b : Fin n → ℝ)
+    (t : ℝ) (psi : Fin n → ℂ)
+    (hnorm : jacobiNormSq psi = 1) :
+    0 ≤ krylovVarianceAt n a b t psi := by
+  unfold krylovVarianceAt
+  apply krylovVariance_nonneg
+  exact jacobiState_normalized n a b t psi hnorm
+
 end Lanzarini
