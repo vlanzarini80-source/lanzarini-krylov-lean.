@@ -354,4 +354,71 @@ theorem krylovVarianceAt_eq_zero_iff_centered
           Complex.normSq (jacobiState n a b t psi j)) = 0 := by
   rw [krylovVarianceAt_centered n a b t psi hnorm]
 
+/--
+P62.1: If the normalized Krylov variance vanishes,
+then every centered weighted term vanishes.
+
+No concentration assumption is introduced.
+-/
+theorem krylovVariance_zero_term
+    {n : ℕ} (psi : Fin n → ℂ)
+    (hnorm : jacobiNormSq psi = 1)
+    (hzero : krylovVariance psi = 0)
+    (j : Fin n) :
+    ((j.val : ℝ) - krylovComplexity psi) ^ 2 *
+      Complex.normSq (psi j) = 0 := by
+
+  have hsum :
+      (∑ k : Fin n,
+        ((k.val : ℝ) - krylovComplexity psi) ^ 2 *
+          Complex.normSq (psi k)) = 0 := by
+    rw [← krylovVariance_centered psi hnorm]
+    exact hzero
+
+  have hnonneg (k : Fin n) :
+      0 ≤ ((k.val : ℝ) - krylovComplexity psi) ^ 2 *
+        Complex.normSq (psi k) :=
+    mul_nonneg (sq_nonneg _) (Complex.normSq_nonneg _)
+
+  have hle :
+      ((j.val : ℝ) - krylovComplexity psi) ^ 2 *
+        Complex.normSq (psi j) ≤
+      ∑ k : Fin n,
+        ((k.val : ℝ) - krylovComplexity psi) ^ 2 *
+          Complex.normSq (psi k) := by
+    apply Finset.single_le_sum
+    · intro k hk
+      exact hnonneg k
+    · simp
+
+  rw [hsum] at hle
+  exact le_antisymm hle (hnonneg j)
+
+/--
+P62.2: Zero variance forces zero probability
+at every index different from the mean.
+
+The conclusion is derived, not assumed.
+-/
+theorem krylovVariance_zero_off_mean
+    {n : ℕ} (psi : Fin n → ℂ)
+    (hnorm : jacobiNormSq psi = 1)
+    (hzero : krylovVariance psi = 0)
+    (j : Fin n)
+    (hne : (j.val : ℝ) ≠ krylovComplexity psi) :
+    Complex.normSq (psi j) = 0 := by
+
+  have hterm :=
+    krylovVariance_zero_term psi hnorm hzero j
+
+  have hdiff :
+      (j.val : ℝ) - krylovComplexity psi ≠ 0 :=
+    sub_ne_zero.mpr hne
+
+  have hsq :
+      ((j.val : ℝ) - krylovComplexity psi) ^ 2 ≠ 0 :=
+    pow_ne_zero 2 hdiff
+
+  exact (mul_eq_zero.mp hterm).resolve_left hsq
+
 end Lanzarini
