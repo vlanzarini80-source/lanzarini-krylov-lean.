@@ -421,4 +421,54 @@ theorem krylovVariance_zero_off_mean
 
   exact (mul_eq_zero.mp hterm).resolve_left hsq
 
+/--
+P63.1: A nonzero probability weight in a
+zero-variance normalized state must occur
+at the Krylov mean.
+
+The conclusion is deduced from P62.
+-/
+theorem krylovVariance_zero_occupied_mean
+    {n : ℕ} (psi : Fin n → ℂ)
+    (hnorm : jacobiNormSq psi = 1)
+    (hzero : krylovVariance psi = 0)
+    (j : Fin n)
+    (hj : Complex.normSq (psi j) ≠ 0) :
+    (j.val : ℝ) = krylovComplexity psi := by
+  by_contra hne
+  exact hj
+    (krylovVariance_zero_off_mean
+      psi hnorm hzero j hne)
+
+/--
+P63.2: Under zero variance, two indices
+with nonzero probability weights coincide.
+
+This proves uniqueness of an occupied level,
+not yet its existence.
+-/
+theorem krylovVariance_zero_occupied_unique
+    {n : ℕ} (psi : Fin n → ℂ)
+    (hnorm : jacobiNormSq psi = 1)
+    (hzero : krylovVariance psi = 0)
+    (j k : Fin n)
+    (hj : Complex.normSq (psi j) ≠ 0)
+    (hk : Complex.normSq (psi k) ≠ 0) :
+    j = k := by
+
+  have hjmean :
+      (j.val : ℝ) = krylovComplexity psi :=
+    krylovVariance_zero_occupied_mean
+      psi hnorm hzero j hj
+
+  have hkmean :
+      (k.val : ℝ) = krylovComplexity psi :=
+    krylovVariance_zero_occupied_mean
+      psi hnorm hzero k hk
+
+  have hval : j.val = k.val := by
+    exact_mod_cast hjmean.trans hkmean.symm
+
+  exact Fin.ext hval
+
 end Lanzarini
