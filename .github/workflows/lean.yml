@@ -32,4 +32,5 @@ jobs:
           lake env lean -o JacobiReal.olean JacobiReal.lean
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o JacobiEvolution.olean JacobiEvolution.lean
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o MatrixExpProbe.olean MatrixExpProbe.lean
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean KrylovNumber.lean
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o KrylovNumber.olean KrylovNumber.lean
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean KrylovGram.lean
