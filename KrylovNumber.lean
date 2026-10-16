@@ -4,38 +4,25 @@ import MatrixExpProbe
 
 namespace Lanzarini
 
-/--
-P56.1: Krylov number operator.
-
-The diagonal entries are 0, 1, ..., n-1.
--/
+/-- P56.1: Krylov number operator. -/
 noncomputable def krylovNumberOperator
     (n : ℕ) : Matrix (Fin n) (Fin n) ℂ :=
   Matrix.diagonal
     (fun j : Fin n => ((j.val : ℝ) : ℂ))
 
-/--
-P56.2: Krylov complexity as a finite sum.
-
-No normalization assumption is required.
--/
+/-- P56.2: Krylov complexity as a finite sum. -/
 noncomputable def krylovComplexity
     {n : ℕ} (psi : Fin n → ℂ) : ℝ :=
   ∑ j : Fin n,
     (j.val : ℝ) * Complex.normSq (psi j)
 
-/--
-P56.3: Krylov complexity of the evolved state.
--/
+/-- P56.3: Krylov complexity of the evolved state. -/
 noncomputable def krylovComplexityAt
     (n : ℕ) (a b : Fin n → ℝ)
     (t : ℝ) (psi : Fin n → ℂ) : ℝ :=
   krylovComplexity (jacobiState n a b t psi)
 
-/--
-P56.4: The Krylov number operator
-acts diagonally on every state.
--/
+/-- P56.4: The number operator acts diagonally. -/
 theorem krylovNumberOperator_mulVec
     (n : ℕ) (psi : Fin n → ℂ) :
     (krylovNumberOperator n).mulVec psi =
@@ -45,10 +32,7 @@ theorem krylovNumberOperator_mulVec
     (fun k : Fin n => ((k.val : ℝ) : ℂ))
     psi j
 
-/--
-P56.5: The matrix expectation equals
-the explicit Krylov complexity sum.
--/
+/-- P56.5: Matrix expectation equals Krylov complexity. -/
 theorem krylovComplexity_expectation
     {n : ℕ} (psi : Fin n → ℂ) :
     jacobiInner psi
@@ -64,10 +48,7 @@ theorem krylovComplexity_expectation
   rw [Complex.normSq_eq_conj_mul_self]
   simp [mul_assoc, mul_comm, mul_left_comm]
 
-/--
-P56.6: Krylov complexity at time zero
-equals its initial value.
--/
+/-- P56.6: Krylov complexity at time zero. -/
 theorem krylovComplexityAt_zero
     (n : ℕ) (a b : Fin n → ℝ)
     (psi : Fin n → ℂ) :
@@ -76,11 +57,7 @@ theorem krylovComplexityAt_zero
   unfold krylovComplexityAt
   rw [jacobiState_zero]
 
-/--
-P57.1: Nonnegativity of Krylov complexity.
-
-No normalization assumption is required.
--/
+/-- P57.1: Nonnegativity of Krylov complexity. -/
 theorem krylovComplexity_nonneg
     {n : ℕ} (psi : Fin n → ℂ) :
     0 ≤ krylovComplexity psi := by
@@ -93,12 +70,7 @@ theorem krylovComplexity_nonneg
     Complex.normSq_nonneg _
   exact mul_nonneg hindex hnorm
 
-/--
-P57.2: Nonnegativity at every real time
-under Jacobi quantum evolution.
-
-No normalization assumption is required.
--/
+/-- P57.2: Nonnegativity under Jacobi evolution. -/
 theorem krylovComplexityAt_nonneg
     (n : ℕ) (a b : Fin n → ℝ)
     (t : ℝ) (psi : Fin n → ℂ) :
@@ -107,29 +79,19 @@ theorem krylovComplexityAt_nonneg
   exact krylovComplexity_nonneg
     (jacobiState n a b t psi)
 
-/--
-P58.1: Second moment of the Krylov
-number distribution.
-
-No normalization assumption is required.
--/
+/-- P58.1: Second moment of the Krylov distribution. -/
 noncomputable def krylovSecondMoment
     {n : ℕ} (psi : Fin n → ℂ) : ℝ :=
   ∑ j : Fin n,
     ((j.val : ℝ) ^ 2) * Complex.normSq (psi j)
 
-/--
-P58.2: Second moment under Jacobi evolution.
--/
+/-- P58.2: Second moment under Jacobi evolution. -/
 noncomputable def krylovSecondMomentAt
     (n : ℕ) (a b : Fin n → ℝ)
     (t : ℝ) (psi : Fin n → ℂ) : ℝ :=
   krylovSecondMoment (jacobiState n a b t psi)
 
-/--
-P58.3: The second moment is nonnegative
-for every finite-dimensional complex state.
--/
+/-- P58.3: Nonnegativity of the second moment. -/
 theorem krylovSecondMoment_nonneg
     {n : ℕ} (psi : Fin n → ℂ) :
     0 ≤ krylovSecondMoment psi := by
@@ -142,10 +104,7 @@ theorem krylovSecondMoment_nonneg
     Complex.normSq_nonneg _
   exact mul_nonneg hindex hnorm
 
-/--
-P58.4: The evolved second moment
-is nonnegative at every real time.
--/
+/-- P58.4: Nonnegativity of the evolved second moment. -/
 theorem krylovSecondMomentAt_nonneg
     (n : ℕ) (a b : Fin n → ℝ)
     (t : ℝ) (psi : Fin n → ℂ) :
@@ -154,10 +113,7 @@ theorem krylovSecondMomentAt_nonneg
   exact krylovSecondMoment_nonneg
     (jacobiState n a b t psi)
 
-/--
-P58.5: At time zero, the second moment
-equals its initial value.
--/
+/-- P58.5: Second moment at time zero. -/
 theorem krylovSecondMomentAt_zero
     (n : ℕ) (a b : Fin n → ℝ)
     (psi : Fin n → ℂ) :
@@ -166,33 +122,19 @@ theorem krylovSecondMomentAt_zero
   unfold krylovSecondMomentAt
   rw [jacobiState_zero]
 
-/--
-P59.1: Krylov variance expression.
-
-For normalized states, this is the variance
-of the Krylov number distribution.
-
-For unnormalized states, nonnegativity
-is not asserted.
--/
+/-- P59.1: Krylov variance expression. -/
 noncomputable def krylovVariance
     {n : ℕ} (psi : Fin n → ℂ) : ℝ :=
   krylovSecondMoment psi -
     (krylovComplexity psi) ^ 2
 
-/--
-P59.2: Krylov variance expression
-under Jacobi evolution.
--/
+/-- P59.2: Krylov variance under Jacobi evolution. -/
 noncomputable def krylovVarianceAt
     (n : ℕ) (a b : Fin n → ℝ)
     (t : ℝ) (psi : Fin n → ℂ) : ℝ :=
   krylovVariance (jacobiState n a b t psi)
 
-/--
-P59.3: At time zero, the variance
-expression equals its initial value.
--/
+/-- P59.3: Variance at time zero. -/
 theorem krylovVarianceAt_zero
     (n : ℕ) (a b : Fin n → ℝ)
     (psi : Fin n → ℂ) :
@@ -201,10 +143,7 @@ theorem krylovVarianceAt_zero
   unfold krylovVarianceAt
   rw [jacobiState_zero]
 
-/--
-P59.4: Normalization is preserved
-under Jacobi quantum evolution.
--/
+/-- P59.4: Normalization is preserved by evolution. -/
 theorem jacobiState_normalized
     (n : ℕ) (a b : Fin n → ℝ)
     (t : ℝ) (psi : Fin n → ℂ)
@@ -213,12 +152,7 @@ theorem jacobiState_normalized
   rw [jacobiNormSq_state]
   exact hnorm
 
-/--
-P60.1: Centered second-moment identity.
-
-For a normalized state, Krylov variance
-equals a sum of squared deviations.
--/
+/-- P60.1: Centered variance identity. -/
 theorem krylovVariance_centered
     {n : ℕ} (psi : Fin n → ℂ)
     (hnorm : jacobiNormSq psi = 1) :
@@ -273,10 +207,7 @@ theorem krylovVariance_centered
   dsimp [m]
   ring
 
-/--
-P60.2: Nonnegativity of Krylov variance
-for every normalized complex state.
--/
+/-- P60.2: Nonnegativity of normalized Krylov variance. -/
 theorem krylovVariance_nonneg
     {n : ℕ} (psi : Fin n → ℂ)
     (hnorm : jacobiNormSq psi = 1) :
@@ -292,11 +223,7 @@ theorem krylovVariance_nonneg
     Complex.normSq_nonneg _
   exact mul_nonneg hsquare hweight
 
-/--
-P60.3: Nonnegativity of Krylov variance
-at every real time under Jacobi evolution,
-assuming a normalized initial state.
--/
+/-- P60.3: Nonnegativity under normalized evolution. -/
 theorem krylovVarianceAt_nonneg
     (n : ℕ) (a b : Fin n → ℝ)
     (t : ℝ) (psi : Fin n → ℂ)
@@ -306,12 +233,7 @@ theorem krylovVarianceAt_nonneg
   apply krylovVariance_nonneg
   exact jacobiState_normalized n a b t psi hnorm
 
-/--
-P61.1: Characterization of zero Krylov variance
-through the centered second-moment sum.
-
-The state must be normalized.
--/
+/-- P61.1: Zero variance iff the centered sum is zero. -/
 theorem krylovVariance_eq_zero_iff_centered
     {n : ℕ} (psi : Fin n → ℂ)
     (hnorm : jacobiNormSq psi = 1) :
@@ -321,10 +243,7 @@ theorem krylovVariance_eq_zero_iff_centered
           Complex.normSq (psi j)) = 0 := by
   rw [krylovVariance_centered psi hnorm]
 
-/--
-P61.2: Centered variance identity
-at every real time for normalized initial states.
--/
+/-- P61.2: Centered variance identity at time t. -/
 theorem krylovVarianceAt_centered
     (n : ℕ) (a b : Fin n → ℝ)
     (t : ℝ) (psi : Fin n → ℂ)
@@ -339,10 +258,7 @@ theorem krylovVarianceAt_centered
     (jacobiState n a b t psi)
     (jacobiState_normalized n a b t psi hnorm)
 
-/--
-P61.3: Zero variance at time t is equivalent
-to the vanishing of the centered sum.
--/
+/-- P61.3: Zero variance at time t. -/
 theorem krylovVarianceAt_eq_zero_iff_centered
     (n : ℕ) (a b : Fin n → ℝ)
     (t : ℝ) (psi : Fin n → ℂ)
@@ -354,12 +270,7 @@ theorem krylovVarianceAt_eq_zero_iff_centered
           Complex.normSq (jacobiState n a b t psi j)) = 0 := by
   rw [krylovVarianceAt_centered n a b t psi hnorm]
 
-/--
-P62.1: If the normalized Krylov variance vanishes,
-then every centered weighted term vanishes.
-
-No concentration assumption is introduced.
--/
+/-- P62.1: Every centered term vanishes at zero variance. -/
 theorem krylovVariance_zero_term
     {n : ℕ} (psi : Fin n → ℂ)
     (hnorm : jacobiNormSq psi = 1)
@@ -394,12 +305,7 @@ theorem krylovVariance_zero_term
   rw [hsum] at hle
   exact le_antisymm hle (hnonneg j)
 
-/--
-P62.2: Zero variance forces zero probability
-at every index different from the mean.
-
-The conclusion is derived, not assumed.
--/
+/-- P62.2: Zero probability away from the mean. -/
 theorem krylovVariance_zero_off_mean
     {n : ℕ} (psi : Fin n → ℂ)
     (hnorm : jacobiNormSq psi = 1)
@@ -421,13 +327,7 @@ theorem krylovVariance_zero_off_mean
 
   exact (mul_eq_zero.mp hterm).resolve_left hsq
 
-/--
-P63.1: A nonzero probability weight in a
-zero-variance normalized state must occur
-at the Krylov mean.
-
-The conclusion is deduced from P62.
--/
+/-- P63.1: Every occupied level equals the Krylov mean. -/
 theorem krylovVariance_zero_occupied_mean
     {n : ℕ} (psi : Fin n → ℂ)
     (hnorm : jacobiNormSq psi = 1)
@@ -437,16 +337,9 @@ theorem krylovVariance_zero_occupied_mean
     (j.val : ℝ) = krylovComplexity psi := by
   by_contra hne
   exact hj
-    (krylovVariance_zero_off_mean
-      psi hnorm hzero j hne)
+    (krylovVariance_zero_off_mean psi hnorm hzero j hne)
 
-/--
-P63.2: Under zero variance, two indices
-with nonzero probability weights coincide.
-
-This proves uniqueness of an occupied level,
-not yet its existence.
--/
+/-- P63.2: Two occupied levels must coincide. -/
 theorem krylovVariance_zero_occupied_unique
     {n : ℕ} (psi : Fin n → ℂ)
     (hnorm : jacobiNormSq psi = 1)
@@ -458,17 +351,45 @@ theorem krylovVariance_zero_occupied_unique
 
   have hjmean :
       (j.val : ℝ) = krylovComplexity psi :=
-    krylovVariance_zero_occupied_mean
-      psi hnorm hzero j hj
+    krylovVariance_zero_occupied_mean psi hnorm hzero j hj
 
   have hkmean :
       (k.val : ℝ) = krylovComplexity psi :=
-    krylovVariance_zero_occupied_mean
-      psi hnorm hzero k hk
+    krylovVariance_zero_occupied_mean psi hnorm hzero k hk
 
   have hval : j.val = k.val := by
     exact_mod_cast hjmean.trans hkmean.symm
 
   exact Fin.ext hval
+
+/-- P64.1: Normalization implies an occupied level exists. -/
+theorem krylov_normalized_exists_occupied
+    {n : ℕ} (psi : Fin n → ℂ)
+    (hnorm : jacobiNormSq psi = 1) :
+    ∃ j : Fin n, 0 < Complex.normSq (psi j) := by
+  by_contra h
+  push_neg at h
+  have hall :
+      ∀ j : Fin n, Complex.normSq (psi j) = 0 := by
+    intro j
+    exact le_antisymm (h j) (Complex.normSq_nonneg (psi j))
+  have hzero : jacobiNormSq psi = 0 := by
+    change (∑ j : Fin n, Complex.normSq (psi j)) = 0
+    simp [hall]
+  linarith
+
+/-- P64.2: Exactly one occupied level when variance is zero. -/
+theorem krylovVariance_zero_existsUnique_occupied
+    {n : ℕ} (psi : Fin n → ℂ)
+    (hnorm : jacobiNormSq psi = 1)
+    (hzero : krylovVariance psi = 0) :
+    ∃! j : Fin n, 0 < Complex.normSq (psi j) := by
+  obtain ⟨j, hj⟩ := krylov_normalized_exists_occupied psi hnorm
+  refine ⟨j, hj, ?_⟩
+  intro k hk
+  have hjne : Complex.normSq (psi j) ≠ 0 := ne_of_gt hj
+  have hkne : Complex.normSq (psi k) ≠ 0 := ne_of_gt hk
+  exact krylovVariance_zero_occupied_unique
+    psi hnorm hzero k j hkne hjne
 
 end Lanzarini
