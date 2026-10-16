@@ -386,10 +386,10 @@ theorem krylovVariance_zero_term
       ∑ k : Fin n,
         ((k.val : ℝ) - krylovComplexity psi) ^ 2 *
           Complex.normSq (psi k) := by
-    apply Finset.single_le_sum
-    · intro k hk
-      exact hnonneg k
-    · simp
+    exact Finset.single_le_sum
+      (s := Finset.univ)
+      (fun k hk => hnonneg k)
+      (Finset.mem_univ j)
 
   rw [hsum] at hle
   exact le_antisymm hle (hnonneg j)
