@@ -1,571 +1,297 @@
 
 # Lanzarini Krylov–Jacobi
 
-### Lean 4 Formalization of Jacobi Matrices and Krylov Quantum Dynamics
+### Lean 4 formalization of finite-dimensional Jacobi dynamics and Krylov observables
 
-**Author:** Valentino Lanzarini  
-**Status:** Research in progress  
-**Framework:** Lean 4 + mathlib  
-**Latest verified milestone:** P61  
+**Author:** Valentino Lanzarini, Independent Mathematical Researcher  
+**Project status:** Research in progress  
+**Latest verified formalization checkpoint:** **P71**  
+**Environment:** Lean 4 `v4.24.0` and mathlib `v4.24.0`  
+**Research preprint:** https://doi.org/10.5281/zenodo.23163367  
+**Repository:** https://github.com/vlanzarini80-source/lanzarini-krylov-lean.  
 **Copyright:** © 2026 Valentino Lanzarini. All rights reserved.
 
-**Repository:**  
-https://github.com/vlanzarini80-source/lanzarini-krylov-lean.
-
-**Research preprint:**  
-https://doi.org/10.5281/zenodo.23163367
+> **Scientific status.** The repository contains machine-checked foundational theorems about **finite-dimensional** Jacobi matrices, unitary evolution, Krylov moments and variance, and complex Gram identities. **The main finite-depth local-defect hierarchy from the preprint has not yet been formalized in Lean.** Passing GitHub Actions checks establish that Lean accepted the encoded statements and proofs, not that all the preprint's claims are formalized, original, or independently peer reviewed.
 
 ---
 
-## 1. Project Overview
+## 1. Latest verified checkpoint and reproducibility
 
-This repository contains an ongoing Lean 4 formalization of finite-dimensional Jacobi dynamics, quantum evolution, and Krylov complexity.
+| Item | Verified record |
+| --- | --- |
+| Milestone | **P71** |
+| Verification | [GitHub Actions #84, `verify`: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39044208215) |
+| Exact source commit | [`85f799e6defae7f9106a10c4fd9f780d27cf2b4f`](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./commit/85f799e6defae7f9106a10c4fd9f780d27cf2b4f) |
+| Date | 17 October 2026 |
+| Lean toolchain | `leanprover/lean4:v4.24.0` |
+| mathlib configuration | `v4.24.0` in `lakefile.toml` |
+| mathlib revision in the #84 CI log | `f897ebcf72cd16f89ab4577d0c826cd14afaafc7` |
+| Files checked | All **ten** `.lean` files explicitly compiled by `.github/workflows/lean.yml`, including `KrylovGap.lean` |
 
-The project supports independent mathematical research on local defects in Krylov speed-limit saturation.
+The source files compiled at P71 were inspected for `sorry`, `admit`, and locally declared `axiom` statements; none were found. **This is not a completed audit of the axiomatic dependencies of Lean/mathlib.** In particular, the outputs of `#print axioms` for the central declarations have **not** yet been recorded as a separate verification checkpoint.
 
-Its objective is to translate mathematical statements into machine-checkable definitions and proofs, making assumptions and logical dependencies explicit.
-
-**Verified progress:** Foundational results through P61 have passed the configured Lean verification workflow.
-
-**Latest confirmed P61 verification:**
-
-- Workflow: Lean 4 Verification #63
-- Commit: `f7bde4f`
-- Date: October 15, 2026
-- Result: PASS
-
-**Important scientific distinction:** The central local-defect hierarchy theorem from the research preprint has not yet been formally verified in Lean.
-
-Successful compilation does not establish mathematical novelty, independent peer review, or correctness of claims not encoded in the verified theorems.
+**Dependency-lock caveat:** The repository currently does **not** contain a committed `lake-manifest.json`. The CI workflow executes `lake update`, so the mathlib revision above comes from the actual #84 job log rather than a checked-in lockfile. A reviewed, committed dependency manifest is a future reproducibility task. The specific source commit and corresponding workflow log document the successful environment used on 17 October 2026.
 
 ---
 
-## 2. Mathematical Framework
+## 2. Mathematical framework and conventions
 
-Consider a finite-dimensional real Jacobi matrix:
-
-$$
-H=
-\begin{pmatrix}
-a_0 & b_0 & 0 & \cdots & 0\\
-b_0 & a_1 & b_1 & \ddots & \vdots\\
-0 & b_1 & a_2 & \ddots & 0\\
-\vdots & \ddots & \ddots & \ddots & b_{n-2}\\
-0 & \cdots & 0 & b_{n-2} & a_{n-1}
-\end{pmatrix}.
-$$
-
-For real Jacobi coefficients,
+For a finite dimension `n`, the code defines a real symmetric tridiagonal Jacobi matrix using `a b : Fin n → ℝ`:
 
 $$
-H^{\mathsf T}=H.
+H_{ij}=\begin{cases}
+a_i, & i=j,\\
+b_i, & j=i+1,\\
+b_j, & i=j+1,\\
+0, & \text{otherwise}.
+\end{cases}
 $$
 
-After embedding into complex matrices,
+The foundational Lean definitions allow **arbitrary real** diagonal and off-diagonal coefficients. The positivity of physical couplings is **not** built into those definitions. Conditions such as positive interior couplings belong to specific results in the research preprint and must be explicitly included when formalizing those results.
+
+**Basis-identification caveat:** The operator named `krylovNumberOperator` acts on the chosen coordinate basis `Fin n`. The repository does not yet formalize a general Lanczos algorithm or prove that this coordinate basis is the Krylov basis generated by an arbitrary Hamiltonian and initial state. Identifying the Jacobi-chain basis with a genuine Lanczos/Krylov basis requires the appropriate construction and hypotheses.
+
+Lean uses zero-based `Fin n` indices. The off-diagonal input `b i` couples site `i` to site `i+1`, and its last entry is unused. In the preprint the first physical coupling is called $b_1$; its correspondence with the Lean input is:
 
 $$
-H^\dagger=H.
+b_j^{\mathrm{preprint}}=b_{j-1}^{\mathrm{Lean}},\qquad 1\le j\le n-1.
 $$
 
-The evolution generator is
+For the complex representation of the finite Jacobi Hamiltonian, the code uses:
 
 $$
-G(t)=-itH,
+U(t)=\exp(-itH),\qquad \psi(t)=U(t)\psi_0.
 $$
 
-and the propagator is
+The finite-dimensional propagator is proved unitary. The formalization establishes preservation of the norm, inner product and orthogonality. These statements do **not** depend on a proof of any infinite-dimensional operator-domain result.
 
-$$
-U(t)=\exp(-itH).
-$$
-
-The Lean formalization proves
-
-$$
-U(0)=I
-$$
-
-and
-
-$$
-U(t)^\dagger U(t)=I.
-$$
-
-Thus the propagator is unitary for every real time in the finite-dimensional setting considered.
+**Infinite-dimensional scope:** This repository does not yet define an unbounded Jacobi operator on $\ell^2(\mathbb N_0)$ or prove its self-adjointness. Defining $e^{-itH}$ and ensuring that $\psi(t)$ lies in $\operatorname{dom}(N)$ can require additional hypotheses and domain arguments. None of those extensions should be inferred from the finite-dimensional Lean results.
 
 ---
 
-## 3. Verified Mathematical Results
+## 3. Verified theorems through P71
 
-The following milestones have passed the configured Lean verification workflow.
+The milestone labels describe the development history; **they do not measure percentage completion of the research theorem**.
 
-### P51: Anti-self-adjoint generator
+| Checkpoints | Actual formalized content | Source file(s) |
+| --- | --- | --- |
+| **P51–P55** | Hermitian finite Jacobi Hamiltonian, anti-Hermitian evolution generator, unitary propagator, preservation of norms, inner products and orthogonality | `JacobiReal.lean`, `JacobiEvolution.lean`, `MatrixExpProbe.lean` |
+| **P56–P59** | Krylov number operator, complexity, second moment, algebraic variance, and preservation of normalization | `KrylovNumber.lean` |
+| **P60–P61** | Centered-variance identity, variance nonnegativity under normalization and zero-variance equivalences | `KrylovNumber.lean` |
+| **P62–P64** | Support constraints under zero variance; a normalized zero-variance state has exactly one occupied Krylov level | `KrylovNumber.lean` |
+| **P65–P69** | Complex Gram coordinates and finite Gram sum; Lagrange identity for finite complex vectors | `KrylovGram.lean`, `KrylovLagrange.lean` |
+| **P70** | Exact real-part Gram-gap identity and its nonnegativity | `KrylovGap.lean` |
+| **P71** | Norm of the centered state equals normalized Krylov variance, including along the time evolution; specialization of the Gram-gap identity with an arbitrary auxiliary vector | `KrylovGap.lean` |
 
-The evolution generator satisfies
+The actual Lean declaration names include:
 
-$$
-G(t)^\dagger=-G(t).
-$$
+- `Lanzarini.jacobiEvolutionGenerator_conjTranspose`
+- `Lanzarini.jacobiPropagator_unitary`
+- `Lanzarini.jacobiNormSq_state`
+- `Lanzarini.jacobiInner_state_pair`
+- `Lanzarini.krylovComplexity_expectation`
+- `Lanzarini.krylovVariance_centered`
+- `Lanzarini.krylovVariance_zero_existsUnique_occupied`
+- `Lanzarini.krylovGramSum_nonneg`
+- `Lanzarini.krylovLagrange_finite`
+- `Lanzarini.krylovGram_realPart_gap`
+- `Lanzarini.krylovGram_realPart_gap_nonneg`
+- `Lanzarini.krylovCenteredState_normSq`
+- `Lanzarini.krylovCenteredState_normSq_at`
+- `Lanzarini.krylovCenteredState_gap_at`
 
-Lean theorem:
+### 3.1. Krylov moments and the normalization hypothesis
 
-`jacobiEvolutionGenerator_conjTranspose`
-
-### P52: Unitary quantum propagator
-
-$$
-U(t)^\dagger U(t)=I.
-$$
-
-Lean theorem:
-
-`jacobiPropagator_unitary`
-
-### P53: Norm conservation
-
-For every initial state and real time,
-
-$$
-\|\psi(t)\|^2=\|\psi(0)\|^2.
-$$
-
-Lean theorem:
-
-`jacobiNormSq_state`
-
-No initial normalization assumption is required.
-
-### P54: Inner-product conservation
-
-For arbitrary states $\psi$ and $\phi$,
+For a finite vector $\psi\in\mathbb C^n$, define
 
 $$
-\langle U(t)\psi,U(t)\phi\rangle
-=
-\langle\psi,\phi\rangle.
+K(\psi)=\sum_{j=0}^{n-1}j|\psi_j|^2,\qquad
+K_2(\psi)=\sum_{j=0}^{n-1}j^2|\psi_j|^2,
 $$
 
-Lean theorem:
-
-`jacobiInner_state_pair`
-
-### P55: Orthogonality preservation
-
-If
-
-$$
-\langle\psi,\phi\rangle=0,
-$$
-
-then
-
-$$
-\langle U(t)\psi,U(t)\phi\rangle=0.
-$$
-
-Lean theorem:
-
-`jacobiState_orthogonality`
-
-### P56: Krylov number operator and expectation
-
-Define the Krylov number operator
-
-$$
-N=\operatorname{diag}(0,1,\ldots,n-1).
-$$
-
-The Krylov complexity is
-
-$$
-K(\psi)=
-\sum_{j=0}^{n-1}j|\psi_j|^2.
-$$
-
-The verified expectation identity is
-
-$$
-\langle\psi,N\psi\rangle=K(\psi).
-$$
-
-Lean theorems:
-
-- `krylovNumberOperator_mulVec`
-- `krylovComplexity_expectation`
-- `krylovComplexityAt_zero`
-
-### P57: Nonnegativity of Krylov complexity
-
-For every finite-dimensional complex state,
-
-$$
-K(\psi)\geq0.
-$$
-
-The same property holds for the evolved state at every real time.
-
-Lean theorems:
-
-- `krylovComplexity_nonneg`
-- `krylovComplexityAt_nonneg`
-
-### P58: Second Krylov moment
-
-Define
-
-$$
-K_2(\psi)=
-\sum_{j=0}^{n-1}j^2|\psi_j|^2.
-$$
-
-The formalization proves
-
-$$
-K_2(\psi)\geq0
-$$
-
-for arbitrary finite-dimensional complex states.
-
-It also proves nonnegativity under Jacobi evolution and the initial-time identity.
-
-Lean theorems:
-
-- `krylovSecondMoment_nonneg`
-- `krylovSecondMomentAt_nonneg`
-- `krylovSecondMomentAt_zero`
-
-### P59: Krylov variance and normalization
-
-Define the variance expression
+and the algebraic expression
 
 $$
 V(\psi)=K_2(\psi)-K(\psi)^2.
 $$
 
-For normalized states, this is the variance of the Krylov number distribution.
-
-The formalization also establishes that Jacobi evolution preserves normalization:
+The code **defines** this expression for arbitrary finite vectors. The centered-variance formula and the interpretation of $V$ as the variance of a probability distribution require the explicit hypothesis $\|\psi\|^2=1$. Under that hypothesis, Lean proves:
 
 $$
-\|\psi(0)\|^2=1
-\implies
-\|\psi(t)\|^2=1.
+V(\psi)=\sum_{j=0}^{n-1}(j-K(\psi))^2|\psi_j|^2\ge0.
 $$
 
-Lean theorems:
+If a normalized state's variance is zero, Lean also proves that precisely one index has positive squared amplitude. This is a property of the finite Krylov-level distribution; it is **not** the central local-defect hierarchy.
 
-- `krylovVarianceAt_zero`
-- `jacobiState_normalized`
+### 3.2. Complex Gram/Lagrange identity (P69)
 
-The variance expression is defined for arbitrary states, but its nonnegativity is asserted only under the appropriate normalization assumption.
-
-### P60: Centered variance and nonnegativity
-
-For a normalized state,
+For arbitrary finite vectors $u,v\in\mathbb C^n$, define
 
 $$
-V(\psi)=
-\sum_{j=0}^{n-1}
-(j-K(\psi))^2|\psi_j|^2.
+G(u,v)=\sum_{0\le i<j<n}|u_iv_j-u_jv_i|^2.
 $$
 
-Consequently,
+The following **classical identity** is formalized:
 
 $$
-V(\psi)\geq0.
+G(u,v)=\|u\|^2\|v\|^2-|\langle u,v\rangle|^2\ge0.
 $$
 
-This nonnegativity also holds at every real time under Jacobi evolution for normalized initial states.
+Each unordered pair is counted once, and the determinant coordinate $u_iv_j-u_jv_i$ contains no conjugation. P69 does not assert that this classical identity is new.
 
-Lean theorems:
+### 3.3. Real-part Gram gap (P70)
 
-- `krylovVariance_centered`
-- `krylovVariance_nonneg`
-- `krylovVarianceAt_nonneg`
-
-### P61: Zero-variance equivalence
-
-For normalized states,
+For arbitrary $u,v\in\mathbb C^n$, the code proves
 
 $$
-V(\psi)=0
-\iff
-\sum_{j=0}^{n-1}
-(j-K(\psi))^2|\psi_j|^2=0.
+\|u\|^2\|v\|^2-\bigl(\operatorname{Re}\langle u,v\rangle\bigr)^2
+=G(u,v)+\bigl(\operatorname{Im}\langle u,v\rangle\bigr)^2\ge0.
 $$
 
-The formalization also establishes the centered variance identity and its zero-variance equivalence at every real time under Jacobi evolution.
+This is an algebraic identity, not yet a quantum speed-limit theorem.
 
-Lean theorems:
+### 3.4. Centered-state/variance bridge (P71)
 
-- `krylovVariance_eq_zero_iff_centered`
-- `krylovVarianceAt_centered`
-- `krylovVarianceAt_eq_zero_iff_centered`
+Let $N=\operatorname{diag}(0,1,\ldots,n-1)$ and set
 
-**Scope:** P61 establishes the equivalence with the vanishing centered sum. It does not yet establish the stronger single-site concentration characterization.
+$$
+u=(N-K(\psi))\psi.
+$$
 
-These are verified foundational results. They do not yet establish the central local-defect hierarchy theorem of the research preprint.
+For a **normalized** state, Lean proves
+
+$$
+\|u\|^2=V(\psi).
+$$
+
+The same identity is proved for the state $\psi(t)=U(t)\psi_0$ when the initial state is normalized. The P70 gap identity is also applied to that centered evolved state and **any auxiliary complex vector** $v$.
+
+**Not yet established in Lean:** P71 does not identify this auxiliary $v$ with the Schrödinger time derivative $\dot\psi(t)$; it does not prove a derivative of $K(t)$, a speed-limit inequality, or a short-time defect hierarchy.
 
 ---
 
-## 4. Repository Structure
+## 4. Repository structure
 
 | File | Purpose |
 | --- | --- |
-| `Main.lean` | Initial verification checks |
-| `Jacobi2.lean` | Two-site Jacobi matrix and symmetry |
-| `JacobiGeneral.lean` | General integer Jacobi entries and symmetry |
-| `JacobiReal.lean` | Finite real Jacobi matrix and symmetry |
-| `JacobiEvolution.lean` | Complex Hamiltonian and evolution generator |
-| `MatrixExpProbe.lean` | Propagator, unitarity and conservation properties |
-| `KrylovNumber.lean` | Krylov operator, complexity, moments, variance and zero-variance identities |
-| `lean-toolchain` | Lean compiler toolchain |
-| `lakefile.toml` | Mathlib dependency configuration |
-| `.github/workflows/lean.yml` | Automated verification workflow |
+| `Main.lean` | Initial Lean verification check |
+| `Jacobi2.lean` | Two-site integer Jacobi matrix and symmetry |
+| `JacobiGeneral.lean` | Finite integer-valued Jacobi entries and symmetry |
+| `JacobiReal.lean` | Finite real Jacobi Hamiltonian |
+| `JacobiEvolution.lean` | Complex Hamiltonian and anti-Hermitian evolution generator |
+| `MatrixExpProbe.lean` | Finite propagator, unitarity and conservation theorems |
+| `KrylovNumber.lean` | Number operator, moments, normalized variance and zero-variance constraints |
+| `KrylovGram.lean` | Complex Gram coordinates and nonnegative Gram sum |
+| `KrylovLagrange.lean` | Finite-dimensional complex Lagrange identity |
+| `KrylovGap.lean` | P70–P71: real-part gap and centered-state/variance bridge |
+| `lean-toolchain` | Lean toolchain version |
+| `lakefile.toml` | mathlib dependency specification |
+| `.github/workflows/lean.yml` | Explicit compilation sequence used by GitHub Actions |
 
 ---
 
-## 5. Formal Verification Environment
+## 5. Verification environment and integrity policy
 
-The project uses:
+The repository uses Lean 4, mathlib, Lake and GitHub Actions. The workflow compiles all ten listed Lean files, in dependency order. In particular, the #84 workflow compiled `KrylovGap.lean`, so it verified the new P71 declarations rather than merely compiling an older subset of the project.
 
-- Lean compiler: `leanprover/lean4:v4.24.0`
-- Mathlib dependency: `leanprover-community/mathlib`, revision `v4.24.0`
-- Lake
-- GitHub Actions
+To audit future proof repairs:
 
-The configured workflow compiles the Lean source files in dependency order.
+1. **Freeze the theorem statement first.** When a proof is corrected, compare the statement and hypotheses against the earlier commit; changing them means changing the theorem.
+2. Check **all definitions that the statement depends on**, not only the displayed theorem text.
+3. Confirm that the new file is included in the actual CI commands. A green workflow does not certify files it omitted.
+4. Retain commit history and failed-run evidence where possible; old failures do not invalidate a later correct proof.
+5. Independently check the correspondence between the encoded Lean statement and the research preprint, including normalization, coupling indices and boundaries.
+6. Audit axiomatic dependencies for selected declarations using `#print axioms`; report the actual output, not an assumed list.
+7. Do not interpret milestone counts as a measure of mathematical completion.
 
-Verification history:
+A **future, not yet executed** axiom audit may inspect:
 
-https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions
+```lean
+#print axioms Lanzarini.krylovLagrange_finite
+#print axioms Lanzarini.krylovGram_realPart_gap
+#print axioms Lanzarini.krylovCenteredState_normSq
+#print axioms Lanzarini.krylovCenteredState_gap_at
+```
 
-Latest confirmed P61 milestone:
-
-**GitHub Actions #63 — commit `f7bde4f` — PASS.**
-
-A successful workflow run confirms that the configured Lean checks succeeded for the corresponding commit.
-
-For stronger reproducibility, the exact dependency lockfile and commit revision should be retained when preparing an archival release.
-
-A separate audit of axiomatic dependencies, precise formal assumptions and mathematical correspondence with the preprint remains important.
-
----
-
-## 6. Indexing Convention
-
-The Lean formalization uses zero-based indices through `Fin n`.
-
-For a Jacobi matrix of dimension `n`, the diagonal coefficients are indexed by
-
-$$
-a_0,\ldots,a_{n-1}.
-$$
-
-In the Lean implementation, `b i` couples site `i` to site `i+1` only when `i+1 < n`.
-
-Consequently, only `n-1` off-diagonal coupling coefficients occur in the matrix.
-
-The final value of the function `b : Fin n → ℝ` does not contribute to the Jacobi matrix.
-
-The research preprint may use one-based Lanczos indexing, where the first physical coupling is denoted by $b_1$.
-
-For valid coupling indices, the correspondence is
-
-$$
-b_j^{\mathrm{research}}
-=
-b_{j-1}^{\mathrm{Lean}},
-\qquad
-1\leq j\leq n-1.
-$$
-
-This indexing correspondence must be applied explicitly in future formalizations of finite differences, local defects and boundary conditions.
-
-No equality between differently indexed coefficients should be assumed without a proved translation.
+The status of these axiom probes is currently **pending**. No particular axiom set is claimed in advance.
 
 ---
 
-## 7. Krylov Complexity and Variance
+## 6. Scientific target and unverified steps
 
-For the evolved state,
+The preprint studies the loss of saturation of a Krylov dispersion speed limit for a real Jacobi evolution **initialized at the first basis state** $e_0$.
 
-$$
-\psi(t)=U(t)\psi(0),
-$$
-
-the time-dependent Krylov complexity is
+In the **preprint's one-based coupling convention**, define $c_0=0$, $c_j=b_j^2$, and
 
 $$
-K(t)=
-\sum_{j=0}^{n-1}j|\psi_j(t)|^2.
+\Omega_r=c_{r+3}-3c_{r+2}+3c_{r+1}-c_r.
 $$
 
-The second moment is
+Where the denominator is nonzero, the preprint's dimensionless saturation deficit is
 
 $$
-K_2(t)=
-\sum_{j=0}^{n-1}j^2|\psi_j(t)|^2.
+D(t)=1-\frac{\dot K(t)^2}{4b_1^2V(t)}.
 $$
 
-For normalized states, the variance is
+The normalized deficit is studied for sufficiently small $t\ne0$ (with its short-time extension at $0$). Its nonnegativity depends on establishing the appropriate dispersion speed-limit inequality under the correct dynamical assumptions.
+
+**Mixed finite-depth local-defect formula stated in the preprint, not yet proved in Lean.** For $r\ge0$, write $m=r+3$ and take a finite real Jacobi chain with dimension $d\ge m+1$, positive interior couplings and the stated initial state $e_0$. Under the prefix conditions
 
 $$
-V(t)=K_2(t)-K(t)^2.
+a_0=a_1=\cdots=a_{m-1},\qquad
+\Omega_0=\cdots=\Omega_{r-1}=0,
 $$
 
-The centered identity is
+where the defect condition is empty for $r=0$, the preprint gives the leading mixed form
 
 $$
-V(t)=
-\sum_{j=0}^{n-1}
-(j-K(t))^2|\psi_j(t)|^2.
+D(t)=\frac{\displaystyle\prod_{j=2}^{m-1}c_j}{[(m+1)!]^2}
+\bigl[4\Omega_r^2+c_m(a_m-a_0)^2\bigr]
+\,t^{2m}+O_H(t^{2m+2}).
 $$
 
-These definitions and identities are represented in the verified Lean development through P61.
+The **diagonal defect** $a_m-a_0$ is part of this general finite-dimensional research claim. The simplified expression involving only $\Omega_r^2$ is not an unconditional statement of the mixed real-Jacobi result. In a terminal-boundary setting, the relevant boundary and positivity assumptions must be checked separately.
 
-The time derivatives and speed-limit deficit are not yet formally established in this repository.
+**The full local-defect hierarchy, its remainder estimates, the short-time rigidity statements and any infinite-dimensional extension are not formalized in the current Lean repository.** The preprint states research results; CI verifies only the theorems that appear in the code. Neither AI review nor Lean compilation by itself establishes novelty or independent peer review.
+
+The next proof obligations are:
+
+- Differentiate the finite-dimensional propagator and Schrödinger state with the correct time-sign convention.
+- Derive $\dot K(t)=2\operatorname{Re}\langle (N-K(t))\psi(t),\dot\psi(t)\rangle$ for normalized evolution.
+- Establish the energy/velocity norm needed for the exact speed-limit hypothesis.
+- Obtain the speed-limit inequality and a rigorously defined deficit where $V(t)>0$.
+- Prove finite-depth local-defect identities, boundary cases and controlled Taylor remainders.
+- Audit operator domains separately before any unbounded or semi-infinite claims.
+
+These steps are **research targets, not verified Lean milestones**.
 
 ---
 
-## 8. Krylov Speed-Limit Deficit
+## 7. Scientific status and limitations
 
-The broader research investigates the dimensionless expression
+The current project **does not claim**:
 
-$$
-D(t)=
-1-\frac{\dot K(t)^2}{4b_1^2V(t)},
-$$
-
-where $b_1$ denotes the first coupling in the one-based research convention.
-
-This expression is defined only where
-
-$$
-b_1\neq0,
-\qquad
-V(t)>0.
-$$
-
-Interpreting $D(t)$ as a nonnegative speed-limit deficit additionally requires a proof of the relevant inequality
-
-$$
-\dot K(t)^2\leq4b_1^2V(t)
-$$
-
-under explicitly stated dynamical assumptions.
-
-The formalization will require:
-
-1. Differentiability of Jacobi quantum evolution.
-2. Differentiability of Krylov complexity.
-3. A precise speed-limit inequality with its hypotheses.
-4. Explicit treatment of zero-variance cases.
-5. Finite-dimensional boundary conditions.
-6. Short-time expansions and rigorous remainder estimates.
-
-Neither the displayed speed-limit inequality nor the deficit formula has yet been formally proved in this Lean repository.
-
-These expressions describe the research objective, not an established result of the current formal verification.
-
----
-
-## 9. Local-Defect Hierarchy
-
-The research investigates local finite-difference defects of squared Lanczos coefficients.
-
-Using the research convention,
-
-$$
-c_j=b_j^2,
-$$
-
-a third finite-difference expression is
-
-$$
-\Omega_r=
-c_{r+3}-3c_{r+2}+3c_{r+1}-c_r.
-$$
-
-The goal is to investigate how local coefficient constraints affect short-time loss of Krylov speed-limit saturation.
-
-The exact hypotheses, coefficient indexing, finite-dimensional boundary conditions and asymptotic remainder estimates must be formalized and checked.
-
-The expression above is presented as research context. Its relationship to the complete hierarchy and the applicable coefficient range must be specified in the formal development.
-
-**The central local-defect hierarchy theorem is not yet a completed Lean theorem.**
-
-The research preprint and the machine-checked foundational development must therefore be distinguished.
-
----
-
-## 10. Research Roadmap
-
-### Completed
-
-- P51: Anti-self-adjoint evolution generator.
-- P52: Unitary quantum propagator.
-- P53: Conservation of norm.
-- P54: Conservation of inner products.
-- P55: Preservation of orthogonality.
-- P56: Krylov number operator and expectation.
-- P57: Nonnegativity of Krylov complexity.
-- P58: Second Krylov moment.
-- P59: Variance expression and normalization preservation.
-- P60: Centered variance and nonnegativity.
-- P61: Zero-variance equivalences.
-
-### Next formalization targets
-
-- P62: Single-site concentration under zero variance.
-- Time derivatives of Jacobi evolution and Krylov complexity.
-- Krylov speed-limit inequality.
-- Rigorous definition and analysis of the speed-limit deficit.
-- Local finite-difference defects.
-- Short-time expansions with controlled remainder estimates.
-- Finite-dimensional boundary-case verification.
-- Formalization of the central local-defect hierarchy theorem.
-
-These next targets are not yet verified Lean theorems.
-
----
-
-## 11. Scientific Status and Limitations
-
-This repository does not currently claim:
-
-- A complete Lean proof of the central local-defect theorem.
-- Independent peer-review certification.
-- Established worldwide mathematical priority.
-- Resolution of an established open mathematical problem.
+- A completed Lean proof of the main local-defect hierarchy theorem.
 - A new universal quantum speed limit.
+- Independent peer-review certification or established worldwide mathematical priority.
+- Formal validity for arbitrary unbounded Jacobi operators.
+- That the number of PASS milestones measures percentage completion of the scientific objective.
 
-The verified foundational results and the proposed research contribution must be evaluated separately.
-
-Formal proof verification establishes correctness of the encoded statements relative to the Lean environment, definitions, assumptions and accepted dependencies.
-
-It does not independently establish the originality of those statements or their complete correspondence with the published research.
-
-The project aims to advance through reproducible, machine-checkable milestones while keeping unresolved scientific questions explicit.
+Lean checks proofs relative to the **precise encoded statements**, accepted foundations, definitions and assumptions. Scientific evaluation also requires the mathematical encoding to match the intended theorem and its physical setting. This correspondence remains an explicit, ongoing audit task.
 
 ---
 
-## 12. Research Preprint
+## 8. Research preprint
 
-**Title:** Local Defect Hierarchies for Krylov Speed-Limit Saturation in General Real Jacobi Dynamics
+**Title:** Local Defect Hierarchies for Krylov Speed-Limit Saturation in General Real Jacobi Dynamics  
+**Author:** Valentino Lanzarini  
+**DOI:** https://doi.org/10.5281/zenodo.23163367
 
-**Author:** Valentino Lanzarini
-
-**Zenodo DOI:**  
-https://doi.org/10.5281/zenodo.23163367
-
-The preprint and this repository are related research artifacts.
-
-The formalization remains incomplete relative to the full mathematical content of the preprint.
+The published preprint and this machine-checked foundational development are related but distinct scientific artifacts. The formalization is still incomplete relative to the full preprint.
 
 ---
 
-## 13. Copyright and Permissions
+## 9. Copyright and permissions
 
 Copyright © 2026 Valentino Lanzarini.
 
@@ -585,7 +311,7 @@ Third-party dependencies remain subject to their respective licenses.
 
 ---
 
-## 14. AI-Assisted Research
+## 10. AI-assisted research
 
 This research and its formalization have been developed with assistance from artificial intelligence tools.
 
@@ -595,7 +321,7 @@ Mathematical claims must be evaluated through explicit proofs, reproducible chec
 
 ---
 
-## 15. Author
+## 11. Author
 
 **Valentino Lanzarini**
 
