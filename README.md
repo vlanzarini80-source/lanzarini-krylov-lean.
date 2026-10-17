@@ -8,7 +8,7 @@
 **Latest verified formalization checkpoint:** **P71**  
 **Environment:** Lean 4 `v4.24.0` and mathlib `v4.24.0`  
 **Research preprint:** https://doi.org/10.5281/zenodo.23163367  
-**Repository:** https://github.com/vlanzarini80-source/lanzarini-krylov-lean.  
+**Repository:** [Open the GitHub repository](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./tree/main)  
 **Copyright:** © 2026 Valentino Lanzarini. All rights reserved.
 
 > **Scientific status.** The repository contains machine-checked foundational theorems about **finite-dimensional** Jacobi matrices, unitary evolution, Krylov moments and variance, and complex Gram identities. **The main finite-depth local-defect hierarchy from the preprint has not yet been formalized in Lean.** Passing GitHub Actions checks establish that Lean accepted the encoded statements and proofs, not that all the preprint's claims are formalized, original, or independently peer reviewed.
@@ -39,13 +39,10 @@ The source files compiled at P71 were inspected for `sorry`, `admit`, and locall
 For a finite dimension `n`, the code defines a real symmetric tridiagonal Jacobi matrix using `a b : Fin n → ℝ`:
 
 $$
-H_{ij}=\begin{cases}
-a_i, & i=j,\\
-b_i, & j=i+1,\\
-b_j, & i=j+1,\\
-0, & \text{otherwise}.
-\end{cases}
+H_{ii}=a_i,\qquad H_{i,i+1}=H_{i+1,i}=b_i.
 $$
+
+All other matrix entries vanish. The coupling formula is understood only for valid adjacent indices.
 
 The foundational Lean definitions allow **arbitrary real** diagonal and off-diagonal coefficients. The positivity of physical couplings is **not** built into those definitions. Conditions such as positive interior couplings belong to specific results in the research preprint and must be explicitly included when formalizing those results.
 
@@ -65,7 +62,7 @@ $$
 
 The finite-dimensional propagator is proved unitary. The formalization establishes preservation of the norm, inner product and orthogonality. These statements do **not** depend on a proof of any infinite-dimensional operator-domain result.
 
-**Infinite-dimensional scope:** This repository does not yet define an unbounded Jacobi operator on $\ell^2(\mathbb N_0)$ or prove its self-adjointness. Defining $e^{-itH}$ and ensuring that $\psi(t)$ lies in $\operatorname{dom}(N)$ can require additional hypotheses and domain arguments. None of those extensions should be inferred from the finite-dimensional Lean results.
+**Infinite-dimensional scope:** This repository does not yet define an unbounded Jacobi operator on $\ell^2(\mathbb N_0)$ or prove its self-adjointness. Defining $e^{-itH}$ and ensuring that $\psi(t)$ belongs to the domain of the number operator $N$ can require additional hypotheses and domain arguments. None of those extensions should be inferred from the finite-dimensional Lean results.
 
 ---
 
@@ -128,7 +125,7 @@ If a normalized state's variance is zero, Lean also proves that precisely one in
 For arbitrary finite vectors $u,v\in\mathbb C^n$, define
 
 $$
-G(u,v)=\sum_{0\le i<j<n}|u_iv_j-u_jv_i|^2.
+G(u,v)=\sum_{i=0}^{n-1}\sum_{j=i+1}^{n-1}|u_i v_j-u_j v_i|^2.
 $$
 
 The following **classical identity** is formalized:
@@ -144,15 +141,15 @@ Each unordered pair is counted once, and the determinant coordinate $u_iv_j-u_jv
 For arbitrary $u,v\in\mathbb C^n$, the code proves
 
 $$
-\|u\|^2\|v\|^2-\bigl(\operatorname{Re}\langle u,v\rangle\bigr)^2
-=G(u,v)+\bigl(\operatorname{Im}\langle u,v\rangle\bigr)^2\ge0.
+\|u\|^2\|v\|^2-\bigl(\mathrm{Re}\langle u,v\rangle\bigr)^2
+=G(u,v)+\bigl(\mathrm{Im}\langle u,v\rangle\bigr)^2\ge0.
 $$
 
 This is an algebraic identity, not yet a quantum speed-limit theorem.
 
 ### 3.4. Centered-state/variance bridge (P71)
 
-Let $N=\operatorname{diag}(0,1,\ldots,n-1)$ and set
+Let $N$ denote the diagonal matrix with entries $0,1,\ldots,n-1$, and set
 
 $$
 u=(N-K(\psi))\psi.
@@ -257,7 +254,7 @@ The **diagonal defect** $a_m-a_0$ is part of this general finite-dimensional res
 The next proof obligations are:
 
 - Differentiate the finite-dimensional propagator and Schrödinger state with the correct time-sign convention.
-- Derive $\dot K(t)=2\operatorname{Re}\langle (N-K(t))\psi(t),\dot\psi(t)\rangle$ for normalized evolution.
+- Derive $\dot K(t)=2\mathrm{Re}\langle (N-K(t))\psi(t),\dot\psi(t)\rangle$ for normalized evolution.
 - Establish the energy/velocity norm needed for the exact speed-limit hypothesis.
 - Obtain the speed-limit inequality and a rigorously defined deficit where $V(t)>0$.
 - Prove finite-depth local-defect identities, boundary cases and controlled Taylor remainders.
@@ -333,7 +330,7 @@ Krylov Dynamics | Jacobi Operators | Quantum Evolution | Formal Verification
 https://doi.org/10.5281/zenodo.23163367
 
 **GitHub:**  
-https://github.com/vlanzarini80-source/lanzarini-krylov-lean.
+[Repository on GitHub](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./tree/main)
 
 ---
 
