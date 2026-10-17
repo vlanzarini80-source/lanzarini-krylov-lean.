@@ -64,10 +64,9 @@ theorem krylovLagrange_inner_product_expansion
 /--
 P68.1: Complex two-coordinate Lagrange identity.
 
-The proof reduces the complex statement
-to the verified real polynomial identity.
-
-No sorry, axioms or additional hypotheses.
+Uses mathlib v4.24.0's Complex.star_def for conjugation.
+No sorry, artificial axioms, or additional hypotheses.
+Compilation remains to be checked by CI.
 -/
 theorem krylovLagrange_two_coordinates_complex
     (a b c d : ℂ) :
@@ -78,12 +77,8 @@ theorem krylovLagrange_two_coordinates_complex
       -
     Complex.normSq
       (star a * c + star b * d) := by
-  have ha : star a = Complex.conj a := by
-    rfl
-  have hb : star b = Complex.conj b := by
-    rfl
-  rw [ha, hb]
   simp only [
+    Complex.star_def,
     Complex.normSq_apply,
     Complex.mul_re,
     Complex.mul_im,
