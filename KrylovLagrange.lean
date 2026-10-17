@@ -64,11 +64,10 @@ theorem krylovLagrange_inner_product_expansion
 /--
 P68.1: Complex two-coordinate Lagrange identity.
 
-This is an identity over arbitrary complex
-numbers a, b, c and d.
+The proof reduces the complex statement
+to the verified real polynomial identity.
 
-The proof reduces it to the real polynomial
-identity already established in P66.1.
+No sorry, axioms or additional hypotheses.
 -/
 theorem krylovLagrange_two_coordinates_complex
     (a b c d : ℂ) :
@@ -79,23 +78,22 @@ theorem krylovLagrange_two_coordinates_complex
       -
     Complex.normSq
       (star a * c + star b * d) := by
-  rw [show star a = conj a from rfl]
-  rw [show star b = conj b from rfl]
-  change
-    (a.re * d.re - a.im * d.im -
-      b.re * c.re + b.im * c.im) ^ 2 +
-    (a.re * d.im + a.im * d.re -
-      b.re * c.im - b.im * c.re) ^ 2
-    =
-    ((a.re ^ 2 + a.im ^ 2) +
-      (b.re ^ 2 + b.im ^ 2)) *
-    ((c.re ^ 2 + c.im ^ 2) +
-      (d.re ^ 2 + d.im ^ 2)) -
-    ((a.re * c.re + a.im * c.im) +
-      (b.re * d.re + b.im * d.im)) ^ 2 -
-    ((a.re * c.im - a.im * c.re) +
-      (b.re * d.im - b.im * d.re)) ^ 2
-  exact krylovLagrange_two_coordinates_real
-    a.re a.im b.re b.im c.re c.im d.re d.im
+  have ha : star a = Complex.conj a := by
+    rfl
+  have hb : star b = Complex.conj b := by
+    rfl
+  rw [ha, hb]
+  simp only [
+    Complex.normSq_apply,
+    Complex.mul_re,
+    Complex.mul_im,
+    Complex.sub_re,
+    Complex.sub_im,
+    Complex.add_re,
+    Complex.add_im,
+    Complex.conj_re,
+    Complex.conj_im
+  ]
+  ring
 
 end Lanzarini
