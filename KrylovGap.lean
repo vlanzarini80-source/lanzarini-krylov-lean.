@@ -1,15 +1,13 @@
 
+import KrylovLagrange
+
 /-!
 LANZARINI-KRYLOV-LEAN
 P70: Exact Gram and scalar-channel decomposition.
 
 This module extends the verified P69 Lagrange identity.
 No theorem statements from P65-P69 are changed.
-
-Status: candidate, pending Lean compilation.
 -/
-
-import KrylovLagrange
 
 namespace Lanzarini
 
