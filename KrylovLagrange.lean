@@ -38,4 +38,42 @@ theorem krylovLagrange_two_coordinates_real
       (br * di - bi * dr)) ^ 2 := by
   ring
 
+/--
+P67.1: Product of finite squared-norm sums
+equals the corresponding double sum.
+
+Valid for arbitrary finite dimensions.
+-/
+theorem krylovLagrange_norm_product_expansion
+    {n : ℕ}
+    (u v : Fin n → ℂ) :
+    (∑ i : Fin n, Complex.normSq (u i)) *
+      (∑ j : Fin n, Complex.normSq (v j))
+    =
+    ∑ i : Fin n,
+      ∑ j : Fin n,
+        Complex.normSq (u i) *
+          Complex.normSq (v j) := by
+  rw [Finset.sum_mul]
+  simp_rw [Finset.mul_sum]
+
+/--
+P67.2: Product of the two Hermitian
+inner-product sums equals a double sum.
+
+No normalization or dynamical hypotheses.
+-/
+theorem krylovLagrange_inner_product_expansion
+    {n : ℕ}
+    (u v : Fin n → ℂ) :
+    (∑ i : Fin n, star (u i) * v i) *
+      (∑ j : Fin n, star (v j) * u j)
+    =
+    ∑ i : Fin n,
+      ∑ j : Fin n,
+        (star (u i) * v i) *
+          (star (v j) * u j) := by
+  rw [Finset.sum_mul]
+  simp_rw [Finset.mul_sum]
+
 end Lanzarini
