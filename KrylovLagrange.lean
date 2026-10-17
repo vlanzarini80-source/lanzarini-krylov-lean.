@@ -76,4 +76,34 @@ theorem krylovLagrange_inner_product_expansion
   rw [Finset.sum_mul]
   simp_rw [Finset.mul_sum]
 
+/--
+P68.1: Complex two-coordinate Lagrange identity.
+
+This theorem is formulated directly in C,
+rather than in eight real coordinates.
+
+It holds for all a, b, c, d in C.
+-/
+theorem krylovLagrange_two_coordinates_complex
+    (a b c d : ℂ) :
+    Complex.normSq (a * d - b * c)
+    =
+    (Complex.normSq a + Complex.normSq b) *
+      (Complex.normSq c + Complex.normSq d)
+      -
+    Complex.normSq
+      (star a * c + star b * d) := by
+  simp only [
+    Complex.normSq_apply,
+    Complex.mul_re,
+    Complex.mul_im,
+    Complex.sub_re,
+    Complex.sub_im,
+    Complex.add_re,
+    Complex.add_im,
+    Complex.conj_re,
+    Complex.conj_im
+  ]
+  ring
+
 end Lanzarini
