@@ -7,11 +7,12 @@ LANZARINI-KRYLOV-LEAN
 P70: Exact Gram and scalar-channel decomposition.
 P71: Centered Krylov state and variance bridge.
 P72.1: Exact Krylov complexity increment.
-P72.2: Derivative of Krylov complexity for a
-       componentwise differentiable state curve.
+P72.2: Derivative for a componentwise differentiable curve.
+P72.3a: Jacobi generator and complex-time matrix
+        exponential derivative.
 
-Earlier theorem statements are unchanged.
-No Schrodinger equation is assumed.
+Previous theorem statements are preserved.
+The real-time Schrodinger equation is not yet proved.
 -/
 
 namespace Lanzarini
@@ -45,7 +46,7 @@ noncomputable def krylovCenteredState
   fun j =>
     (((j.val : ℝ) - krylovComplexity psi : ℝ) : ℂ) * psi j
 
-/-- P71.2: Squared norm of the centered state. -/
+/-- P71.2: The squared norm of the centered state. -/
 theorem krylovCenteredState_normSq
     {n : ℕ} (psi : Fin n → ℂ)
     (hnorm : jacobiNormSq psi = 1) :
@@ -229,7 +230,65 @@ theorem krylovComplexity_hasDerivAt_components
   rw [hderiv] at hsum
   exact hsum
 
+/--
+P72.3a.1: The existing Jacobi evolution
+generator is t times the constant matrix -iH.
+-/
+theorem jacobiEvolutionGenerator_time_factor
+    (n : ℕ) (a b : Fin n → ℝ) (t : ℝ) :
+    jacobiEvolutionGenerator n a b t =
+      (t : ℂ) •
+        ((-Complex.I) • jacobiComplex n a b) := by
+  unfold jacobiEvolutionGenerator
+  rw [smul_smul]
+  have h :
+      (-(t : ℂ)) * Complex.I =
+        (t : ℂ) * (-Complex.I) := by
+    ring
+  rw [h]
+
+/--
+P72.3a.2: The existing Jacobi propagator
+equals the restriction of the complex-time
+matrix exponential to real time.
+-/
+theorem jacobiPropagator_complex_time_eq
+    (n : ℕ) (a b : Fin n → ℝ) (t : ℝ) :
+    jacobiPropagator n a b t =
+      NormedSpace.exp ℂ
+        ((t : ℂ) •
+          ((-Complex.I) • jacobiComplex n a b)) := by
+  unfold jacobiPropagator
+  rw [jacobiEvolutionGenerator_time_factor]
+
+/--
+P72.3a.3: Complex-time derivative
+of the original Jacobi matrix exponential.
+
+Let A = -iH.
+
+Then d/dz exp(z A) = A * exp(z A).
+
+This does not yet prove the real-time
+Schrodinger derivative of the evolved state.
+-/
+theorem jacobiComplexTimeExp_hasDerivAt
+    (n : ℕ) (a b : Fin n → ℝ) (z : ℂ) :
+    HasDerivAt
+      (fun w : ℂ =>
+        NormedSpace.exp ℂ
+          (w • ((-Complex.I) • jacobiComplex n a b)))
+      (((-Complex.I) • jacobiComplex n a b) *
+        NormedSpace.exp ℂ
+          (z • ((-Complex.I) • jacobiComplex n a b)))
+      z := by
+  exact NormedSpace.hasDerivAt_exp_smul_const'
+    ((-Complex.I) • jacobiComplex n a b) z
+
 end Lanzarini
 
 #print axioms Lanzarini.krylovComplexity_increment
 #print axioms Lanzarini.krylovComplexity_hasDerivAt_components
+#print axioms Lanzarini.jacobiEvolutionGenerator_time_factor
+#print axioms Lanzarini.jacobiPropagator_complex_time_eq
+#print axioms Lanzarini.jacobiComplexTimeExp_hasDerivAt
