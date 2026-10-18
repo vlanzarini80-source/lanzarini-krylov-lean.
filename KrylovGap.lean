@@ -282,7 +282,7 @@ theorem jacobiComplexTimeExp_hasDerivAt
         NormedSpace.exp ℂ
           (z • ((-Complex.I) • jacobiComplex n a b)))
       z := by
-  exact NormedSpace.hasDerivAt_exp_smul_const'
+  exact hasDerivAt_exp_smul_const'
     ((-Complex.I) • jacobiComplex n a b) z
 
 end Lanzarini
