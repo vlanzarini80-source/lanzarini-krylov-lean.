@@ -261,6 +261,8 @@ theorem jacobiPropagator_complex_time_eq
   unfold jacobiPropagator
   rw [jacobiEvolutionGenerator_time_factor]
 
+open scoped Matrix.Norms.Operator
+
 /--
 P72.3a.3: Complex-time derivative
 of the original Jacobi matrix exponential.
@@ -272,9 +274,6 @@ Then d/dz exp(z A) = A * exp(z A).
 The operator norm is selected explicitly.
 No real-time state derivative is asserted here.
 -/
-
-open scoped Matrix.Norms.Operator
-
 attribute [-instance] Matrix.SpecialLinearGroup.hasCoeToGeneralLinearGroup in
 theorem jacobiComplexTimeExp_hasDerivAt
     (n : ℕ) (a b : Fin n → ℝ) (z : ℂ) :
