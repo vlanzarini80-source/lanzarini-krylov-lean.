@@ -11,7 +11,7 @@ P72.2: Derivative for a componentwise differentiable curve.
 P72.3a: Jacobi generator and complex-time matrix
         exponential derivative.
 
-Previous theorem statements are preserved.
+All previous theorem statements are preserved.
 The real-time Schrodinger equation is not yet proved.
 -/
 
@@ -269,9 +269,10 @@ Let A = -iH.
 
 Then d/dz exp(z A) = A * exp(z A).
 
-This does not yet prove the real-time
-Schrodinger derivative of the evolved state.
+No real-time state derivative is asserted here.
+The larger elaboration budget is local to this theorem.
 -/
+set_option maxHeartbeats 2000000 in
 theorem jacobiComplexTimeExp_hasDerivAt
     (n : ℕ) (a b : Fin n → ℝ) (z : ℂ) :
     HasDerivAt
