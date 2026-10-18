@@ -11,7 +11,7 @@ P72.2: Derivative for a componentwise differentiable curve.
 P72.3a: Jacobi generator and complex-time matrix
         exponential derivative.
 
-Previous theorem statements are preserved.
+All previous theorem statements are preserved.
 The real-time Schrodinger equation is not yet proved.
 -/
 
@@ -261,7 +261,9 @@ theorem jacobiPropagator_complex_time_eq
   unfold jacobiPropagator
   rw [jacobiEvolutionGenerator_time_factor]
 
-/--
+open scoped Matrix.Norms.Operator
+
+/-
 P72.3a.3: Complex-time derivative
 of the original Jacobi matrix exponential.
 
@@ -269,9 +271,10 @@ Let A = -iH.
 
 Then d/dz exp(z A) = A * exp(z A).
 
-This does not yet prove the real-time
-Schrodinger derivative of the evolved state.
+The operator norm is selected explicitly.
+No real-time state derivative is asserted here.
 -/
+attribute [-instance] Matrix.SpecialLinearGroup.hasCoeToGeneralLinearGroup in
 theorem jacobiComplexTimeExp_hasDerivAt
     (n : ℕ) (a b : Fin n → ℝ) (z : ℂ) :
     HasDerivAt
