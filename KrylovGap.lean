@@ -11,7 +11,7 @@ P72.2: Derivative of Krylov complexity for a
        componentwise differentiable state curve.
 
 Earlier theorem statements are unchanged.
-No Schrödinger equation is assumed.
+No Schrodinger equation is assumed.
 -/
 
 namespace Lanzarini
@@ -154,7 +154,7 @@ componentwise differentiable curve.
 The real and imaginary derivatives of each
 coordinate are explicitly assumed.
 
-No normalization or Schrödinger dynamics is
+No normalization or Schrodinger dynamics is
 assumed, and the conclusion does not appear
 among the hypotheses.
 -/
@@ -192,7 +192,12 @@ theorem krylovComplexity_hasDerivAt_components
 
     convert hs using 1
     · funext s
-      simp only [Complex.normSq_apply]
+      simp only [
+        Complex.normSq_apply,
+        Pi.add_apply,
+        Pi.pow_apply
+      ]
+      ring
     · simp only [
         Complex.star_def,
         Complex.mul_re,
@@ -209,13 +214,20 @@ theorem krylovComplexity_hasDerivAt_components
       (u := (Finset.univ : Finset (Fin n)))
       (fun j _ => hterm j)
 
-  convert hsum using 1
-  · funext s
-    rfl
-  · rw [Finset.mul_sum]
+  have hderiv :
+      (∑ j : Fin n,
+        (j.val : ℝ) *
+          (2 * (star (psi t j) * velocity j).re)) =
+      2 * (∑ j : Fin n,
+        (j.val : ℝ) *
+          (star (psi t j) * velocity j).re) := by
+    rw [Finset.mul_sum]
     apply Finset.sum_congr rfl
     intro j _
     ring
+
+  rw [hderiv] at hsum
+  exact hsum
 
 end Lanzarini
 
