@@ -263,7 +263,7 @@ theorem jacobiPropagator_complex_time_eq
 
 open scoped Matrix.Norms.Operator
 
-/--
+/-
 P72.3a.3: Complex-time derivative
 of the original Jacobi matrix exponential.
 
