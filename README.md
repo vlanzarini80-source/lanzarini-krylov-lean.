@@ -5,7 +5,7 @@
 
 **Author:** Valentino Lanzarini, Independent Mathematical Researcher  
 **Project status:** Research in progress  
-**Latest verified formalization checkpoint:** **P73.1 (test branch, GitHub Actions #101: SUCCESS)**  
+**Latest verified formalization checkpoint:** **P73.1 (main, GitHub Actions #103: SUCCESS)**  
 **Environment:** Lean 4 `v4.24.0` and mathlib `v4.24.0`  
 **Research preprint:** https://doi.org/10.5281/zenodo.23163367  
 **Repository:** [Open the GitHub repository](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./tree/main)  
@@ -13,7 +13,7 @@
 
 > **Scientific status.** The repository contains machine-checked foundational theorems about **finite-dimensional** Jacobi matrices, unitary evolution, Krylov moments and variance, complex Gram identities, and the derivative of the finite-dimensional Jacobi propagator. **The main finite-depth local-defect hierarchy from the preprint has not yet been formalized in Lean.** Passing GitHub Actions checks establishes that Lean accepted the encoded statements and proofs, not that all the preprint's claims are formalized, original, or independently peer reviewed.
 
-**Branch status:** The verified P72.3a.3 and P73.1 developments currently reside on `p72-3a-proof-test`. They have not yet been merged into `main`. The corresponding full verification record is GitHub Actions #101.
+**Branch status:** P72.3a.3 and P73.1 were integrated into `main` through [Pull Request #1](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/1), merged on 18 October 2026. The complete verification of the resulting `main` commit passed in [GitHub Actions #103](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39153415923). The former test branch is retained for historical traceability.
 
 ---
 
@@ -24,17 +24,19 @@
 | Item | Verified record |
 | --- | --- |
 | Milestone | **P73.1** |
-| Verification | [GitHub Actions #101, `verify`: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39144527474) |
-| Exact source commit | [`a291e152b9ea3feed8f7c0608ae8eaca33700298`](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./commit/a291e152b9ea3feed8f7c0608ae8eaca33700298) |
+| Verification on `main` | [GitHub Actions #103, `verify`: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39153415923) |
+| Original test-branch verification | [GitHub Actions #101, `verify`: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39144527474) |
+| Verified `main` merge commit | [`677985738a8e82aca8327ad3cc241ef8bc5e695d`](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./commit/677985738a8e82aca8327ad3cc241ef8bc5e695d) |
+| Original P73.1 proof commit | [`a291e152b9ea3feed8f7c0608ae8eaca33700298`](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./commit/a291e152b9ea3feed8f7c0608ae8eaca33700298) |
 | Date | 18 October 2026 |
-| Verified branch | `p72-3a-proof-test` |
+| Verified branch | `main` (test branch retained) |
 | Lean toolchain | `leanprover/lean4:v4.24.0` |
 | mathlib configuration | `v4.24.0` in `lakefile.toml` |
 | Files checked | All **eleven** `.lean` files explicitly compiled by `.github/workflows/lean.yml`, including `KrylovGap.lean` and `P73_RealTime.lean` |
-| Isolated derivative verification | [P72.3a Minimal Derivative Verification #7: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39144527416) |
+| Isolated derivative verification | [P72.3a Minimal Derivative Verification #8: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39148469476) (test branch; same proof source) |
 | P73.1 axiom audit | `[propext, Classical.choice, Quot.sound]` |
 | `sorryAx` in the P73.1 theorem | Not present in the recorded `#print axioms` output |
-| Default branch | Not yet updated to this checkpoint |
+| Default branch | `main`, merged through PR #1 and independently verified by workflow #103 |
 
 The exact declaration verified in P73.1 is:
 
@@ -44,15 +46,15 @@ Lanzarini.p73_jacobiPropagator_hasDerivAt
 
 This theorem establishes the real-time derivative of the propagator
 
-\[
+$$
 U(t)=\exp(-itH)
-\]
+$$
 
 in the finite-dimensional Jacobi setting:
 
-\[
+$$
 \frac{d}{dt}U(t)=(-iH)U(t).
-\]
+$$
 
 The theorem follows from the already verified complex-time matrix exponential derivative and the restriction of complex differentiability to real time.
 
@@ -60,7 +62,7 @@ The statement does **not** assume the desired derivative as a hypothesis.
 
 It is a result about the **propagator**, not yet the complete Schrödinger time-derivative theorem for the evolving state.
 
-The GitHub Actions #101 log records:
+The GitHub Actions #103 log on `main` records:
 
 ```text
 'Lanzarini.p73_jacobiPropagator_hasDerivAt'
@@ -169,7 +171,7 @@ The milestone labels describe the development history; **they do not measure per
 | **P72.3a.3** | Complex-time derivative of the finite-dimensional Jacobi matrix exponential | `KrylovGap.lean` |
 | **P73.1** | Real-time derivative of the finite-dimensional Jacobi propagator | `P73_RealTime.lean` |
 
-The P72.3a.3 and P73.1 results have passed the full verification workflow on the test branch. They have not yet been merged into `main`.
+The P72.3a.3 and P73.1 results passed verification on the test branch and were merged into `main` through [Pull Request #1](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/1). The merged code passed the full GitHub Actions #103 verification on `main`.
 
 The actual Lean declaration names include:
 
@@ -339,6 +341,8 @@ No physical time-evolution derivative is assumed as a hypothesis.
 - Source: `P73_RealTime.lean`
 - `#print axioms` result: `[propext, Classical.choice, Quot.sound]`
 - No `sorryAx` in the recorded axiom dependency output.
+- Integration into `main`: [Pull Request #1](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/1)
+- Independent post-merge verification: [GitHub Actions #103: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39153415923)
 
 **Important distinction:** P73.1 proves the derivative of the matrix propagator. The theorem asserting
 
@@ -373,7 +377,7 @@ That is the next logical proof obligation.
 | `.github/workflows/lean.yml` | Explicit compilation sequence used by the main GitHub Actions verification |
 | `.github/workflows/p72-minimal.yml` | Separate verification workflow for the isolated P72.3a proof |
 
-The additional P72 and P73 source files and the dedicated verification workflow currently belong to the verified test branch.
+The additional P72 and P73 source files and the dedicated verification workflow are now included in `main`, following Pull Request #1. The former test branch remains available for historical traceability.
 
 ---
 
@@ -383,21 +387,21 @@ The repository uses Lean 4, mathlib, Lake and GitHub Actions.
 
 The historical P71 workflow #84 compiled ten Lean files in dependency order and verified the foundational theorems through P71.
 
-The subsequent full verification workflow #101 compiled eleven Lean files in dependency order, including `KrylovGap.lean` and `P73_RealTime.lean`.
+The subsequent full verification workflow #103 on `main` compiled eleven Lean files in dependency order, including `KrylovGap.lean` and `P73_RealTime.lean`. The original P73.1 proof was previously verified in test-branch workflow #101.
 
 The separate P72.3a verification workflow also completed successfully.
 
 **Latest completed verification:**
 
-[Lean 4 Verification #101: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39144527474)
+[Lean 4 Verification #103 on `main`: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39153415923)
 
 The recorded source commit is:
 
 ```text
-a291e152b9ea3feed8f7c0608ae8eaca33700298
+677985738a8e82aca8327ad3cc241ef8bc5e695d
 ```
 
-The verification applies to that exact source state on the test branch.
+The verification applies to this exact merged source state on `main`. The earlier test-branch verification #101 remains part of the historical record.
 
 To audit future proof repairs:
 
@@ -416,7 +420,7 @@ To audit future proof repairs:
 
 ### 5.1. Axiom audit
 
-The following declarations have explicit axiom reports in the successful #101 workflow:
+The following declarations have explicit axiom reports in the successful #103 workflow on `main`:
 
 ```lean
 #print axioms Lanzarini.krylovComplexity_increment
@@ -448,30 +452,21 @@ The dedicated record of these four axiom probes is still **pending**. No unobser
 
 ### 5.2. Branch and integration policy
 
-The latest verified P73.1 source state is on:
-
-```text
-p72-3a-proof-test
-```
-
-The default branch is:
+The officially verified P73.1 checkpoint is integrated into the default branch:
 
 ```text
 main
 ```
 
-The test branch has passed the full workflow but has not yet been merged into `main`.
+- Integration: [Pull Request #1](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/1), merged on 18 October 2026.
+- Merge commit: `677985738a8e82aca8327ad3cc241ef8bc5e695d`.
+- Verification on `main`: [GitHub Actions #103: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39153415923).
+- Previous development branch: `p72-3a-proof-test`, retained for traceability.
+- Next unproved target: P73.2, the Schrödinger equation for the evolved state.
 
-Before integration:
+Future research milestones should be developed in a separate branch, integrated only after their full workflow and axiom checks pass, and verified again on `main`.
 
-- Update this README on the test branch.
-- Confirm that the complete workflow remains successful.
-- Compare the proposed source changes with `main`.
-- Review the Pull Request.
-- Merge the verified development without discarding the historical records.
-- Verify the resulting `main` branch independently.
-
-A successful test-branch workflow is not automatically a successful default-branch workflow.
+A successful development-branch workflow does not itself certify the merged branch.
 
 ---
 
@@ -532,9 +527,11 @@ These are genuine formalized results but do not yet prove the preprint's central
 The next proof obligations are:
 
 1. **P73.2: Schrödinger state derivative.** Derive
+
    $$
    \frac{d}{dt}\psi(t)=-iH\psi(t)
    $$
+
    from the verified propagator derivative and the existing definition of `jacobiState`.
 
 2. **Physical Krylov complexity derivative.** Apply the componentwise differentiation theorem to the actual Jacobi-evolved state, with the correct normalized-state hypotheses.
