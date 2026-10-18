@@ -3,11 +3,13 @@ import KrylovLagrange
 
 /-!
 LANZARINI-KRYLOV-LEAN
+
 P70: Exact Gram and scalar-channel decomposition.
 P71: Centered Krylov state and variance bridge.
+P72.1: Exact Krylov complexity increment.
 
-The statements of P70.1 and P70.2 are unchanged.
-No theorem assumes a speed-limit inequality or a time derivative.
+P70 and P71 statements and proofs are preserved.
+No speed-limit or time-derivative result is assumed.
 -/
 
 namespace Lanzarini
@@ -103,4 +105,53 @@ theorem krylovCenteredState_gap_at
   rw [krylovCenteredState_normSq_at n a b t psi hnorm] at h
   exact h
 
+/--
+P72.1: Exact increment of Krylov complexity.
+
+No normalization, differentiability, or Jacobi
+evolution assumptions are required.
+
+The result follows from the coordinate definition
+of Krylov complexity and complex algebra.
+-/
+theorem krylovComplexity_increment
+    {n : ℕ} (psi h : Fin n → ℂ) :
+    krylovComplexity (fun j => psi j + h j) =
+      krylovComplexity psi +
+      krylovComplexity h +
+      2 * (∑ j : Fin n,
+        (j.val : ℝ) *
+          (star (psi j) * h j).re) := by
+  unfold krylovComplexity
+  calc
+    (∑ j : Fin n,
+      (j.val : ℝ) *
+        Complex.normSq (psi j + h j)) =
+      ∑ j : Fin n,
+        ((j.val : ℝ) *
+            Complex.normSq (psi j) +
+         (j.val : ℝ) *
+            Complex.normSq (h j) +
+         2 * ((j.val : ℝ) *
+            (star (psi j) * h j).re)) := by
+      apply Finset.sum_congr rfl
+      intro j _
+      simp only [
+        Complex.normSq_apply,
+        Complex.add_re,
+        Complex.add_im,
+        Complex.star_def,
+        Complex.mul_re,
+        Complex.conj_re,
+        Complex.conj_im
+      ]
+      ring
+    _ = _ := by
+      simp only [
+        Finset.sum_add_distrib,
+        Finset.mul_sum
+      ]
+
 end Lanzarini
+
+#print axioms Lanzarini.krylovComplexity_increment
