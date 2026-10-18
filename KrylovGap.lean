@@ -269,10 +269,13 @@ Let A = -iH.
 
 Then d/dz exp(z A) = A * exp(z A).
 
+The operator norm is selected explicitly.
 No real-time state derivative is asserted here.
-The larger elaboration budget is local to this theorem.
 -/
-set_option maxHeartbeats 2000000 in
+
+open scoped Matrix.Norms.Operator
+
+attribute [-instance] Matrix.SpecialLinearGroup.hasCoeToGeneralLinearGroup in
 theorem jacobiComplexTimeExp_hasDerivAt
     (n : ℕ) (a b : Fin n → ℝ) (z : ℂ) :
     HasDerivAt
