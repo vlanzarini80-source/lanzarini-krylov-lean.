@@ -7,9 +7,11 @@ LANZARINI-KRYLOV-LEAN
 P70: Exact Gram and scalar-channel decomposition.
 P71: Centered Krylov state and variance bridge.
 P72.1: Exact Krylov complexity increment.
+P72.2: Derivative of Krylov complexity for a
+       componentwise differentiable state curve.
 
-P70 and P71 statements and proofs are preserved.
-No speed-limit or time-derivative result is assumed.
+Earlier theorem statements are unchanged.
+No Schrödinger equation is assumed.
 -/
 
 namespace Lanzarini
@@ -43,8 +45,7 @@ noncomputable def krylovCenteredState
   fun j =>
     (((j.val : ℝ) - krylovComplexity psi : ℝ) : ℂ) * psi j
 
-/-- P71.2: For a normalized state, the squared norm of
-    the centered state equals the Krylov variance. -/
+/-- P71.2: Squared norm of the centered state. -/
 theorem krylovCenteredState_normSq
     {n : ℕ} (psi : Fin n → ℂ)
     (hnorm : jacobiNormSq psi = 1) :
@@ -63,8 +64,7 @@ theorem krylovCenteredState_normSq
     _ = krylovVariance psi :=
       (krylovVariance_centered psi hnorm).symm
 
-/-- P71.3: The same identity holds at every real time
-    for normalized Jacobi evolution. -/
+/-- P71.3: The centered norm along Jacobi evolution. -/
 theorem krylovCenteredState_normSq_at
     (n : ℕ) (a b : Fin n → ℝ)
     (t : ℝ) (psi : Fin n → ℂ)
@@ -77,9 +77,7 @@ theorem krylovCenteredState_normSq_at
     (jacobiState n a b t psi)
     (jacobiState_normalized n a b t psi hnorm)
 
-/-- P71.4: The P70 gap identity applied to the
-    centered time-evolved Krylov state and any velocity candidate v.
-    No Schrödinger derivative is asserted here. -/
+/-- P71.4: Gram gap for the centered evolved state. -/
 theorem krylovCenteredState_gap_at
     (n : ℕ) (a b : Fin n → ℝ)
     (t : ℝ) (psi v : Fin n → ℂ)
@@ -110,9 +108,6 @@ P72.1: Exact increment of Krylov complexity.
 
 No normalization, differentiability, or Jacobi
 evolution assumptions are required.
-
-The result follows from the coordinate definition
-of Krylov complexity and complex algebra.
 -/
 theorem krylovComplexity_increment
     {n : ℕ} (psi h : Fin n → ℂ) :
@@ -152,6 +147,77 @@ theorem krylovComplexity_increment
         Finset.mul_sum
       ]
 
+/--
+P72.2: Derivative of Krylov complexity for a
+componentwise differentiable curve.
+
+The real and imaginary derivatives of each
+coordinate are explicitly assumed.
+
+No normalization or Schrödinger dynamics is
+assumed, and the conclusion does not appear
+among the hypotheses.
+-/
+theorem krylovComplexity_hasDerivAt_components
+    {n : ℕ}
+    (psi : ℝ → Fin n → ℂ)
+    (velocity : Fin n → ℂ)
+    (t : ℝ)
+    (hre : ∀ j : Fin n,
+      HasDerivAt
+        (fun s : ℝ => (psi s j).re)
+        (velocity j).re t)
+    (him : ∀ j : Fin n,
+      HasDerivAt
+        (fun s : ℝ => (psi s j).im)
+        (velocity j).im t) :
+    HasDerivAt
+      (fun s : ℝ => krylovComplexity (psi s))
+      (2 * (∑ j : Fin n,
+        (j.val : ℝ) *
+          (star (psi t j) * velocity j).re))
+      t := by
+
+  have hterm (j : Fin n) :
+      HasDerivAt
+        (fun s : ℝ =>
+          (j.val : ℝ) * Complex.normSq (psi s j))
+        ((j.val : ℝ) *
+          (2 * (star (psi t j) * velocity j).re))
+        t := by
+
+    have hr := (hre j).pow 2
+    have hi := (him j).pow 2
+    have hs := (hr.add hi).const_mul (j.val : ℝ)
+
+    convert hs using 1
+    · funext s
+      simp only [Complex.normSq_apply]
+    · simp only [
+        Complex.star_def,
+        Complex.mul_re,
+        Complex.conj_re,
+        Complex.conj_im,
+        Nat.cast_ofNat,
+        Nat.reduceSub,
+        pow_one
+      ]
+      ring
+
+  have hsum :=
+    HasDerivAt.fun_sum
+      (u := (Finset.univ : Finset (Fin n)))
+      (fun j _ => hterm j)
+
+  convert hsum using 1
+  · funext s
+    rfl
+  · rw [Finset.mul_sum]
+    apply Finset.sum_congr rfl
+    intro j _
+    ring
+
 end Lanzarini
 
 #print axioms Lanzarini.krylovComplexity_increment
+#print axioms Lanzarini.krylovComplexity_hasDerivAt_components
