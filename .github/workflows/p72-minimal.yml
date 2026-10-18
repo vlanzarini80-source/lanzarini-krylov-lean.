@@ -1,0 +1,37 @@
+
+name: P72.3a Minimal Derivative Verification
+
+on:
+  push:
+    branches:
+      - p72-3a-proof-test
+  workflow_dispatch:
+
+jobs:
+  p72-minimal:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout test branch
+        uses: actions/checkout@v4
+
+      - name: Install Lean 4
+        run: |
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Fetch pinned mathlib v4.24.0
+        run: |
+          lake update
+          lake exe cache get
+
+      - name: Compile dependencies and isolated derivative proof
+        run: |
+          set -euo pipefail
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o JacobiReal.olean JacobiReal.lean
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o JacobiEvolution.olean JacobiEvolution.lean
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean P72_3a_Minimal.lean | tee p72-axioms.log
+          if grep -q 'sorryAx' p72-axioms.log; then
+            echo 'P72.3a FAILED: sorryAx detected'
+            exit 1
+          fi
