@@ -39,7 +39,6 @@ theorem p73_jacobiPropagator_hasDerivAt
     have hfre := hc.hasFDerivAt.restrictScalars ℝ
     have hcomp := hfre.comp t Complex.ofRealCLM.hasFDerivAt
     simpa [ContinuousLinearMap.comp_apply,
-      ContinuousLinearMap.restrictScalars_apply,
       ContinuousLinearMap.smulRight_apply,
       Complex.ofRealCLM_apply] using hcomp.hasDerivAt
 
