@@ -28,29 +28,27 @@ theorem p73_jacobiState_hasDerivAt
         (jacobiState n a b t psi))
       t := by
 
-  -- Matrix action on a fixed initial state is real-linear.
+  -- Applying a matrix to a fixed vector is real-linear.
   let applyVec :
       Matrix (Fin n) (Fin n) ℂ →ₗ[ℝ]
         (Fin n → ℂ) :=
     (LinearMap.applyₗ (R := ℝ) psi).comp
       (Matrix.mulVecBilin ℝ ℝ)
 
-  -- A linear map on this finite-dimensional
-  -- normed space is continuous.
+  -- Finite-dimensional linear maps are continuous.
   let applyVecC :
       Matrix (Fin n) (Fin n) ℂ →L[ℝ]
         (Fin n → ℂ) :=
     LinearMap.toContinuousLinearMap applyVec
 
-  -- P73.1: derivative of the propagator.
+  -- Use the verified propagator derivative P73.1.
   have hU :=
     p73_jacobiPropagator_hasDerivAt n a b t
 
-  -- Apply the continuous linear map.
+  -- Apply a continuous linear map to the derivative.
   have hcomp :=
     applyVecC.hasFDerivAt.comp_hasDerivAt t hU
 
-  -- Express the result as matrix-vector multiplication.
   have hstate :
       HasDerivAt
         (fun s : ℝ =>
@@ -60,8 +58,8 @@ theorem p73_jacobiState_hasDerivAt
         t := by
     exact hcomp
 
-  -- Use associativity of matrix-vector multiplication.
-  rw [Matrix.mulVec_mulVec] at hstate
+  -- Correct direction of matrix-vector associativity.
+  rw [← Matrix.mulVec_mulVec] at hstate
 
   -- Recover the original definition of jacobiState.
   exact hstate
