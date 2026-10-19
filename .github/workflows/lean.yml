@@ -23,12 +23,14 @@ jobs:
           lake update
           lake exe cache get
 
-      - name: Verify all theorems including P73
+      - name: Verify Lean proofs through P73.2
         run: |
           set -euo pipefail
+
           lake env lean Main.lean
           lake env lean Jacobi2.lean
           lake env lean JacobiGeneral.lean
+
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o JacobiReal.olean JacobiReal.lean
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o JacobiEvolution.olean JacobiEvolution.lean
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o MatrixExpProbe.olean MatrixExpProbe.lean
@@ -36,8 +38,11 @@ jobs:
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o KrylovGram.olean KrylovGram.lean
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o KrylovLagrange.olean KrylovLagrange.lean
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o KrylovGap.olean KrylovGap.lean
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean P73_RealTime.lean | tee p73-axioms.log
-          if grep -q 'sorryAx' p73-axioms.log; then
-            echo 'P73 FAILED: sorryAx detected'
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P73_RealTime.olean P73_RealTime.lean
+
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean P73_2_State.lean | tee p73-2-axioms.log
+
+          if grep -q 'sorryAx' p73-2-axioms.log; then
+            echo 'P73.2 FAILED: sorryAx detected'
             exit 1
           fi
