@@ -23,7 +23,7 @@ jobs:
           lake update
           lake exe cache get
 
-      - name: Verify Lean proofs through P74.1
+      - name: Verify Lean proofs through P74.2
         run: |
           set -euo pipefail
 
@@ -41,12 +41,17 @@ jobs:
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P73_RealTime.olean P73_RealTime.lean
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P73_2_State.olean P73_2_State.lean
 
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean P74_1_Components.lean | tee p74-1-axioms.log
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P74_1_Components.olean P74_1_Components.lean | tee p74-1-axioms.log
 
-          if grep -q 'sorryAx' p74-1-axioms.log; then
-            echo 'P74.1 FAILED: sorryAx detected'
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean P74_2_KrylovDerivative.lean | tee p74-2-axioms.log
+
+          if grep -q 'sorryAx' p74-1-axioms.log p74-2-axioms.log; then
+            echo 'FAILED: sorryAx detected'
             exit 1
           fi
 
           grep -F "'Lanzarini.p74_jacobiState_component_hasDerivAt' depends on axioms:" p74-1-axioms.log
           grep -F "'Lanzarini.p74_jacobiState_parts_hasDerivAt' depends on axioms:" p74-1-axioms.log
+          grep -F "'Lanzarini.p74_krylovComplexityAt_hasDerivAt' depends on axioms:" p74-2-axioms.log
+
+          echo "P74.1 and P74.2 verification completed"
