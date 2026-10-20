@@ -1,430 +1,437 @@
+Lanzarini Krylov–Jacobi
 
-# Lanzarini Krylov–Jacobi
+Lean 4 formalization of finite-dimensional Jacobi dynamics and Krylov observables
 
-### Lean 4 formalization of finite-dimensional Jacobi dynamics and Krylov observables
+Author: Valentino Lanzarini, Independent Mathematical Researcher
+Project status: Research in progress
+Latest verified formalization checkpoint: P74.2 (main, GitHub Actions #117: SUCCESS)
+Environment: Lean 4 "v4.24.0" and mathlib "v4.24.0"
+Research preprint: https://doi.org/10.5281/zenodo.23163367
+Repository: "Open the GitHub repository" (https://github.com/vlanzarini80-source/lanzarini-krylov-lean./tree/main)
+Copyright: © 2026 Valentino Lanzarini. All rights reserved.
 
-**Author:** Valentino Lanzarini, Independent Mathematical Researcher  
-**Project status:** Research in progress  
-**Latest verified formalization checkpoint:** **P73.2 (main, GitHub Actions #109: SUCCESS)**  
-**Environment:** Lean 4 `v4.24.0` and mathlib `v4.24.0`  
-**Research preprint:** https://doi.org/10.5281/zenodo.23163367  
-**Repository:** [Open the GitHub repository](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./tree/main)  
-**Copyright:** © 2026 Valentino Lanzarini. All rights reserved.
+«Scientific status. This repository contains machine-checked foundational theorems concerning finite-dimensional Jacobi matrices, unitary evolution, Krylov moments and variance, complex Gram identities, matrix-exponential differentiation, real-time Schrödinger evolution, componentwise state derivatives, and the physical derivative of finite-dimensional Krylov complexity.
 
-> **Scientific status.** The repository contains machine-checked foundational theorems about **finite-dimensional** Jacobi matrices, unitary evolution, Krylov moments and variance, complex Gram identities, the derivative of the Jacobi propagator, and the real-time Schrödinger evolution equation for the finite-dimensional state.
->
-> **The main finite-depth local-defect hierarchy from the preprint has not yet been formalized in Lean.**
->
-> Passing GitHub Actions checks establishes that Lean accepted the encoded statements and proofs, not that all the preprint's claims are formalized, original, or independently peer reviewed.
+The principal finite-depth local-defect hierarchy of the research preprint has not yet been formalized in Lean.
 
-**Branch status:** P72.3a.3 and P73.1 were integrated into `main` through [Pull Request #1](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/1) on 18 October 2026.
+Successful GitHub Actions verification establishes that Lean accepted the encoded declarations and their proofs within the configured environment. It does not establish scientific originality, independent peer review, or verification of every claim in the preprint.»
 
-P73.2 was integrated through [Pull Request #2](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/2) on 19 October 2026.
+Official integration history:
 
-The resulting `main` commit passed [GitHub Actions #109](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39248613293).
+- P72.3a.3 and P73.1 were integrated into "main" through "Pull Request #1" (https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/1) on 18 October 2026.
+- P73.2 was integrated through "Pull Request #2" (https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/2) on 19 October 2026.
+- P74.1 and P74.2 were integrated through "Pull Request #3" (https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/3) on 20 October 2026.
 
-The former development branches remain available for historical traceability.
+The latest reported post-merge verification is "GitHub Actions #117: SUCCESS" (https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39399857938).
 
 ---
 
-## 1. Latest verified checkpoint and reproducibility
+1. Latest verified checkpoint and reproducibility
 
-### 1.1. Current verified checkpoint: P73.2
+1.1. Current checkpoint: P74.2
 
-| Item | Verified record |
-| --- | --- |
-| Milestone | **P73.2** |
-| Verification on `main` | [GitHub Actions #109, `verify`: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39248613293) |
-| Original test-branch verification | [GitHub Actions #108: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39204261981) |
-| Verified `main` merge commit | [`4e288ae3ce35e3f99c5630dd3fb436b30c3a36c9`](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./commit/4e288ae3ce35e3f99c5630dd3fb436b30c3a36c9) |
-| Original P73.2 verified proof commit | [`9489b44a880688790e6dc65d422d90755d57a341`](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./commit/9489b44a880688790e6dc65d422d90755d57a341) |
-| Pull Request | [PR #2: merged](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/2) |
-| Date | 19 October 2026 |
-| Verified branch | `main` |
-| Lean toolchain | `leanprover/lean4:v4.24.0` |
-| mathlib configuration | `v4.24.0` in `lakefile.toml` |
-| Files checked | All **twelve** `.lean` files explicitly compiled by `.github/workflows/lean.yml`, including `P73_RealTime.lean` and `P73_2_State.lean` |
-| P73.2 axiom audit | `[propext, Classical.choice, Quot.sound]` |
-| `sorryAx` in P73.2 dependencies | Not present in the recorded `#print axioms` output |
-| Default branch | `main`, verified by workflow #109 |
+Item| Verification record
+Milestone| P74.2
+Branch| "main"
+Date| 20 October 2026
+Pull Request| "PR #3: merged" (https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/3)
+Post-merge verification| "GitHub Actions #117: SUCCESS" (https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39399857938)
+Development verification| "GitHub Actions #116: SUCCESS" (https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39374579575)
+Verified merge commit| "3cc284d942bb73b977315fe5096033ce9ec37d42"
+Lean toolchain| "leanprover/lean4:v4.24.0"
+mathlib configuration| "v4.24.0"
+New source files| "P74_1_Components.lean", "P74_2_KrylovDerivative.lean"
+Recorded axiom dependencies| "[propext, Classical.choice, Quot.sound]"
+"sorryAx" in the recorded P74 theorem dependencies| Not present
 
-The exact declaration verified in P73.2 is:
-
-```lean
-Lanzarini.p73_jacobiState_hasDerivAt
-```
-
-The theorem establishes the real-time derivative of the evolved finite-dimensional Jacobi state.
+The latest checkpoint establishes the physical derivative of finite-dimensional Krylov complexity along Jacobi evolution.
 
 For
 
 $$
-U(t)=\exp(-itH)
+\psi(t)=e^{-itH}\psi_0,
 $$
 
-and
+define
 
 $$
-\psi(t)=U(t)\psi_0,
+K(t)=\sum_{j=0}^{n-1}j|\psi_j(t)|^2.
 $$
 
-the verified identity is
+The verified derivative identity is
 
 $$
 \boxed{
-\frac{d}{dt}\psi(t)=(-iH)\psi(t)
+\frac{dK(t)}{dt}
+
+2\sum_{j=0}^{n-1}
+j,\operatorname{Re}
+\left(
+\overline{\psi_j(t)}
+(-iH\psi(t))_j
+\right).
 }
 $$
 
-The theorem derives the state derivative from the previously verified propagator derivative P73.1.
+This result is derived from the previously formalized componentwise differentiation theorem and the physical Jacobi-state derivative.
 
-**No state differentiability assumption is introduced.**
+The desired derivative is not assumed as a hypothesis.
 
-**The Schrödinger evolution equation is not assumed as a hypothesis.**
+No normalization assumption is required for this particular identity.
 
-**No normalization assumption is required for this finite-dimensional state derivative.**
+P74.2 does not yet establish the centered derivative identity or the Krylov dispersion speed limit.
 
-The GitHub Actions #109 log on `main` records:
+1.2. Historical verification checkpoints
 
-```text
-'Lanzarini.p73_jacobiState_hasDerivAt'
-depends on axioms:
-[propext, Classical.choice, Quot.sound]
-```
+Milestone| Verification| Commit or record
+P71| "GitHub Actions #84: SUCCESS" (https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39044208215)| "85f799e6defae7f9106a10c4fd9f780d27cf2b4f"
+P72.3a.3| "GitHub Actions #98: SUCCESS" (https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39140660849)| "702256d89e7623eafcabd188911166eaddb08c7a"
+P73.1| "GitHub Actions #103: SUCCESS" (https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39153415923)| "677985738a8e82aca8327ad3cc241ef8bc5e695d"
+P73.2| "GitHub Actions #109: SUCCESS" (https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39248613293)| "4e288ae3ce35e3f99c5630dd3fb436b30c3a36c9"
+P74.2| "GitHub Actions #117: SUCCESS" (https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39399857938)| "3cc284d942bb73b977315fe5096033ce9ec37d42"
 
-These are standard foundational axioms in the Lean/mathlib environment.
+These records document successive verification checkpoints. They do not represent percentages of completion of the central research theorem.
 
-No additional project-specific axiom or `sorryAx` is reported for this declaration.
+1.3. Dependency reproducibility
 
-The successful workflow compiles the preceding theorem files before compiling P73.2.
+The previously documented repository state did not include a committed "lake-manifest.json".
 
-This verification does not establish originality, independent peer review, or the full mathematical content of the research preprint.
+The CI configuration used "lake update".
 
-### 1.2. Historical verified checkpoints
+The historical P71 workflow reported mathlib revision:
 
-The original P71 and P73.1 verification records are preserved.
+"f897ebcf72cd16f89ab4577d0c826cd14afaafc7"
 
-#### Historical checkpoint: P71
+The dependency-lock status should be rechecked against the current P74.2 commit.
 
-| Item | Verified record |
-| --- | --- |
-| Milestone | **P71** |
-| Verification | [GitHub Actions #84, `verify`: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39044208215) |
-| Exact source commit | [`85f799e6defae7f9106a10c4fd9f780d27cf2b4f`](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./commit/85f799e6defae7f9106a10c4fd9f780d27cf2b4f) |
-| Date | 17 October 2026 |
-| Lean toolchain | `leanprover/lean4:v4.24.0` |
-| mathlib configuration | `v4.24.0` in `lakefile.toml` |
-| mathlib revision in the #84 CI log | `f897ebcf72cd16f89ab4577d0c826cd14afaafc7` |
-| Files checked | All **ten** `.lean` files explicitly compiled by `.github/workflows/lean.yml`, including `KrylovGap.lean` |
-
-The source files compiled at P71 were inspected for `sorry`, `admit`, and locally declared `axiom` statements; none were found.
-
-At the P71 checkpoint, the outputs of `#print axioms` for the central declarations had not yet been recorded as a separate verification checkpoint.
-
-#### Historical checkpoint: P73.1
-
-| Item | Verified record |
-| --- | --- |
-| Milestone | **P73.1** |
-| Verification on `main` | [GitHub Actions #103: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39153415923) |
-| Original test-branch verification | [GitHub Actions #101: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39144527474) |
-| Original proof commit | [`a291e152b9ea3feed8f7c0608ae8eaca33700298`](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./commit/a291e152b9ea3feed8f7c0608ae8eaca33700298) |
-| Verified merge commit | [`677985738a8e82aca8327ad3cc241ef8bc5e695d`](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./commit/677985738a8e82aca8327ad3cc241ef8bc5e695d) |
-| Date | 18 October 2026 |
-| Pull Request | [PR #1: merged](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/1) |
-| Files checked | Eleven `.lean` files in the main verification workflow |
-| P73.1 axiom audit | `[propext, Classical.choice, Quot.sound]` |
-
-The original P73.1 theorem established
-
-$$
-\frac{d}{dt}U(t)=(-iH)U(t).
-$$
-
-The later P73.2 theorem uses that verified result to establish the derivative of the evolved state.
-
-The P72.3a.3, P73.1 and P73.2 checks record the axiomatic dependencies of their respective declarations, but do not constitute an exhaustive audit of every historical theorem.
-
-### 1.3. Dependency reproducibility
-
-**Dependency-lock caveat:** The repository currently does **not** contain a committed `lake-manifest.json`.
-
-The CI workflow executes `lake update`. The mathlib revision reported for the historical P71 run comes from its actual CI log.
-
-A reviewed, committed dependency manifest remains a reproducibility task.
-
-The successful source commits, workflow definitions and execution logs provide verification records, but a dependency lockfile would improve environmental traceability.
-
-No dependency revision beyond those explicitly established by the available records is asserted here.
+A reviewed and committed dependency manifest remains a recommended reproducibility improvement if it is still absent.
 
 ---
 
-## 2. Mathematical framework and conventions
+2. Mathematical framework and conventions
 
-For a finite dimension `n`, the code defines a real symmetric tridiagonal Jacobi matrix using `a b : Fin n → ℝ`:
+For finite dimension "n", the repository defines a real symmetric tridiagonal Jacobi matrix using
 
-$$
-H_{ii}=a_i,\qquad H_{i,i+1}=H_{i+1,i}=b_i.
-$$
+a b : Fin n → ℝ
 
-All other matrix entries vanish. The coupling formula is understood only for valid adjacent indices.
-
-The foundational Lean definitions allow **arbitrary real** diagonal and off-diagonal coefficients. The positivity of physical couplings is **not** built into those definitions. Conditions such as positive interior couplings belong to specific results in the research preprint and must be explicitly included when formalizing those results.
-
-**Basis-identification caveat:** The operator named `krylovNumberOperator` acts on the chosen coordinate basis `Fin n`. The repository does not yet formalize a general Lanczos algorithm or prove that this coordinate basis is the Krylov basis generated by an arbitrary Hamiltonian and initial state. Identifying the Jacobi-chain basis with a genuine Lanczos/Krylov basis requires the appropriate construction and hypotheses.
-
-Lean uses zero-based `Fin n` indices. The off-diagonal input `b i` couples site `i` to site `i+1`, and its last entry is unused. In the preprint the first physical coupling is called $b_1$; its correspondence with the Lean input is:
+with entries
 
 $$
-b_j^{\mathrm{preprint}}=b_{j-1}^{\mathrm{Lean}},\qquad 1\le j\le n-1.
+H_{ii}=a_i,
+\qquad
+H_{i,i+1}=H_{i+1,i}=b_i.
 $$
 
-For the complex representation of the finite Jacobi Hamiltonian, the code uses:
+All other entries vanish.
+
+The foundational definitions allow arbitrary real diagonal and off-diagonal coefficients.
+
+Positive interior couplings are not imposed globally by the definitions. They must be included explicitly in theorems requiring irreducible Jacobi chains.
+
+2.1. Index conventions
+
+Lean uses zero-based indices.
+
+The input "b i" couples sites "i" and "i+1", where this adjacent pair exists. The final entry of the "Fin n" coupling input is unused.
+
+The preprint uses one-based physical coupling indices:
 
 $$
-U(t)=\exp(-itH),\qquad \psi(t)=U(t)\psi_0.
+b_j^{\mathrm{preprint}}
+
+b_{j-1}^{\mathrm{Lean}},
+\qquad 1\le j\le n-1.
 $$
 
-The finite-dimensional propagator is proved unitary. The formalization establishes preservation of the norm, inner product and orthogonality.
+These conventions must be preserved when formalizing finite-depth defects and boundary terms.
 
-P73.1 establishes the real-time derivative of the propagator:
+2.2. Krylov basis identification
+
+The formalized number operator acts on the selected coordinate basis.
+
+The repository does not yet formalize a general Lanczos algorithm or establish that this basis is the Krylov basis generated by an arbitrary Hamiltonian and initial state.
+
+The physical interpretation therefore applies to the Jacobi-chain setting under the appropriate basis-identification hypotheses.
+
+2.3. Finite-dimensional evolution
+
+The complex Jacobi Hamiltonian generates
+
+$$
+U(t)=\exp(-itH),
+$$
+
+and the evolved state is
+
+$$
+\psi(t)=U(t)\psi_0.
+$$
+
+The finite-dimensional propagator is formally proved unitary.
+
+Consequently, the formalization includes preservation of norms, inner products and orthogonality.
+
+The real-time propagator derivative is
 
 $$
 U'(t)=(-iH)U(t).
 $$
 
-P73.2 establishes the real-time derivative of the evolved state:
+The evolved-state derivative is
 
 $$
 \psi'(t)=(-iH)\psi(t).
 $$
 
-Both results hold for finite-dimensional Jacobi evolution, without assuming state normalization for these particular derivative identities.
+Both are established in finite dimensions without requiring normalization for these derivative statements.
 
-These statements do **not** depend on a proof of any infinite-dimensional operator-domain result.
+2.4. Infinite-dimensional scope
 
-**Infinite-dimensional scope:** This repository does not yet define an unbounded Jacobi operator on $\ell^2(\mathbb N_0)$ or prove its self-adjointness. Defining $e^{-itH}$ and ensuring that $\psi(t)$ belongs to the domain of the number operator $N$ can require additional hypotheses and domain arguments. None of those extensions should be inferred from the finite-dimensional Lean results.
+The repository does not yet establish a general self-adjoint unbounded Jacobi operator on
+
+$$
+\ell^2(\mathbb N_0).
+$$
+
+Infinite-dimensional extensions require separate treatment of operator domains, self-adjointness, differentiability, weighted estimates and the domain of the Krylov number operator.
+
+No infinite-dimensional result is inferred from the finite-dimensional verification.
 
 ---
 
-## 3. Verified theorems through P73.2
+3. Verified theorem development through P74.2
 
-The milestone labels describe the development history; **they do not measure percentage completion of the research theorem**.
+Checkpoints| Formalized content| Source files
+P51–P55| Hermitian finite Jacobi Hamiltonian, anti-Hermitian generator, unitary propagator, norm and inner-product preservation| "JacobiReal.lean", "JacobiEvolution.lean", "MatrixExpProbe.lean"
+P56–P59| Krylov number operator, complexity, second moment, algebraic variance and normalization preservation| "KrylovNumber.lean"
+P60–P61| Centered variance, normalized variance nonnegativity and zero-variance equivalences| "KrylovNumber.lean"
+P62–P64| Zero-variance support constraints and unique occupied Krylov level| "KrylovNumber.lean"
+P65–P69| Complex Gram coordinates, Gram sum and finite-dimensional Lagrange identity| "KrylovGram.lean", "KrylovLagrange.lean"
+P70| Exact real-part Gram-gap identity and nonnegativity| "KrylovGap.lean"
+P71| Centered-state norm/variance identity and time-evolved specialization| "KrylovGap.lean"
+P72.1| Exact algebraic increment of Krylov complexity| "KrylovGap.lean"
+P72.2| Conditional componentwise Krylov differentiation| "KrylovGap.lean"
+P72.3a.1–P72.3a.3| Generator factorization, complex-time propagator representation and matrix-exponential derivative| "KrylovGap.lean"
+P73.1| Real-time Jacobi propagator derivative| "P73_RealTime.lean"
+P73.2| Real-time evolved Jacobi-state derivative| "P73_2_State.lean"
+P74.1| Componentwise complex, real and imaginary state derivatives| "P74_1_Components.lean"
+P74.2| Physical Krylov complexity derivative along Jacobi evolution| "P74_2_KrylovDerivative.lean"
 
-| Checkpoints | Actual formalized content | Source file(s) |
-| --- | --- | --- |
-| **P51–P55** | Hermitian finite Jacobi Hamiltonian, anti-Hermitian evolution generator, unitary propagator, preservation of norms, inner products and orthogonality | `JacobiReal.lean`, `JacobiEvolution.lean`, `MatrixExpProbe.lean` |
-| **P56–P59** | Krylov number operator, complexity, second moment, algebraic variance, and preservation of normalization | `KrylovNumber.lean` |
-| **P60–P61** | Centered-variance identity, variance nonnegativity under normalization and zero-variance equivalences | `KrylovNumber.lean` |
-| **P62–P64** | Support constraints under zero variance; a normalized zero-variance state has exactly one occupied Krylov level | `KrylovNumber.lean` |
-| **P65–P69** | Complex Gram coordinates and finite Gram sum; Lagrange identity for finite complex vectors | `KrylovGram.lean`, `KrylovLagrange.lean` |
-| **P70** | Exact real-part Gram-gap identity and its nonnegativity | `KrylovGap.lean` |
-| **P71** | Norm of the centered state equals normalized Krylov variance, including along the time evolution; specialization of the Gram-gap identity with an arbitrary auxiliary vector | `KrylovGap.lean` |
-| **P72.1** | Exact algebraic increment of Krylov complexity | `KrylovGap.lean` |
-| **P72.2** | Derivative of Krylov complexity for a curve with explicitly assumed componentwise differentiability | `KrylovGap.lean` |
-| **P72.3a.1** | Factorization of the existing Jacobi evolution generator as a real-time scalar multiplied by the constant generator $-iH$ | `KrylovGap.lean` |
-| **P72.3a.2** | Expression of the real-time Jacobi propagator as the restriction of the complex-time matrix exponential | `KrylovGap.lean` |
-| **P72.3a.3** | Complex-time derivative of the finite-dimensional Jacobi matrix exponential | `KrylovGap.lean` |
-| **P73.1** | Real-time derivative of the finite-dimensional Jacobi propagator | `P73_RealTime.lean` |
-| **P73.2** | Real-time derivative of the evolved finite-dimensional Jacobi state, derived from P73.1 | `P73_2_State.lean` |
+3.1. Krylov moments and variance
 
-P72.3a.3 and P73.1 were integrated into `main` through [Pull Request #1](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/1).
-
-P73.2 was integrated into `main` through [Pull Request #2](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/2).
-
-The complete GitHub Actions #109 verification succeeded on the resulting `main` commit.
-
-The actual Lean declaration names include:
-
-- `Lanzarini.jacobiEvolutionGenerator_conjTranspose`
-- `Lanzarini.jacobiPropagator_unitary`
-- `Lanzarini.jacobiNormSq_state`
-- `Lanzarini.jacobiInner_state_pair`
-- `Lanzarini.krylovComplexity_expectation`
-- `Lanzarini.krylovVariance_centered`
-- `Lanzarini.krylovVariance_zero_existsUnique_occupied`
-- `Lanzarini.krylovGramSum_nonneg`
-- `Lanzarini.krylovLagrange_finite`
-- `Lanzarini.krylovGram_realPart_gap`
-- `Lanzarini.krylovGram_realPart_gap_nonneg`
-- `Lanzarini.krylovCenteredState_normSq`
-- `Lanzarini.krylovCenteredState_normSq_at`
-- `Lanzarini.krylovCenteredState_gap_at`
-- `Lanzarini.krylovComplexity_increment`
-- `Lanzarini.krylovComplexity_hasDerivAt_components`
-- `Lanzarini.jacobiEvolutionGenerator_time_factor`
-- `Lanzarini.jacobiPropagator_complex_time_eq`
-- `Lanzarini.jacobiComplexTimeExp_hasDerivAt`
-- `Lanzarini.p73_jacobiPropagator_hasDerivAt`
-- `Lanzarini.p73_jacobiState_hasDerivAt`
-
-### 3.1. Krylov moments and the normalization hypothesis
-
-For a finite vector $\psi\in\mathbb C^n$, define
+For a finite vector
 
 $$
-K(\psi)=\sum_{j=0}^{n-1}j|\psi_j|^2,\qquad
+\psi\in\mathbb C^n,
+$$
+
+define
+
+$$
+K(\psi)=\sum_{j=0}^{n-1}j|\psi_j|^2,
+$$
+
+$$
 K_2(\psi)=\sum_{j=0}^{n-1}j^2|\psi_j|^2,
 $$
 
-and the algebraic expression
+and
 
 $$
 V(\psi)=K_2(\psi)-K(\psi)^2.
 $$
 
-The code **defines** this expression for arbitrary finite vectors. The centered-variance formula and the interpretation of $V$ as the variance of a probability distribution require the explicit hypothesis $\|\psi\|^2=1$. Under that hypothesis, Lean proves:
+The algebraic expression is defined for arbitrary finite vectors.
+
+For normalized states,
 
 $$
-V(\psi)=\sum_{j=0}^{n-1}(j-K(\psi))^2|\psi_j|^2\ge0.
+|\psi|^2=1,
 $$
 
-If a normalized state's variance is zero, Lean also proves that precisely one index has positive squared amplitude. This is a property of the finite Krylov-level distribution; it is **not** the central local-defect hierarchy.
-
-### 3.2. Complex Gram/Lagrange identity (P69)
-
-For arbitrary finite vectors $u,v\in\mathbb C^n$, define
+the formalization establishes
 
 $$
-G(u,v)=\sum_{i=0}^{n-1}\sum_{j=i+1}^{n-1}|u_i v_j-u_j v_i|^2.
+\boxed{
+V(\psi)
+
+\sum_{j=0}^{n-1}
+(j-K(\psi))^2|\psi_j|^2
+\ge0.
+}
 $$
 
-The following **classical identity** is formalized:
+For a normalized zero-variance state, precisely one Krylov level has positive squared amplitude.
+
+This is a finite-distribution property and does not establish the local-defect hierarchy.
+
+3.2. Complex Gram and Lagrange identity: P69
+
+For arbitrary
 
 $$
-G(u,v)=\|u\|^2\|v\|^2-|\langle u,v\rangle|^2\ge0.
+u,v\in\mathbb C^n,
 $$
 
-Each unordered pair is counted once, and the determinant coordinate $u_iv_j-u_jv_i$ contains no conjugation. P69 does not assert that this classical identity is new.
-
-### 3.3. Real-part Gram gap (P70)
-
-For arbitrary $u,v\in\mathbb C^n$, the code proves
+define
 
 $$
-\|u\|^2\|v\|^2-\bigl(\mathrm{Re}\langle u,v\rangle\bigr)^2
-=G(u,v)+\bigl(\mathrm{Im}\langle u,v\rangle\bigr)^2\ge0.
+G(u,v)
+
+\sum_{0\le i<j<n}
+|u_iv_j-u_jv_i|^2.
 $$
 
-This is an algebraic identity, not yet a quantum speed-limit theorem.
+The formalization establishes the classical identity
 
-### 3.4. Centered-state/variance bridge (P71)
+$$
+\boxed{
+G(u,v)
 
-Let $N$ denote the diagonal matrix with entries $0,1,\ldots,n-1$, and set
+|u|^2|v|^2
+
+|\langle u,v\rangle|^2
+\ge0.
+}
+$$
+
+Each unordered pair is counted once.
+
+This identity is classical and is not presented as a new mathematical discovery.
+
+3.3. Real-part Gram gap: P70
+
+For arbitrary finite complex vectors,
+
+$$
+\boxed{
+|u|^2|v|^2
+
+\bigl(\operatorname{Re}\langle u,v\rangle\bigr)^2
+
+G(u,v)
++
+\bigl(\operatorname{Im}\langle u,v\rangle\bigr)^2
+\ge0.
+}
+$$
+
+This is an exact algebraic identity.
+
+Its later specialization to physical Krylov evolution requires additional dynamical arguments.
+
+3.4. Centered-state variance bridge: P71
+
+Let
+
+$$
+N=\operatorname{diag}(0,1,\ldots,n-1)
+$$
+
+and define
 
 $$
 u=(N-K(\psi))\psi.
 $$
 
-For a **normalized** state, Lean proves
+For normalized states, Lean proves
 
 $$
-\|u\|^2=V(\psi).
+\boxed{
+|u|^2=V(\psi).
+}
 $$
 
-The same identity is proved for the state $\psi(t)=U(t)\psi_0$ when the initial state is normalized. The P70 gap identity is also applied to that centered evolved state and **any auxiliary complex vector** $v$.
+The corresponding identity is established along unitary Jacobi evolution when the initial state is normalized.
 
-The physical Schrödinger state derivative was subsequently formalized in P73.2.
+The real-part Gram gap is also specialized to the centered evolved state and an arbitrary auxiliary vector.
 
-However, the specialized Krylov speed-limit inequality has not yet been derived from these ingredients in Lean.
+This provides a formal algebraic foundation for the future speed-limit derivation.
 
-### 3.5. Krylov complexity differentiation (P72.1–P72.2)
+3.5. Krylov complexity differentiation: P72.1–P72.2
 
-P72.1 establishes an exact algebraic increment formula for the finite-dimensional Krylov complexity.
+P72.1 establishes an exact algebraic increment formula.
 
-P72.2 proves a derivative formula for a general time-dependent complex state when the real and imaginary parts of each coordinate are differentiable with the explicitly supplied coordinate derivatives.
+P72.2 establishes a conditional derivative formula for a complex-state curve with explicitly supplied coordinatewise differentiability hypotheses.
 
-Schematically, for a differentiable curve $\psi(t)$,
+For a differentiable curve,
 
 $$
-\frac{d}{dt}K(\psi(t))
-=
+\frac{dK}{dt}
+
 2\sum_{j=0}^{n-1}
-j\,\mathrm{Re}
+j\operatorname{Re}
 \left(
-\overline{\psi_j(t)}\,\dot\psi_j(t)
+\overline{\psi_j(t)}\dot\psi_j(t)
 \right).
 $$
 
-The Lean theorem includes explicit coordinatewise differentiability hypotheses.
+At P72.2 this was a conditional statement.
 
-**Scope limitation:** P72.2 is a conditional derivative theorem. Although P73.2 now proves differentiability of the evolved state, the corresponding theorem that specializes P72.2 to the actual physical Jacobi evolution has not yet been formalized.
+P74.2 subsequently completes its specialization to the actual finite-dimensional Jacobi evolution.
 
-This specialization is the next research step.
+3.6. Complex-time matrix exponential: P72.3a
 
-### 3.6. Complex-time matrix exponential derivative (P72.3a)
+P72.3a.1 establishes the factorization of the evolution generator.
 
-P72.3a.1 establishes the factorization of the existing Jacobi evolution generator.
+P72.3a.2 connects the real-time propagator with the complex-time exponential.
 
-P72.3a.2 connects the real-time propagator to the corresponding complex-time matrix exponential.
-
-P72.3a.3 proves the complex derivative
+P72.3a.3 establishes
 
 $$
-\frac{d}{dz}\exp(zA)=A\exp(zA),
-\qquad A=-iH,
+\boxed{
+\frac{d}{dz}\exp(zA)
+
+A\exp(zA),
+\qquad A=-iH.
+}
 $$
 
-for the finite-dimensional Jacobi matrix.
+The proof uses the relevant matrix operator-norm and exponential differentiation machinery in mathlib.
 
-The result uses the matrix operator-norm structure required by mathlib and a verified matrix-exponential derivative theorem.
+Historical verification:
 
-**Verified record:**
+- GitHub Actions #98: SUCCESS.
+- Source commit: "702256d89e7623eafcabd188911166eaddb08c7a".
+- Recorded axioms: "[propext, Classical.choice, Quot.sound]".
+- No "sorryAx" in the recorded dependencies.
 
-- [GitHub Actions #98: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39140660849)
-- Source commit: `702256d89e7623eafcabd188911166eaddb08c7a`
-- `#print axioms` result: `[propext, Classical.choice, Quot.sound]`
-- No `sorryAx` in the recorded axiom dependency output.
+This is a standard analytical ingredient, not a claim of mathematical novelty.
 
-The result is a standard analytical ingredient used by the formal development. It is not presented as a new discovery.
+3.7. Real-time propagator derivative: P73.1
 
-### 3.7. Real-time Jacobi propagator derivative (P73.1)
-
-P73.1 converts the established complex-time derivative into a real-time derivative.
-
-The verified statement is
+P73.1 establishes
 
 $$
+\boxed{
 \frac{d}{dt}U(t)=(-iH)U(t).
+}
 $$
 
-Here $H$ is the finite-dimensional complex representation of the real Jacobi matrix and
+The proof derives the real-time identity from the complex-time matrix-exponential derivative.
+
+Lean declaration:
+
+Lanzarini.p73_jacobiPropagator_hasDerivAt
+
+Verification:
+
+- GitHub Actions #101: SUCCESS on the development branch.
+- GitHub Actions #103: SUCCESS on "main".
+- Pull Request #1: merged.
+- Recorded axioms: "[propext, Classical.choice, Quot.sound]".
+
+No normalization hypothesis or circular propagator-derivative hypothesis is required.
+
+3.8. Real-time Schrödinger state derivative: P73.2
+
+For
 
 $$
-U(t)=\exp(-itH).
+\psi(t)=U(t)\psi_0,
 $$
 
-The proof derives the real-time result from the complex-time derivative using the real-to-complex differentiability machinery available in mathlib.
-
-No normalization assumption is needed for this matrix-valued derivative statement.
-
-No physical time-evolution derivative is assumed as a hypothesis.
-
-**Verified record:**
-
-- [GitHub Actions #101: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39144527474)
-- Commit: `a291e152b9ea3feed8f7c0608ae8eaca33700298`
-- Source: `P73_RealTime.lean`
-- `#print axioms` result: `[propext, Classical.choice, Quot.sound]`
-- No `sorryAx` in the recorded axiom dependency output.
-- Integration into `main`: [Pull Request #1](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/1)
-- Independent post-merge verification: [GitHub Actions #103: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39153415923)
-
-P73.1 is the foundational derivative theorem for the propagator.
-
-The derivative of the evolved state was subsequently established in P73.2.
-
-### 3.8. Real-time Schrödinger state derivative (P73.2)
-
-P73.2 establishes the derivative of the state
-
-$$
-\psi(t)=U(t)\psi_0
-$$
-
-under the finite-dimensional Jacobi evolution.
-
-The verified statement is
+P73.2 establishes
 
 $$
 \boxed{
@@ -432,17 +439,10 @@ $$
 }
 $$
 
-The proof uses the P73.1 propagator derivative and the continuous linear map that applies a matrix to the fixed initial state.
-
-It then uses the associativity of matrix-vector multiplication.
-
-The proof does not assume the desired state derivative.
-
-The result is established without a state-normalization hypothesis.
+The proof uses the P73.1 propagator derivative and the continuous linear map applying a matrix to the fixed initial state.
 
 The exact Lean theorem is:
 
-```lean
 theorem p73_jacobiState_hasDerivAt
     (n : ℕ) (a b : Fin n → ℝ)
     (t : ℝ) (psi : Fin n → ℂ) :
@@ -451,107 +451,197 @@ theorem p73_jacobiState_hasDerivAt
       (((-Complex.I) • jacobiComplex n a b).mulVec
         (jacobiState n a b t psi))
       t
-```
 
-**Verified record:**
+Verification:
 
-- [GitHub Actions #108: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39204261981)
-- Verified proof commit: `9489b44a880688790e6dc65d422d90755d57a341`
-- Source: `P73_2_State.lean`
-- `#print axioms` result: `[propext, Classical.choice, Quot.sound]`
-- No `sorryAx` in the recorded axiom dependency output.
-- Integration into `main`: [Pull Request #2](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/2)
-- Post-merge verification: [GitHub Actions #109: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39248613293)
-- Verified merge commit: `4e288ae3ce35e3f99c5630dd3fb436b30c3a36c9`
+- GitHub Actions #108: SUCCESS.
+- GitHub Actions #109: SUCCESS on "main".
+- Pull Request #2: merged.
+- Verified merge commit: "4e288ae3ce35e3f99c5630dd3fb436b30c3a36c9".
+- Recorded axioms: "[propext, Classical.choice, Quot.sound]".
 
-**Scientific distinction:** The Schrödinger state derivative is a standard consequence of finite-dimensional unitary evolution.
+The result establishes a standard finite-dimensional Schrödinger evolution identity in the repository's formal framework.
 
-Formalizing it establishes a rigorous connection within this repository between the matrix propagator and the evolving state. It does not constitute a new physical law.
+It does not constitute a new physical law.
 
-The Krylov complexity derivative along this specific evolution and the dispersion speed-limit inequality remain further proof obligations.
+3.9. Jacobi-state component derivatives: P74.1
+
+Source: "P74_1_Components.lean"
+
+The following declarations are reported as verified:
+
+Lanzarini.p74_jacobiState_component_hasDerivAt
+Lanzarini.p74_jacobiState_parts_hasDerivAt
+
+For the evolved state
+
+$$
+\psi(t)=e^{-itH}\psi_0,
+$$
+
+the component derivative is
+
+$$
+\boxed{
+\frac{d}{dt}\psi_j(t)
+
+(-iH\psi(t))_j.
+}
+$$
+
+The real and imaginary coordinate derivatives are also formally established.
+
+P74.1 derives these statements from P73.2.
+
+It does not assume the desired component derivatives.
+
+This milestone connects the vector-valued Schrödinger derivative with the coordinatewise differentiability requirements of P72.2.
+
+3.10. Physical Krylov complexity derivative: P74.2
+
+Source: "P74_2_KrylovDerivative.lean"
+
+Verified declaration:
+
+Lanzarini.p74_krylovComplexityAt_hasDerivAt
+
+Define
+
+$$
+K(t)=\sum_{j=0}^{n-1}j|\psi_j(t)|^2
+$$
+
+for the physical Jacobi evolution
+
+$$
+\psi(t)=e^{-itH}\psi_0.
+$$
+
+P74.2 establishes
+
+$$
+\boxed{
+\dot K(t)
+
+2\sum_{j=0}^{n-1}
+j\operatorname{Re}
+\left(
+\overline{\psi_j(t)}
+(-iH\psi(t))_j
+\right).
+}
+$$
+
+The proof combines:
+
+1. P72.2, the conditional componentwise differentiation theorem.
+2. P73.2, the physical evolved-state derivative.
+3. P74.1, the coordinatewise complex, real and imaginary derivatives.
+
+The physical derivative is derived rather than introduced as a hypothesis.
+
+No state normalization assumption is required for this derivative identity.
+
+Official verification:
+
+- "PR #3: merged" (https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/3).
+- "Development workflow #116: SUCCESS" (https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39374579575).
+- "Post-merge workflow #117: SUCCESS" (https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39399857938).
+- Merge commit: "3cc284d942bb73b977315fe5096033ce9ec37d42".
+
+The recorded P74 theorem dependencies are
+
+[propext, Classical.choice, Quot.sound]
+
+No "sorryAx" appears in the reported dependencies of the three P74 declarations.
+
+Scientific interpretation: P74.2 closes the foundational gap between conditional differentiation of Krylov complexity and the actual finite-dimensional Jacobi evolution.
+
+It does not yet establish the centered derivative identity, the physical dispersion speed limit or the finite-depth local-defect hierarchy.
 
 ---
 
-## 4. Repository structure
+4. Repository structure
 
-| File | Purpose |
-| --- | --- |
-| `Main.lean` | Initial Lean verification check |
-| `Jacobi2.lean` | Two-site integer Jacobi matrix and symmetry |
-| `JacobiGeneral.lean` | Finite integer-valued Jacobi entries and symmetry |
-| `JacobiReal.lean` | Finite real Jacobi Hamiltonian |
-| `JacobiEvolution.lean` | Complex Hamiltonian and anti-Hermitian evolution generator |
-| `MatrixExpProbe.lean` | Finite propagator, unitarity and conservation theorems |
-| `KrylovNumber.lean` | Number operator, moments, normalized variance and zero-variance constraints |
-| `KrylovGram.lean` | Complex Gram coordinates and nonnegative Gram sum |
-| `KrylovLagrange.lean` | Finite-dimensional complex Lagrange identity |
-| `KrylovGap.lean` | P70–P72.3a: Gram gap, variance bridge, complexity differentiation and complex-time derivative |
-| `P72_3a_Minimal.lean` | Isolated verification of the complex-time matrix exponential derivative |
-| `P73_RealTime.lean` | P73.1: real-time Jacobi propagator derivative |
-| `P73_2_State.lean` | P73.2: real-time evolved Jacobi state derivative |
-| `lean-toolchain` | Lean toolchain version |
-| `lakefile.toml` | mathlib dependency specification |
-| `.github/workflows/lean.yml` | Explicit compilation sequence through P73.2 used by the main GitHub Actions verification |
-| `.github/workflows/p72-minimal.yml` | Separate verification workflow for the isolated P72.3a proof |
+File| Purpose
+"Main.lean"| Initial Lean verification check
+"Jacobi2.lean"| Two-site integer Jacobi matrix and symmetry
+"JacobiGeneral.lean"| Finite integer-valued Jacobi entries and symmetry
+"JacobiReal.lean"| Finite real Jacobi Hamiltonian
+"JacobiEvolution.lean"| Complex Hamiltonian and anti-Hermitian generator
+"MatrixExpProbe.lean"| Propagator, unitarity and conservation theorems
+"KrylovNumber.lean"| Number operator, moments, normalized variance and support constraints
+"KrylovGram.lean"| Complex Gram coordinates and nonnegative Gram sum
+"KrylovLagrange.lean"| Finite complex Lagrange identity
+"KrylovGap.lean"| P70–P72.3a foundational identities and derivatives
+"P72_3a_Minimal.lean"| Isolated complex-time matrix-exponential verification
+"P73_RealTime.lean"| P73.1 propagator derivative
+"P73_2_State.lean"| P73.2 evolved-state derivative
+"P74_1_Components.lean"| P74.1 componentwise derivatives
+"P74_2_KrylovDerivative.lean"| P74.2 physical Krylov complexity derivative
+"lean-toolchain"| Lean toolchain specification
+"lakefile.toml"| mathlib dependency configuration
+".github/workflows/lean.yml"| Main GitHub Actions verification workflow
+".github/workflows/p72-minimal.yml"| Isolated P72.3a verification workflow
 
-The P72 and P73 source files and verification workflows are included in `main`.
+The P74 post-merge verification record reports successful compilation of both new P74 source files.
 
-The verified proof development has been integrated through Pull Requests #1 and #2.
-
-The previous development branches are retained for historical traceability.
+The current workflow contents should be consulted when reproducing the exact compilation sequence.
 
 ---
 
-## 5. Verification environment and integrity policy
+5. Verification environment and scientific integrity
 
-The repository uses Lean 4, mathlib, Lake and GitHub Actions.
+The project uses Lean 4, mathlib, Lake and GitHub Actions.
 
-The historical P71 workflow #84 compiled ten Lean files in dependency order and verified the foundational theorems through P71.
+Historical verification milestones include:
 
-Workflow #103 on `main` compiled eleven Lean files and verified the foundational development through P73.1.
+- P71: GitHub Actions #84.
+- P73.1: GitHub Actions #103.
+- P73.2: GitHub Actions #109.
+- P74.2: GitHub Actions #117.
 
-The full verification workflow #109 on `main` compiled twelve Lean files in dependency order, including:
+The latest reported successful checkpoint is
 
-- `KrylovGap.lean`
-- `P73_RealTime.lean`
-- `P73_2_State.lean`
+"GitHub Actions #117 on main: SUCCESS" (https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39399857938)
 
-The P72.3a isolated verification workflow also completed successfully.
+at commit
 
-**Latest completed verification:**
+3cc284d942bb73b977315fe5096033ce9ec37d42
 
-[Lean 4 Verification #109 on `main`: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39248613293)
+5.1. Proof integrity policy
 
-The recorded source commit is:
+Every future formalization milestone must follow these requirements:
 
-```text
-4e288ae3ce35e3f99c5630dd3fb436b30c3a36c9
-```
+1. Preserve the mathematical statement when repairing its proof.
+2. Audit all relevant definitions and hypotheses.
+3. Compile every new source file in the official verification workflow.
+4. Record the exact verified commit.
+5. Preserve historical verification and failure records.
+6. Audit selected declarations using "#print axioms".
+7. Never introduce "sorry", "admit", artificial axioms or circular hypotheses to force a successful compilation.
+8. Check normalization and positivity assumptions explicitly.
+9. Verify coupling-index and finite-boundary conventions.
+10. Separate successful development-branch checks from post-merge verification.
+11. Avoid interpreting milestone numbers as a percentage of research completion.
+12. Distinguish formal verification from independent scientific review.
 
-The verification applies to this exact merged source state on `main`.
+5.2. Axiom audit
 
-Earlier test-branch verification records, including #101 and #108, remain part of the project's development history.
+The recorded P74 axiom probes concern:
 
-To audit future proof repairs:
+#print axioms Lanzarini.p74_jacobiState_component_hasDerivAt
+#print axioms Lanzarini.p74_jacobiState_parts_hasDerivAt
+#print axioms Lanzarini.p74_krylovComplexityAt_hasDerivAt
 
-1. **Freeze the theorem statement first.** When a proof is corrected, compare the statement and hypotheses against the earlier commit; changing them means changing the theorem.
-2. Check **all definitions that the statement depends on**, not only the displayed theorem text.
-3. Confirm that the new file is included in the actual CI commands. A green workflow does not certify files it omitted.
-4. Retain commit history and failed-run evidence where possible; old failures do not invalidate a later correct proof.
-5. Independently check the correspondence between the encoded Lean statement and the research preprint, including normalization, coupling indices and boundaries.
-6. Audit axiomatic dependencies for selected declarations using `#print axioms`; report the actual output, not an assumed list.
-7. Do not interpret milestone counts as a measure of mathematical completion.
-8. Do not introduce `sorry`, `admit`, artificial axioms or circular hypotheses to force verification.
-9. Preserve the mathematical meaning of each declaration while repairing proofs.
-10. Compile every new theorem explicitly in GitHub Actions before assigning it a verified checkpoint.
-11. Keep experimental developments separate from the official branch until the complete verification passes.
-12. Do not claim formalization of the preprint's main theorem until its precise mathematical statement and proof have been encoded and checked.
+Their reported dependencies are
 
-### 5.1. Axiom audit
+[propext, Classical.choice, Quot.sound]
 
-The following declarations have explicit axiom reports in the successful #109 workflow on `main`:
+No "sorryAx" is reported for these declarations.
 
-```lean
+Earlier recorded probes include:
+
 #print axioms Lanzarini.krylovComplexity_increment
 #print axioms Lanzarini.krylovComplexity_hasDerivAt_components
 #print axioms Lanzarini.jacobiEvolutionGenerator_time_factor
@@ -559,235 +649,401 @@ The following declarations have explicit axiom reports in the successful #109 wo
 #print axioms Lanzarini.jacobiComplexTimeExp_hasDerivAt
 #print axioms Lanzarini.p73_jacobiPropagator_hasDerivAt
 #print axioms Lanzarini.p73_jacobiState_hasDerivAt
-```
 
-The recorded output for each lists the standard Lean axioms:
+The earlier recorded outputs also list
 
-```text
 [propext, Classical.choice, Quot.sound]
-```
 
-No `sorryAx` appears in these reported theorem dependencies.
+These reports apply to the specified declarations.
 
-This confirms the reported axiom dependencies of these specific declarations, not those of every theorem in the repository.
+They do not constitute an exhaustive axiom audit of every historical theorem.
 
-A further audit may inspect:
+Additional audits remain appropriate for:
 
-```lean
 #print axioms Lanzarini.krylovLagrange_finite
 #print axioms Lanzarini.krylovGram_realPart_gap
 #print axioms Lanzarini.krylovCenteredState_normSq
 #print axioms Lanzarini.krylovCenteredState_gap_at
-```
 
-The dedicated record of these four axiom probes is still **pending**. No unobserved result is claimed.
+No result is asserted for an unexecuted audit.
 
-### 5.2. Branch and integration policy
+5.3. Branch integration policy
 
-The officially verified P73.2 checkpoint is integrated into the default branch:
+The official checkpoint is integrated into
 
-```text
 main
-```
 
-**P73.1 integration:**
+The next milestone must be developed separately, verified, reviewed and merged only after successful checks.
 
-- [Pull Request #1](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/1), merged on 18 October 2026.
-- Merge commit: `677985738a8e82aca8327ad3cc241ef8bc5e695d`.
-- Verification on `main`: [GitHub Actions #103: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39153415923).
-
-**P73.2 integration:**
-
-- [Pull Request #2](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/2), merged on 19 October 2026.
-- Merge commit: `4e288ae3ce35e3f99c5630dd3fb436b30c3a36c9`.
-- Verification on `main`: [GitHub Actions #109: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39248613293).
-
-Previous development branches:
-
-- `p72-3a-proof-test`
-- `p73-2-state-derivative`
-
-Both remain available for traceability.
-
-**Next unproved target:** Specialize the Krylov complexity derivative to the actual Jacobi evolution, using the verified state derivative P73.2.
-
-Future research milestones should be developed in a separate branch, integrated only after their full workflow and axiom checks pass, and verified again on `main`.
-
-A successful development-branch workflow does not itself certify the merged branch.
+A green development-branch workflow does not itself certify the merged branch.
 
 ---
 
-## 6. Scientific target and unverified steps
+6. Scientific target: finite-depth local-defect hierarchy
 
-The preprint studies the loss of saturation of a Krylov dispersion speed limit for a real Jacobi evolution **initialized at the first basis state** $e_0$.
-
-In the **preprint's one-based coupling convention**, define $c_0=0$, $c_j=b_j^2$, and
+The research preprint studies the loss of saturation of a Krylov dispersion speed limit for real Jacobi dynamics initialized at the first basis state
 
 $$
-\Omega_r=c_{r+3}-3c_{r+2}+3c_{r+1}-c_r.
+\psi_0=e_0.
 $$
 
-Where the denominator is nonzero, the preprint's dimensionless saturation deficit is
+In the preprint's one-based coupling convention, define
 
 $$
-D(t)=1-\frac{\dot K(t)^2}{4b_1^2V(t)}.
+c_0=0,\qquad c_j=b_j^2,
 $$
 
-The normalized deficit is studied for sufficiently small $t\ne0$ (with its short-time extension at $0$). Its nonnegativity depends on establishing the appropriate dispersion speed-limit inequality under the correct dynamical assumptions.
-
-**Mixed finite-depth local-defect formula stated in the preprint, not yet proved in Lean.** For $r\ge0$, write $m=r+3$ and take a finite real Jacobi chain with dimension $d\ge m+1$, positive interior couplings and the stated initial state $e_0$. Under the prefix conditions
+and the third-difference defect
 
 $$
-a_0=a_1=\cdots=a_{m-1},\qquad
+\boxed{
+\Omega_r
+
+c_{r+3}-3c_{r+2}+3c_{r+1}-c_r.
+}
+$$
+
+Where the denominator is nonzero, the preprint defines the dimensionless saturation deficit
+
+$$
+\boxed{
+D(t)
+
+1-
+\frac{\dot K(t)^2}{4b_1^2V(t)}.
+}
+$$
+
+The short-time analysis concerns sufficiently small nonzero times and the appropriate extension at zero.
+
+Nonnegativity of this deficit requires the relevant physical dispersion speed-limit inequality and its assumptions.
+
+6.1. Mixed finite-depth defect formula
+
+The preprint states a mixed finite-depth local-defect expansion.
+
+For
+
+$$
+r\ge0,\qquad m=r+3,
+$$
+
+consider a finite real Jacobi chain of dimension
+
+$$
+d\ge m+1
+$$
+
+with positive interior couplings and initial state $e_0$.
+
+Assume the prefix conditions
+
+$$
+a_0=a_1=\cdots=a_{m-1}
+$$
+
+and
+
+$$
 \Omega_0=\cdots=\Omega_{r-1}=0,
 $$
 
-where the defect condition is empty for $r=0$, the preprint gives the leading mixed form
+where the latter condition is empty for $r=0$.
+
+The preprint states the leading expansion
 
 $$
-D(t)=\frac{\displaystyle\prod_{j=2}^{m-1}c_j}{[(m+1)!]^2}
-\bigl[4\Omega_r^2+c_m(a_m-a_0)^2\bigr]
-\,t^{2m}+O_H(t^{2m+2}).
+\boxed{
+D(t)
+
+\frac{\displaystyle\prod_{j=2}^{m-1}c_j}
+{[(m+1)!]^2}
+\left[
+4\Omega_r^2+
+c_m(a_m-a_0)^2
+\right]
+t^{2m}
++
+O_H(t^{2m+2}).
+}
 $$
 
-The **diagonal defect** $a_m-a_0$ is part of this general finite-dimensional research claim. The simplified expression involving only $\Omega_r^2$ is not an unconditional statement of the mixed real-Jacobi result. In a terminal-boundary setting, the relevant boundary and positivity assumptions must be checked separately.
+This expression contains two mechanisms:
 
-**The full local-defect hierarchy, its remainder estimates, the short-time rigidity statements and any infinite-dimensional extension are not formalized in the current Lean repository.**
+- Off-diagonal third-difference defects $\Omega_r$.
+- Diagonal inhomogeneity $a_m-a_0$.
 
-The preprint states research results; CI verifies only the theorems that appear in the code. Neither AI review nor Lean compilation by itself establishes novelty or independent peer review.
+The diagonal term is part of the general mixed real-Jacobi claim.
 
-### 6.1. Completed foundational derivative steps
+The expression involving only $\Omega_r^2$ is not an unconditional version of the mixed formula.
 
-The following steps are verified:
+Finite-chain boundaries, terminal couplings and positivity assumptions must be treated explicitly.
 
-- Exact increment of finite-dimensional Krylov complexity (P72.1).
-- Derivative formula for a componentwise differentiable complex-state curve, under explicit differentiability hypotheses (P72.2).
-- Factorization of the Jacobi evolution generator (P72.3a.1).
-- Complex-time representation of the propagator (P72.3a.2).
-- Complex-time matrix exponential derivative (P72.3a.3).
-- Real-time propagator derivative (P73.1).
-- Real-time derivative of the evolved Jacobi state (P73.2).
+This expansion is a claim of the research preprint and has not yet been established as a Lean theorem in this repository.
 
-These are genuine formalized results but do not yet prove the preprint's central local-defect hierarchy.
+The formula, its hypotheses, its remainder and its claimed novelty remain subject to independent mathematical audit.
 
-### 6.2. Next formal proof obligations
+6.2. Completed foundational formalization
 
-The next proof obligations are:
+The verified development now includes:
 
-1. **Physical Krylov complexity derivative.**
+- Finite-dimensional unitary Jacobi evolution.
+- Krylov moments and normalized variance.
+- Complex Gram and Lagrange identities.
+- Real-part Gram-gap identity.
+- Centered-state variance identity.
+- Conditional complexity differentiation.
+- Complex-time matrix-exponential differentiation.
+- Real-time propagator differentiation.
+- Physical evolved-state differentiation.
+- Componentwise physical state differentiation.
+- Physical Krylov complexity differentiation, P74.2.
 
-   Specialize the componentwise differentiation theorem to the actual Jacobi-evolved state, using P73.2.
-
-   The target identity is
-
-   $$
-   \frac{d}{dt}K(\psi(t))
-   =
-   2\mathrm{Re}
-   \langle N\psi(t),\dot\psi(t)\rangle,
-   $$
-
-   with the precise inner-product convention and assumptions encoded in Lean.
-
-   For normalized evolution, the centered-state version is
-
-   $$
-   \frac{d}{dt}K(t)
-   =
-   2\mathrm{Re}
-   \langle (N-K(t))\psi(t),\dot\psi(t)\rangle.
-   $$
-
-   These are future proof targets, not yet verified as physical-evolution theorems in Lean.
-
-2. **Energy and velocity norm.**
-
-   Establish the conserved quantity required by the dispersion speed limit under the initial-state assumptions of the preprint.
-
-3. **Finite-dimensional speed-limit inequality.**
-
-   Prove the required bound using the already formalized Gram identity, centered variance and physical time derivative.
-
-4. **Deficit definition and domain.**
-
-   Define the normalized deficit with an explicit proof that its denominator is nonzero where used.
-
-5. **Finite-depth local defects.**
-
-   Formalize the diagonal and off-diagonal obstructions, including their index conventions, finite-chain boundaries and leading Taylor coefficients.
-
-6. **Main finite-chain result.**
-
-   Prove the precise counterpart of Theorem 8.1 in the research preprint.
-
-7. **Local rigidity.**
-
-   Formalize the finite-depth rigidity criterion of Theorem 9.1, explicitly preserving the hypotheses on positive couplings and terminal edges.
-
-8. **Semi-infinite extension.**
-
-   Treat unbounded operator domains, essential self-adjointness and weighted estimates separately from the finite-dimensional results.
-
-Except for the explicitly completed foundational steps, these are **research targets, not verified Lean milestones**.
-
-The next milestone must not assume the desired physical Krylov derivative, speed-limit inequality or local-defect expansion as a hypothesis merely to make a proof compile.
+These ingredients are necessary for the planned formal development but do not by themselves prove the central finite-depth hierarchy.
 
 ---
 
-## 7. Scientific status and limitations
+7. Next research checkpoint: P75
 
-The current project **does not claim**:
+7.1. Centered physical Krylov derivative
 
-- A completed Lean proof of the main local-defect hierarchy theorem.
-- A completed Lean proof of the physical Krylov complexity derivative along Jacobi evolution.
-- A completed Lean proof of the physical Krylov dispersion speed limit.
+Status: NOT YET VERIFIED
+
+The next milestone is the centered physical Krylov derivative identity.
+
+For a normalized initial state,
+
+$$
+|\psi_0|^2=1,
+$$
+
+unitary evolution gives
+
+$$
+|\psi(t)|^2=1.
+$$
+
+Let
+
+$$
+N=\operatorname{diag}(0,1,\ldots,n-1)
+$$
+
+and
+
+$$
+K(t)=\langle\psi(t),N\psi(t)\rangle,
+$$
+
+using the appropriate inner-product convention.
+
+Define
+
+$$
+u(t)=(N-K(t))\psi(t).
+$$
+
+The target is
+
+$$
+\boxed{
+\dot K(t)
+
+2\operatorname{Re}
+\langle u(t),\dot\psi(t)\rangle.
+}
+$$
+
+For the physical Jacobi evolution,
+
+$$
+\dot\psi(t)=(-iH)\psi(t).
+$$
+
+Consequently, the intended centered physical form is
+
+$$
+\boxed{
+\dot K(t)
+
+2\operatorname{Re}
+\langle
+(N-K(t))\psi(t),
+(-iH)\psi(t)
+\rangle.
+}
+$$
+
+The inner-product ordering must match the convention used by the formalized Lean definitions. For this real-part identity, conjugate symmetry permits the corresponding reversed ordering.
+
+7.2. Mathematical proof strategy
+
+The proof should proceed from already established results.
+
+First, use P74.2 to obtain
+
+$$
+\dot K(t)
+
+2\operatorname{Re}
+\langle N\psi(t),\dot\psi(t)\rangle.
+$$
+
+Second, use the normalization conservation theorem to establish
+
+$$
+\operatorname{Re}
+\langle\psi(t),\dot\psi(t)\rangle=0.
+$$
+
+Then
+
+$$
+\begin{aligned}
+2\operatorname{Re}
+\langle (N-K(t))\psi(t),\dot\psi(t)\rangle
+&=
+2\operatorname{Re}
+\langle N\psi(t),\dot\psi(t)\rangle\
+&\quad-
+2K(t)\operatorname{Re}
+\langle\psi(t),\dot\psi(t)\rangle\
+&=\dot K(t).
+\end{aligned}
+$$
+
+This is the mathematical target.
+
+The corresponding Lean proof must preserve the exact definitions, scalar conventions and normalization hypotheses.
+
+No theorem may assume the desired centered derivative as a hypothesis.
+
+7.3. P75 acceptance criteria
+
+P75 can be declared verified only after:
+
+1. The precise theorem statement is encoded.
+2. Its proof compiles under Lean 4 and mathlib.
+3. The proof uses the established physical derivative and normalization results.
+4. No circular hypothesis is introduced.
+5. The theorem's axiomatic dependencies are recorded.
+6. The official workflow explicitly compiles the new file.
+7. The development branch passes verification.
+8. The change is merged into "main".
+9. A post-merge workflow passes successfully.
+
+Until these conditions are met, P75 remains a research target.
+
+---
+
+8. Subsequent formal proof obligations
+
+Following P75, the planned work includes:
+
+8.1. Energy and velocity norm
+
+Establish the conserved energy-related quantity required for the Krylov dispersion speed limit under the preprint's initial-state assumptions.
+
+The relation between the physical state derivative, its norm and the relevant initial coupling must be proved with explicit hypotheses.
+
+8.2. Physical Krylov speed limit
+
+Combine the centered derivative, normalized variance and Gram/Cauchy–Schwarz inequality.
+
+The intended form is
+
+$$
+|\dot K(t)|
+\le
+2\sqrt{V(t)},|\dot\psi(t)|.
+$$
+
+Under the specific Jacobi initial-state hypotheses and the corresponding conserved velocity norm, derive the relevant bound involving the first coupling $b_1$.
+
+This is not yet a verified Lean result.
+
+8.3. Saturation deficit
+
+Define
+
+$$
+D(t)=1-\frac{\dot K(t)^2}{4b_1^2V(t)}
+$$
+
+on an explicitly justified domain.
+
+The formalization must establish nonvanishing denominators wherever division is used.
+
+8.4. Finite-depth local defects
+
+Formalize diagonal and off-diagonal defects, finite-chain boundaries, coupling-index conventions and leading Taylor coefficients.
+
+8.5. Main finite-chain theorem
+
+Formalize the precise mathematical counterpart of Theorem 8.1 in the research preprint, preserving all necessary assumptions and remainder estimates.
+
+8.6. Local rigidity
+
+Formalize the finite-depth rigidity criterion corresponding to Theorem 9.1, including positive couplings and terminal-boundary conditions.
+
+8.7. Semi-infinite extension
+
+Treat self-adjointness, unbounded operator domains, weighted estimates and infinite-dimensional evolution separately.
+
+These remain research obligations, not completed Lean milestones.
+
+---
+
+9. Scientific status and limitations
+
+The current formalization establishes the finite-dimensional physical Krylov complexity derivative through P74.2.
+
+It does not claim:
+
+- A completed Lean proof of the centered physical Krylov derivative.
+- A completed Lean proof of the Krylov dispersion speed limit.
+- A completed Lean proof of the saturation-deficit expansion.
+- A completed Lean proof of the finite-depth local-defect hierarchy.
+- A completed Lean proof of the preprint's main rigidity theorem.
+- General validity for unbounded semi-infinite Jacobi operators.
 - A new universal quantum speed limit.
-- Independent peer-review certification or established worldwide mathematical priority.
-- Formal validity for arbitrary unbounded Jacobi operators.
-- That the number of PASS milestones measures percentage completion of the scientific objective.
+- Independent peer-review certification.
+- Established worldwide mathematical priority.
+- That successful compilation verifies every scientific claim in the preprint.
 
-The finite-dimensional Schrödinger state derivative is formalized through P73.2.
+The formalized Schrödinger derivative and physical Krylov complexity derivative are standard consequences of the finite-dimensional dynamical framework.
 
-This establishes a foundational dynamical theorem, not a new physical law.
+Their formalization supplies checked mathematical infrastructure for investigating the more specialized local-defect claims.
 
-Lean checks proofs relative to the **precise encoded statements**, accepted foundations, definitions and assumptions.
+Scientific validity requires agreement between the intended mathematical theorem and the exact Lean encoding.
 
-Scientific evaluation also requires the mathematical encoding to match the intended theorem and its physical setting.
+Scientific novelty requires independent comparison with prior literature.
 
-This correspondence remains an explicit, ongoing audit task.
-
-The repository's finite-dimensional formalization should not be interpreted as an automatic verification of the semi-infinite statements in the preprint.
-
-The mathematical novelty of any claimed local-defect hierarchy remains subject to independent analysis of the literature and specialist review.
+These remain distinct verification responsibilities.
 
 ---
 
-## 8. Research preprint
+10. Research preprint
 
-**Title:** Local Defect Hierarchies for Krylov Speed-Limit Saturation in General Real Jacobi Dynamics  
-**Author:** Valentino Lanzarini  
-**DOI:** https://doi.org/10.5281/zenodo.23163367
+Title: Local Defect Hierarchies for Krylov Speed-Limit Saturation in General Real Jacobi Dynamics
+Author: Valentino Lanzarini
+DOI: https://doi.org/10.5281/zenodo.23163367
 
-The published preprint and this machine-checked foundational development are related but distinct scientific artifacts.
+The preprint and this Lean repository are related but distinct scientific artifacts.
 
-The formalization is still incomplete relative to the full preprint.
+The preprint presents the proposed finite-depth local-defect hierarchy for real Jacobi dynamics.
 
-The central research target is the finite-depth hierarchy describing the first nonzero obstruction to saturation of the Krylov dispersion bound for general real Jacobi dynamics.
+The Lean repository currently provides formally verified foundational results through the physical Krylov complexity derivative P74.2.
 
-The proposed hierarchy combines two distinct mechanisms:
-
-- Off-diagonal third-difference defects, measured by $\Omega_r$.
-- Diagonal inhomogeneity, measured by $a_{r+3}-a_0$.
-
-The preprint's main finite-chain theorem and rigidity criterion must be formalized with their precise hypotheses before a machine-verified version of those research claims can be asserted.
+The main local-defect theorem, its remainder estimates and its rigidity consequences have not yet been fully translated into machine-checked proofs.
 
 ---
 
-## 9. Copyright and permissions
+11. Copyright and permissions
 
 Copyright © 2026 Valentino Lanzarini.
 
-**All rights reserved.**
+All rights reserved.
 
 The repository is publicly accessible for inspection and scientific discussion.
 
@@ -797,39 +1053,41 @@ Except where applicable law or GitHub's Terms of Service permit otherwise, copyi
 
 Public visibility does not place original materials in the public domain.
 
-Copyright protects original expression but does not grant exclusive ownership of mathematical facts, ideas or theorems.
+Copyright protects original expression but does not confer exclusive ownership of mathematical facts, ideas or theorems.
 
 Third-party dependencies remain subject to their respective licenses.
 
 ---
 
-## 10. AI-assisted research
+12. AI-assisted research
 
 This research and its formalization have been developed with assistance from artificial intelligence tools.
 
-AI assistance is not presented as independent peer review or scientific certification.
+AI assistance is not represented as independent peer review or scientific certification.
 
-Mathematical claims must be evaluated through explicit proofs, reproducible checks and independent scientific scrutiny.
+Mathematical claims require explicit proofs, reproducible checks and independent scientific scrutiny.
 
 The author remains responsible for reviewing the research claims, the published documentation and the scope of the conclusions.
 
-Automated theorem verification provides evidence of the validity of the encoded formal statements relative to Lean's foundations, but does not independently certify scientific originality or the accuracy of every translation from informal mathematics.
+Automated theorem verification provides evidence for the validity of the encoded statements relative to the accepted formal foundations.
+
+It does not independently establish originality or certify every translation from informal mathematics into Lean.
 
 ---
 
-## 11. Author
+13. Author
 
-**Valentino Lanzarini**
+Valentino Lanzarini
 
 Independent Mathematical Researcher
 
 Krylov Dynamics | Jacobi Operators | Quantum Evolution | Formal Verification
 
-**Research:**  
+Research:
 https://doi.org/10.5281/zenodo.23163367
 
-**GitHub:**  
-[Repository on GitHub](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./tree/main)
+GitHub:
+"Repository on GitHub" (https://github.com/vlanzarini80-source/lanzarini-krylov-lean./tree/main)
 
 ---
 
