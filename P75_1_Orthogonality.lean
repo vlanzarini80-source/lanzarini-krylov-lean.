@@ -34,7 +34,7 @@ theorem p75_centeredState_orthogonal
 
   rw [hcenter, krylovComplexity_expectation,
       jacobiInner_self, hnorm]
-  ring
+  simp
 
 #print axioms p75_centeredState_orthogonal
 
