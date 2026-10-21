@@ -23,7 +23,7 @@ jobs:
           lake update
           lake exe cache get
 
-      - name: Verify Lean proofs through P75.2a
+      - name: Verify Lean proofs through P75.2b
         run: |
           set -euo pipefail
 
@@ -40,21 +40,31 @@ jobs:
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o KrylovGap.olean KrylovGap.lean
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P73_RealTime.olean P73_RealTime.lean
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P73_2_State.olean P73_2_State.lean
+
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P74_1_Components.olean P74_1_Components.lean | tee p74-1-axioms.log
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P74_2_KrylovDerivative.olean P74_2_KrylovDerivative.lean | tee p74-2-axioms.log
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P75_1_Orthogonality.olean P75_1_Orthogonality.lean | tee p75-1-check.log
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean P75_2a_VelocityOrthogonality.lean | tee p75-2a-check.log
 
-          if grep -q 'sorryAx' p74-1-axioms.log p74-2-axioms.log p75-1-check.log p75-2a-check.log; then
-            echo 'FAILED: sorryAx detected'
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P75_1_Orthogonality.olean P75_1_Orthogonality.lean | tee p75-1-check.log
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P75_2a_VelocityOrthogonality.olean P75_2a_VelocityOrthogonality.lean | tee p75-2a-check.log
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean P75_2b_CenteredDerivative.lean | tee p75-2b-check.log
+
+          echo "Checking for forbidden sorryAx dependencies"
+
+          if grep -q 'sorryAx' p74-1-axioms.log p74-2-axioms.log p75-1-check.log p75-2a-check.log p75-2b-check.log; then
+            echo "FAILED: sorryAx detected"
             exit 1
           fi
 
           grep -F "'Lanzarini.p74_jacobiState_component_hasDerivAt' depends on axioms:" p74-1-axioms.log
           grep -F "'Lanzarini.p74_jacobiState_parts_hasDerivAt' depends on axioms:" p74-1-axioms.log
           grep -F "'Lanzarini.p74_krylovComplexityAt_hasDerivAt' depends on axioms:" p74-2-axioms.log
+
           grep -F "'Lanzarini.p75_centeredState_orthogonal' depends on axioms:" p75-1-check.log
+
           grep -F "'Lanzarini.p75_antiHermitian_real_orthogonal' depends on axioms:" p75-2a-check.log
           grep -F "'Lanzarini.p75_state_velocity_real_orthogonal' depends on axioms:" p75-2a-check.log
 
-          echo "Lean verification through P75.2a completed"
+          grep -F "'Lanzarini.p75_centered_inner_identity' depends on axioms:" p75-2b-check.log
+          grep -F "'Lanzarini.p75_centered_derivative' depends on axioms:" p75-2b-check.log
+
+          echo "SUCCESS: Lean verification through P75.2b completed"
