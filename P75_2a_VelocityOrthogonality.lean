@@ -4,7 +4,7 @@ import P75_1_Orthogonality
 namespace Lanzarini
 
 /-!
-P75.2a: Real orthogonality of the physical
+P75.2a: Real orthogonality of physical
 Jacobi velocity.
 
 No normalization hypothesis is required.
@@ -12,8 +12,8 @@ No sorry, admit, or additional axioms.
 -/
 
 /--
-An anti-Hermitian matrix has purely imaginary
-expectation values.
+For an anti-Hermitian matrix A, the real
+part of the expectation of A vanishes.
 -/
 theorem p75_antiHermitian_real_orthogonal
     {n : ℕ}
@@ -32,15 +32,13 @@ theorem p75_antiHermitian_real_orthogonal
       star (dotProduct (star v) (A.mulVec v)) =
         -dotProduct (star v) (A.mulVec v)
 
-    rw [star_dotProduct]
+    rw [← Matrix.star_dotProduct]
     rw [Matrix.star_mulVec]
-    rw [Matrix.dotProduct_mulVec]
-    rw [Matrix.vecMul_vecMul]
-
-    rw [show star A = A.conjTranspose.transpose from rfl]
+    rw [← Matrix.dotProduct_mulVec]
     rw [hA]
 
-    simp
+    simp [Matrix.mulVec, dotProduct,
+      Finset.sum_neg_distrib]
 
   have hre := congrArg Complex.re hstar
 
