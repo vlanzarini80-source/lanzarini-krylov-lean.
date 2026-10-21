@@ -23,7 +23,7 @@ jobs:
           lake update
           lake exe cache get
 
-      - name: Verify Lean proofs through P74.2
+      - name: Verify Lean proofs through P74.2 and audit P75.1
         run: |
           set -euo pipefail
 
@@ -43,7 +43,9 @@ jobs:
 
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P74_1_Components.olean P74_1_Components.lean | tee p74-1-axioms.log
 
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean P74_2_KrylovDerivative.lean | tee p74-2-axioms.log
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P74_2_KrylovDerivative.olean P74_2_KrylovDerivative.lean | tee p74-2-axioms.log
+
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean P75_1_Orthogonality.lean | tee p75-1-check.log
 
           if grep -q 'sorryAx' p74-1-axioms.log p74-2-axioms.log; then
             echo 'FAILED: sorryAx detected'
@@ -55,3 +57,4 @@ jobs:
           grep -F "'Lanzarini.p74_krylovComplexityAt_hasDerivAt' depends on axioms:" p74-2-axioms.log
 
           echo "P74.1 and P74.2 verification completed"
+          echo "P75.1 preliminary dependency audit completed"
