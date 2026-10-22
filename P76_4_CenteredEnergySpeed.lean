@@ -57,12 +57,18 @@ theorem p76_4_centeredState_orthogonal_left
     intro j hj
     ring
   rw [h] at hs
-  exact hs.symm
+  calc
+    jacobiInner (krylovCenteredState u) u =
+        star (0 : ℂ) := hs.symm
+    _ = 0 := star_zero
 
 /--
 Removing the energy expectation from Hu
 does not change its inner product with the
 centered Krylov state.
+
+The conclusion follows from linearity and
+the independently proved orthogonality.
 -/
 theorem p76_4_centeredEnergy_inner
     (n : ℕ)
