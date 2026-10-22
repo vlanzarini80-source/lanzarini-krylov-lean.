@@ -39,7 +39,7 @@ private theorem p76_4_inner_sub_scalar
 Orthogonality of the centered Krylov state
 in the reversed inner-product order.
 
-Derived from P75.1.
+Derived from P75.1 by conjugate symmetry.
 -/
 theorem p76_4_centeredState_orthogonal_left
     {n : ℕ}
@@ -57,7 +57,7 @@ theorem p76_4_centeredState_orthogonal_left
     intro j hj
     ring
   rw [h] at hs
-  simpa only [star_zero] using hs
+  exact hs.symm
 
 /--
 Removing the energy expectation from Hu
