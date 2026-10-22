@@ -22,7 +22,7 @@ jobs:
           lake update
           lake exe cache get
 
-      - name: Verify Lean proofs through P76.2
+      - name: Verify Lean proofs through P76.3
         run: |
           set -euo pipefail
 
@@ -51,8 +51,9 @@ jobs:
 
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P76_1_EnergyVariance.olean P76_1_EnergyVariance.lean | tee p76-1-check.log
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P76_2_EnergyVarianceIdentity.olean P76_2_EnergyVarianceIdentity.lean | tee p76-2-check.log
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P76_3_EnergySecondMoment.olean P76_3_EnergySecondMoment.lean | tee p76-3-check.log
 
-          if grep -q 'sorryAx' p74-1-axioms.log p74-2-axioms.log p75-1-check.log p75-2a-check.log p75-2b-check.log p75-3-check.log p75-4-check.log p76-1-check.log p76-2-check.log; then
+          if grep -q 'sorryAx' p74-1-axioms.log p74-2-axioms.log p75-1-check.log p75-2a-check.log p75-2b-check.log p75-3-check.log p75-4-check.log p76-1-check.log p76-2-check.log p76-3-check.log; then
             echo 'Forbidden sorryAx dependency found' >&2
             exit 1
           fi
@@ -72,3 +73,6 @@ jobs:
           grep -F "'Lanzarini.p76_energyVarianceAt_nonneg' depends on axioms:" p76-1-check.log
           grep -F "'Lanzarini.p76_energyVariance_identity' depends on axioms:" p76-2-check.log
           grep -F "'Lanzarini.p76_energyVarianceAt_identity' depends on axioms:" p76-2-check.log
+          grep -F "'Lanzarini.p76_energyNormSq_secondMoment' depends on axioms:" p76-3-check.log
+          grep -F "'Lanzarini.p76_energyVariance_secondMoment' depends on axioms:" p76-3-check.log
+          grep -F "'Lanzarini.p76_energyVarianceAt_secondMoment' depends on axioms:" p76-3-check.log
