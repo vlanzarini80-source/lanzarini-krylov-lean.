@@ -10,9 +10,11 @@ The Jacobi Hamiltonian is Hermitian by the
 previously established theorem
 `jacobiComplex_conjTranspose`.
 
-No new axioms and no assumed variance identity.
+No new axioms.
+No sorry.
+No assumed variance identity.
 
-The proof must be checked by Lean CI.
+Candidate awaiting Lean CI verification.
 -/
 
 /--
@@ -40,10 +42,11 @@ private theorem p76_inner_energy_second_moment
     exact jacobiComplex_conjTranspose n a b
   rw [hH]
   rw [Matrix.dotProduct_mulVec]
-  exact (Matrix.vecMul_vecMul (star u) H H).symm
+  rw [Matrix.dotProduct_mulVec]
+  rw [Matrix.vecMul_vecMul]
 
 /--
-The squared norm of Hu is the real part
+The squared norm of Hu equals the real part
 of the energy second moment.
 -/
 theorem p76_energyNormSq_secondMoment
