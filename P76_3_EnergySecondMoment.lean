@@ -7,12 +7,12 @@ namespace Lanzarini
 P76.3: Energy variance as a second moment.
 
 The Jacobi Hamiltonian is Hermitian by the
-already established theorem
+previously established theorem
 `jacobiComplex_conjTranspose`.
 
 No new axioms and no assumed variance identity.
 
-Candidate: requires actual Lean CI compilation.
+The proof must be checked by Lean CI.
 -/
 
 /--
@@ -40,6 +40,7 @@ private theorem p76_inner_energy_second_moment
     exact jacobiComplex_conjTranspose n a b
   rw [hH]
   rw [Matrix.dotProduct_mulVec]
+  exact (Matrix.vecMul_vecMul (star u) H H).symm
 
 /--
 The squared norm of Hu is the real part
