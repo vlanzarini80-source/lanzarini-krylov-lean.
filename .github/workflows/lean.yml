@@ -23,7 +23,7 @@ jobs:
           lake update
           lake exe cache get
 
-      - name: Verify Lean proofs through P75.2b
+      - name: Verify Lean proofs through P75.3
         run: |
           set -euo pipefail
 
@@ -46,11 +46,12 @@ jobs:
 
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P75_1_Orthogonality.olean P75_1_Orthogonality.lean | tee p75-1-check.log
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P75_2a_VelocityOrthogonality.olean P75_2a_VelocityOrthogonality.lean | tee p75-2a-check.log
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean P75_2b_CenteredDerivative.lean | tee p75-2b-check.log
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P75_2b_CenteredDerivative.olean P75_2b_CenteredDerivative.lean | tee p75-2b-check.log
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean P75_3_QuadraticSpeedBound.lean | tee p75-3-check.log
 
           echo "Checking for forbidden sorryAx dependencies"
 
-          if grep -q 'sorryAx' p74-1-axioms.log p74-2-axioms.log p75-1-check.log p75-2a-check.log p75-2b-check.log; then
+          if grep -q 'sorryAx' p74-1-axioms.log p74-2-axioms.log p75-1-check.log p75-2a-check.log p75-2b-check.log p75-3-check.log; then
             echo "FAILED: sorryAx detected"
             exit 1
           fi
@@ -67,4 +68,7 @@ jobs:
           grep -F "'Lanzarini.p75_centered_inner_identity' depends on axioms:" p75-2b-check.log
           grep -F "'Lanzarini.p75_centered_derivative' depends on axioms:" p75-2b-check.log
 
-          echo "SUCCESS: Lean verification through P75.2b completed"
+          grep -F "'Lanzarini.p75_centered_quadratic_bound' depends on axioms:" p75-3-check.log
+          grep -F "'Lanzarini.p75_physical_quadratic_bound' depends on axioms:" p75-3-check.log
+
+          echo "SUCCESS: Lean verification through P75.3 completed"
