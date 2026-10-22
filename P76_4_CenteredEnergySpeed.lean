@@ -57,7 +57,7 @@ theorem p76_4_centeredState_orthogonal_left
     intro j hj
     ring
   rw [h] at hs
-  simpa using hs.symm
+  simpa only [star_zero] using hs.symm
 
 /--
 Removing the energy expectation from Hu
