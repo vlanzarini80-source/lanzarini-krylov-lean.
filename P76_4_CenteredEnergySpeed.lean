@@ -10,12 +10,12 @@ No new axioms.
 No sorry or admit.
 No assumption of the desired conclusion.
 
-Requires actual Lean CI verification.
+Candidate requiring Lean CI verification.
 -/
 
 /--
-Linearity of the Jacobi inner product in its
-second argument.
+Linearity of the Jacobi inner product
+in its second argument.
 -/
 private theorem p76_4_inner_sub_scalar
     {n : ℕ}
@@ -41,16 +41,15 @@ private theorem p76_4_inner_conj_symm
     star (jacobiInner u v) =
       jacobiInner v u := by
   unfold jacobiInner
-  rw [map_sum]
+  simp only [star_sum, star_mul', star_star]
   apply Finset.sum_congr rfl
   intro j hj
-  simp only [star_mul', star_star]
   ring
 
 /--
 The centered Krylov state is orthogonal
-to the original normalized state, with
-the arguments in reversed order.
+to the original normalized state,
+with reversed arguments.
 -/
 theorem p76_4_centeredState_orthogonal_left
     {n : ℕ}
@@ -74,9 +73,9 @@ theorem p76_4_centeredState_orthogonal_left
       simpa using congrArg star h
 
 /--
-Subtracting the mean energy from Hu does
-not change its inner product with the
-centered Krylov state.
+Subtracting the mean energy from Hu
+does not change its inner product with
+the centered Krylov state.
 -/
 theorem p76_4_centeredEnergy_inner
     (n : ℕ)
