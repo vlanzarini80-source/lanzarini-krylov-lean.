@@ -15,8 +15,9 @@
 **Research preprint:**  
 https://doi.org/10.5281/zenodo.23163367
 
-**Repository:**  
-https://github.com/vlanzarini80-source/lanzarini-krylov-lean
+
+**Repository:** [GitHub repository](https://github.com/vlanzarini80-source/lanzarini-krylov-lean.)
+
 
 **Copyright © 2026 Valentino Lanzarini. All rights reserved.**
 
@@ -440,7 +441,8 @@ https://doi.org/10.5281/zenodo.23163367
 
 Repository:
 
-https://github.com/vlanzarini80-source/lanzarini-krylov-lean
+[GitHub repository](https://github.com/vlanzarini80-source/lanzarini-krylov-lean.)
+
 
 ---
 
