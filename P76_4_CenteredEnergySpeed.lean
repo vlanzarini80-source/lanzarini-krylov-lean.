@@ -6,19 +6,16 @@ namespace Lanzarini
 /-!
 P76.4a: Centered energy and Krylov orthogonality.
 
-First stage of the centered energy speed bound.
-
 No new axioms.
-No sorry.
-No assumption of the desired speed inequality.
+No sorry or admit.
+No assumption of the desired conclusion.
 
-Candidate requiring Lean CI verification.
+Requires actual Lean CI verification.
 -/
 
 /--
 Linearity of the Jacobi inner product in its
-second argument, for subtraction of a scalar
-multiple of a vector.
+second argument.
 -/
 private theorem p76_4_inner_sub_scalar
     {n : ℕ}
@@ -36,39 +33,50 @@ private theorem p76_4_inner_sub_scalar
   ring
 
 /--
-Orthogonality of the centered Krylov state
-in the reversed inner-product order.
+Conjugate symmetry of the Jacobi inner product.
+-/
+private theorem p76_4_inner_conj_symm
+    {n : ℕ}
+    (u v : Fin n → ℂ) :
+    star (jacobiInner u v) =
+      jacobiInner v u := by
+  unfold jacobiInner
+  rw [map_sum]
+  apply Finset.sum_congr rfl
+  intro j hj
+  simp only [star_mul', star_star]
+  ring
 
-Derived from P75.1 by conjugate symmetry.
+/--
+The centered Krylov state is orthogonal
+to the original normalized state, with
+the arguments in reversed order.
 -/
 theorem p76_4_centeredState_orthogonal_left
     {n : ℕ}
     (u : Fin n → ℂ)
     (hnorm : jacobiNormSq u = 1) :
     jacobiInner (krylovCenteredState u) u = 0 := by
-  have h :=
+  have h :
+      jacobiInner u (krylovCenteredState u) = 0 :=
     p75_centeredState_orthogonal u hnorm
-  have hs :
+
+  have hsym :
       star (jacobiInner u (krylovCenteredState u)) =
-        jacobiInner (krylovCenteredState u) u := by
-    unfold jacobiInner
-    simp only [map_sum, star_mul', star_star]
-    apply Finset.sum_congr rfl
-    intro j hj
-    ring
-  rw [h] at hs
+        jacobiInner (krylovCenteredState u) u :=
+    p76_4_inner_conj_symm u (krylovCenteredState u)
+
   calc
     jacobiInner (krylovCenteredState u) u =
-        star (0 : ℂ) := hs.symm
-    _ = 0 := star_zero
+        star (jacobiInner u (krylovCenteredState u)) :=
+          hsym.symm
+    _ = 0 := by
+      simpa using congrArg star h
 
 /--
-Removing the energy expectation from Hu
-does not change its inner product with the
+Subtracting the mean energy from Hu does
+not change its inner product with the
 centered Krylov state.
-
-The conclusion follows from linearity and
-the independently proved orthogonality.
 -/
 theorem p76_4_centeredEnergy_inner
     (n : ℕ)
@@ -86,6 +94,7 @@ theorem p76_4_centeredEnergy_inner
   rw [p76_4_centeredState_orthogonal_left u hnorm]
   simp
 
+#print axioms p76_4_inner_conj_symm
 #print axioms p76_4_centeredState_orthogonal_left
 #print axioms p76_4_centeredEnergy_inner
 
