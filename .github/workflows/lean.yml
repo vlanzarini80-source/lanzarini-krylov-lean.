@@ -22,7 +22,7 @@ jobs:
           lake update
           lake exe cache get
 
-      - name: Verify Lean proofs through P76.4a
+      - name: Verify Lean proofs through P76.5a
         run: |
           set -euo pipefail
 
@@ -53,8 +53,9 @@ jobs:
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P76_2_EnergyVarianceIdentity.olean P76_2_EnergyVarianceIdentity.lean | tee p76-2-check.log
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P76_3_EnergySecondMoment.olean P76_3_EnergySecondMoment.lean | tee p76-3-check.log
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P76_4_CenteredEnergySpeed.olean P76_4_CenteredEnergySpeed.lean | tee p76-4-check.log
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P76_5_CenteredVelocity.olean P76_5_CenteredVelocity.lean | tee p76-5-check.log
 
-          if grep -q 'sorryAx' p74-1-axioms.log p74-2-axioms.log p75-1-check.log p75-2a-check.log p75-2b-check.log p75-3-check.log p75-4-check.log p76-1-check.log p76-2-check.log p76-3-check.log p76-4-check.log; then
+          if grep -q 'sorryAx' p74-1-axioms.log p74-2-axioms.log p75-1-check.log p75-2a-check.log p75-2b-check.log p75-3-check.log p75-4-check.log p76-1-check.log p76-2-check.log p76-3-check.log p76-4-check.log p76-5-check.log; then
             echo 'Forbidden sorryAx dependency found' >&2
             exit 1
           fi
@@ -79,3 +80,4 @@ jobs:
           grep -F "'Lanzarini.p76_energyVarianceAt_secondMoment' depends on axioms:" p76-3-check.log
           grep -F "'Lanzarini.p76_4_centeredState_orthogonal_left' depends on axioms:" p76-4-check.log
           grep -F "'Lanzarini.p76_4_centeredEnergy_inner' depends on axioms:" p76-4-check.log
+          grep -F "'Lanzarini.p76_5_centered_velocity_inner' depends on axioms:" p76-5-check.log
