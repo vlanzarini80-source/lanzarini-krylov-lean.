@@ -16,7 +16,7 @@
 >
 > The reported P74.2 checkpoint establishes the derivative of Krylov complexity along finite-dimensional Jacobi evolution.
 >
-> **The centered physical Krylov derivative, complete dispersion speed limit, saturation-deficit expansion and finite-depth local-defect hierarchy are not yet established as verified Lean theorems.**
+> **The centered physical Krylov derivative and the finite-dimensional energy-variance speed limit have been verified through P76.6 on the development branch `research/p75-centered-derivative`, but have not yet been merged into `main`. The first-coupling specialization, saturation-deficit expansion and finite-depth local-defect hierarchy remain unverified as Lean theorems.**
 >
 > Successful Lean verification establishes that the encoded statements follow from their formal definitions, hypotheses and accepted foundations. It does not establish mathematical originality, complete correspondence with the research preprint or independent peer review.
 
@@ -956,7 +956,8 @@ A development-branch success does not automatically certify the merged `main` br
 
 ---
 
-## 7. Next research checkpoint: P75
+## 7. Historical research checkpoint: P75 (subsequently verified)
+
 
 **Status: Not yet verified.**
 
