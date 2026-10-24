@@ -9,7 +9,7 @@
 **Environment:** Lean 4 `v4.24.0` and mathlib `v4.24.0`  
 **Research preprint:** https://doi.org/10.5281/zenodo.23163367  
 **Repository:** [GitHub repository](https://github.com/vlanzarini80-source/lanzarini-krylov-lean.)  
-**Next research checkpoint:** P75, not yet verified  
+**Latest development checkpoint:** P76.6 (verified on `research/p75-centered-derivative`; not yet merged into `main`) 
 **Copyright:** © 2026 Valentino Lanzarini. All rights reserved.
 
 > **Scientific status.** This repository contains machine-checked foundational results concerning finite-dimensional real Jacobi matrices, unitary quantum evolution, Krylov moments and variance, complex Gram identities, and the physical time derivative of Krylov complexity.
