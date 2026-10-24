@@ -22,6 +22,175 @@
 
 ---
 
+---
+
+## Scientific Update — P75 to P76.6
+
+**Updated:** 24 October 2026  
+**Author:** Valentino Lanzarini  
+**Lean:** v4.24.0  
+**mathlib:** v4.24.0
+
+### Verified development status
+
+The historical README documents the formal development through P74.2 on `main`.
+
+Subsequent development has established additional results through P76.6 on the branch:
+
+`research/p75-centered-derivative`
+
+**Verification records:**
+
+- P74.2 on `main`: GitHub Actions #117 — SUCCESS
+- P76.6 development: GitHub Actions #159 — SUCCESS
+- P76.6 development: GitHub Actions #163 — SUCCESS
+
+**Important:** P76.6 has not yet been verified as merged into `main`.
+
+### P75: Centered Krylov derivative
+
+The P75 development establishes centered-state orthogonality, physical velocity orthogonality, the centered physical Krylov derivative, and quadratic speed estimates.
+
+For a normalized evolved state, let
+
+$$
+u(t)=(N-K(t)I)\psi(t).
+$$
+
+The centered physical derivative is
+
+$$
+K'(t)=
+2\operatorname{Re}
+\langle u(t),\dot{\psi}(t)\rangle.
+$$
+
+The relevant source files are:
+
+```text
+P75_1_Orthogonality.lean
+P75_2a_VelocityOrthogonality.lean
+P75_2b_CenteredDerivative.lean
+P75_3_QuadraticSpeedBound.lean
+P75_4_DerivativeSpeedBound.lean
+```
+
+### P76: Energy variance and centered velocity
+
+For a normalized state, define
+
+$$
+E(t)=\langle\psi(t),H\psi(t)\rangle
+$$
+
+and
+
+$$
+V_H(t)=
+\|(H-E(t)I)\psi(t)\|^2.
+$$
+
+The centered velocity is
+
+$$
+v_c(t)=-i(H-E(t)I)\psi(t).
+$$
+
+Its squared norm satisfies
+
+$$
+\|v_c(t)\|^2=V_H(t).
+$$
+
+The relevant source files are:
+
+```text
+P76_1_EnergyVariance.lean
+P76_2_EnergyVarianceIdentity.lean
+P76_3_EnergySecondMoment.lean
+P76_4_CenteredEnergySpeed.lean
+P76_5_CenteredVelocity.lean
+P76_5b_CenteredVelocityNorm.lean
+```
+
+### P76.6: Energy-variance speed limit
+
+**Verified declaration:**
+
+```lean
+Lanzarini.p76_6_energy_speed_limit
+```
+
+**Source:**
+
+```text
+P76_6_EnergySpeedLimit.lean
+```
+
+The theorem establishes that, for normalized finite-dimensional Jacobi evolution, there exists a real derivative \(d\) of Krylov complexity at time \(t\) satisfying
+
+$$
+d^2\leq4V_K(t)V_H(t).
+$$
+
+Equivalently,
+
+$$
+\boxed{
+(K'(t))^2\leq4V_K(t)V_H(t)
+}
+$$
+
+The theorem uses the centered physical derivative, Gram inequalities, and the centered-energy variance identities.
+
+The desired inequality is not assumed as a hypothesis.
+
+### Formal verification
+
+GitHub Actions:
+
+- https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/40004543470
+- https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/40018524509
+
+The recorded axiom dependencies of the final declaration are:
+
+```text
+[propext, Classical.choice, Quot.sound]
+```
+
+No `sorryAx` was reported in the audited declaration dependencies.
+
+### Remaining mathematical obligations
+
+The following are not yet verified Lean theorems:
+
+1. The first-basis energy-variance identity \(V_H=b_1^2\).
+2. The first-coupling Krylov speed-limit specialization.
+3. The saturation-deficit definition and its precise domain.
+4. The short-time saturation-deficit expansion.
+5. The finite-depth mixed local-defect hierarchy.
+6. The finite-chain rigidity theorem.
+7. The semi-infinite Jacobi extension.
+8. General Lanczos basis equivalence.
+
+The research preprint's proposed local-defect expansion remains a separate mathematical claim requiring further formal proof and independent review.
+
+### Scientific limitations
+
+Lean verification establishes the encoded theorem relative to its definitions, assumptions, and foundational axioms.
+
+It does not establish:
+
+- Mathematical novelty.
+- Worldwide scientific priority.
+- Independent peer review.
+- Correctness of every informal interpretation.
+- Validity of unformalized preprint claims.
+
+The original historical documentation below remains part of the repository record.
+
+---
+
 ## 1. Latest verified formalization checkpoint
 
 ### 1.1. P74.2: Physical Krylov complexity derivative
