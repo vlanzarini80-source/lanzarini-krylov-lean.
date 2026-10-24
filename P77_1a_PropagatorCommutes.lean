@@ -1,4 +1,3 @@
-
 import P76_6_EnergySpeedLimit
 
 namespace Lanzarini
@@ -8,7 +7,9 @@ open scoped Matrix.Norms.Operator
 /--
 P77.1a: Hamiltonian-propagator commutation.
 
-Experimental proof using Commute.exp_right.
+The Jacobi Hamiltonian commutes with its
+own complex-time exponential propagator.
+
 No sorry, admit, or additional axioms.
 -/
 theorem p77_1a_jacobi_commutes_propagator
@@ -22,7 +23,14 @@ theorem p77_1a_jacobi_commutes_propagator
         ((t : ℂ) •
           ((-Complex.I) • jacobiComplex n a b)) := by
     simp only [smul_smul]
-    exact Commute.self_smul_left _ _
+    change
+      jacobiComplex n a b *
+          (((t : ℂ) * (-Complex.I)) •
+            jacobiComplex n a b) =
+        (((t : ℂ) * (-Complex.I)) •
+            jacobiComplex n a b) *
+          jacobiComplex n a b
+    simp only [mul_smul, smul_mul_assoc]
   exact hcomm.exp_right.eq
 
 #print axioms p77_1a_jacobi_commutes_propagator
