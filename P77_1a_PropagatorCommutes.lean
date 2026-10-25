@@ -1,3 +1,4 @@
+
 import P76_6_EnergySpeedLimit
 
 namespace Lanzarini
@@ -31,7 +32,8 @@ theorem p77_1a_jacobi_commutes_propagator
           jacobiComplex n a b
     simp only [smul_smul]
     simp only [Matrix.mul_smul, Matrix.smul_mul]
-  exact hcomm.exp_right.eq
+  set_option diagnostics true in
+    exact hcomm.exp_right.eq
 
 #print axioms p77_1a_jacobi_commutes_propagator
 
