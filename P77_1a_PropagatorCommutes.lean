@@ -7,10 +7,10 @@ open scoped Matrix.Norms.Operator
 /--
 P77.1a: Hamiltonian-propagator commutation.
 
-The Jacobi Hamiltonian commutes with its
-own complex-time exponential propagator.
+The Jacobi Hamiltonian commutes with
+its own exponential propagator.
 
-No sorry, admit, or additional axioms.
+No sorry, admit, or new axioms.
 -/
 theorem p77_1a_jacobi_commutes_propagator
     (n : ℕ) (a b : Fin n → ℝ) (t : ℝ) :
@@ -22,15 +22,15 @@ theorem p77_1a_jacobi_commutes_propagator
         (jacobiComplex n a b)
         ((t : ℂ) •
           ((-Complex.I) • jacobiComplex n a b)) := by
-    simp only [smul_smul]
     change
       jacobiComplex n a b *
-          (((t : ℂ) * (-Complex.I)) •
-            jacobiComplex n a b) =
-        (((t : ℂ) * (-Complex.I)) •
-            jacobiComplex n a b) *
+          ((t : ℂ) •
+            ((-Complex.I) • jacobiComplex n a b)) =
+        ((t : ℂ) •
+          ((-Complex.I) • jacobiComplex n a b)) *
           jacobiComplex n a b
-    simp only [mul_smul, smul_mul_assoc]
+    simp only [smul_smul]
+    simp only [Matrix.mul_smul, Matrix.smul_mul]
   exact hcomm.exp_right.eq
 
 #print axioms p77_1a_jacobi_commutes_propagator
