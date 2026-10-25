@@ -27,7 +27,7 @@ theorem p77_1a_jacobi_commutes_propagator
           jacobiComplex n a b
     simp only [smul_smul]
     simp only [Matrix.mul_smul, Matrix.smul_mul]
-  exact (hcomm.exp_right (K := ℂ)).eq
+  exact (Commute.exp_right ℂ hcomm).eq
 
 #print axioms p77_1a_jacobi_commutes_propagator
 
