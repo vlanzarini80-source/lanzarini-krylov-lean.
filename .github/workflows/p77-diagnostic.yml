@@ -1,0 +1,80 @@
+
+name: P77 Diagnostic
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'P77_ExpProbe.lean'
+      - '.github/workflows/p77-diagnostic.yml'
+
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Lean 4
+        run: |
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Fetch mathlib
+        run: |
+          lake update
+          lake exe cache get
+
+      - name: Compile verified dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          export LEAN_PATH=".:${LEAN_PATH:-}"
+
+          lake env lean Main.lean
+          lake env lean Jacobi2.lean
+          lake env lean JacobiGeneral.lean
+
+          for file in \
+            JacobiReal \
+            JacobiEvolution \
+            MatrixExpProbe \
+            KrylovNumber \
+            KrylovGram \
+            KrylovLagrange \
+            KrylovGap \
+            P73_RealTime \
+            P73_2_State \
+            P74_1_Components \
+            P74_2_KrylovDerivative \
+            P75_1_Orthogonality \
+            P75_2a_VelocityOrthogonality \
+            P75_2b_CenteredDerivative \
+            P75_3_QuadraticSpeedBound \
+            P75_4_DerivativeSpeedBound \
+            P76_1_EnergyVariance \
+            P76_2_EnergyVarianceIdentity \
+            P76_3_EnergySecondMoment \
+            P76_4_CenteredEnergySpeed \
+            P76_5_CenteredVelocity \
+            P76_5b_CenteredVelocityNorm \
+            P76_6_EnergySpeedLimit
+          do
+            lake env lean -o "${file}.olean" "${file}.lean"
+          done
+
+      - name: Inspect exponential lemmas
+        shell: bash
+        run: |
+          set -euo pipefail
+          export LEAN_PATH=".:${LEAN_PATH:-}"
+          lake env lean P77_ExpProbe.lean 2>&1 | tee p77-diagnostic.log
+
+      - name: Upload diagnostic log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p77-diagnostic-log
+          path: p77-diagnostic.log
+          if-no-files-found: ignore
