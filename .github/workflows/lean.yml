@@ -1,4 +1,3 @@
-
 name: Lean 4 Verification
 
 on:
@@ -23,7 +22,7 @@ jobs:
           lake update
           lake exe cache get
 
-      - name: Verify Lean proofs through P77.1b
+      - name: Verify Lean proofs through P77.2
         run: |
           set -euo pipefail
 
@@ -60,8 +59,9 @@ jobs:
 
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P77_1a_PropagatorCommutes.olean P77_1a_PropagatorCommutes.lean | tee p77-1a-check.log
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P77_1b_HamiltonianIntertwining.olean P77_1b_HamiltonianIntertwining.lean | tee p77-1b-check.log
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P77_2_EnergyMeanConservation.olean P77_2_EnergyMeanConservation.lean | tee p77-2-check.log
 
-          if grep -q 'sorryAx' p74-1-axioms.log p74-2-axioms.log p75-1-check.log p75-2a-check.log p75-2b-check.log p75-3-check.log p75-4-check.log p76-1-check.log p76-2-check.log p76-3-check.log p76-4-check.log p76-5-check.log p76-5b-check.log p76-6-check.log p77-1a-check.log p77-1b-check.log; then
+          if grep -q 'sorryAx' p74-1-axioms.log p74-2-axioms.log p75-1-check.log p75-2a-check.log p75-2b-check.log p75-3-check.log p75-4-check.log p76-1-check.log p76-2-check.log p76-3-check.log p76-4-check.log p76-5-check.log p76-5b-check.log p76-6-check.log p77-1a-check.log p77-1b-check.log p77-2-check.log; then
             echo 'Forbidden sorryAx dependency found' >&2
             exit 1
           fi
@@ -95,3 +95,24 @@ jobs:
 
           grep -F "'Lanzarini.p77_1a_jacobi_commutes_propagator' depends on axioms:" p77-1a-check.log
           grep -F "'Lanzarini.p77_1b_hamiltonian_intertwining' depends on axioms:" p77-1b-check.log
+          grep -F "'Lanzarini.p77_2_energy_pair_conserved' depends on axioms:" p77-2-check.log
+          grep -F "'Lanzarini.p77_2_energyMean_conserved' depends on axioms:" p77-2-check.log
+
+          # Audit P77.2: permit only Lean's standard foundational axioms.
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+
+          log = Path("p77-2-check.log").read_text()
+          allowed = {"propext", "Classical.choice", "Quot.sound"}
+          for name in ("p77_2_energy_pair_conserved", "p77_2_energyMean_conserved"):
+              pattern = rf"'Lanzarini\.{re.escape(name)}' depends on axioms:\s*\[([^\]]*)\]"
+              match = re.search(pattern, log)
+              if not match:
+                  raise SystemExit(f"Missing #print axioms output for {name}")
+              found = {x.strip() for x in match.group(1).split(",") if x.strip()}
+              extra = found - allowed
+              if extra:
+                  raise SystemExit(f"Forbidden new axioms in {name}: {sorted(extra)}")
+              print(f"{name}: standard axioms only: {sorted(found)}")
+          PY
