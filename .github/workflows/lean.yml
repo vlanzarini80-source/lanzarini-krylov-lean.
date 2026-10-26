@@ -99,7 +99,6 @@ jobs:
           grep -F "'Lanzarini.p77_2_energy_pair_conserved' depends on axioms:" p77-2-check.log
           grep -F "'Lanzarini.p77_2_energyMean_conserved' depends on axioms:" p77-2-check.log
 
-          # Audit of the already certified P77.2 results.
           python3 - <<'PY'
           import re
           from pathlib import Path
@@ -118,9 +117,7 @@ jobs:
               match = re.search(pattern, log)
 
               if not match:
-                  raise SystemExit(
-                      f"Missing axioms audit for {name}"
-                  )
+                  raise SystemExit(f"Missing axioms audit for {name}")
 
               found = {
                   x.strip()
@@ -129,7 +126,6 @@ jobs:
               }
 
               extra = found - allowed
-
               if extra:
                   raise SystemExit(
                       f"Unauthorized axioms in {name}: {sorted(extra)}"
@@ -205,14 +201,87 @@ jobs:
               }
 
               unexpected = found - allowed
-
               if unexpected:
                   raise SystemExit(
                       f"Unauthorized axioms in {name}: "
                       f"{sorted(unexpected)}"
                   )
 
-              print(
-                  f"PASS {name}: {sorted(found)}"
+              print(f"PASS {name}: {sorted(found)}")
+          PY
+
+      - name: Verify P78.2 physical derivative and axioms
+        run: |
+          set -euo pipefail
+
+          if grep -En '(^|[[:space:]])(sorry|admit|axiom|sorryAx)([[:space:]]|$)' P78_2_PhysicalSpeedResidual.lean; then
+            echo 'Forbidden proof placeholder or axiom in P78.2' >&2
+            exit 1
+          fi
+
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P78_2_PhysicalSpeedResidual.olean P78_2_PhysicalSpeedResidual.lean | tee p78-2-check.log
+
+          if grep -Fq 'sorryAx' p78-2-check.log; then
+            echo 'Forbidden sorryAx dependency in P78.2' >&2
+            exit 1
+          fi
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          log = Path("p78-2-check.log").read_text(
+              encoding="utf-8"
+          )
+
+          allowed = {
+              "propext",
+              "Classical.choice",
+              "Quot.sound",
+          }
+
+          names = (
+              "p78_2_speedChannel_derivative",
+              "p78_2_exact_physical_residual",
+          )
+
+          for name in names:
+              prefix = (
+                  f"'Lanzarini.{name}' depends on axioms:"
               )
+
+              matches = [
+                  line.strip()
+                  for line in log.splitlines()
+                  if line.strip().startswith(prefix)
+              ]
+
+              if len(matches) != 1:
+                  raise SystemExit(
+                      f"Missing or duplicate audit: {name}"
+                  )
+
+              payload = matches[0][len(prefix):].strip()
+
+              if not (
+                  payload.startswith("[")
+                  and payload.endswith("]")
+              ):
+                  raise SystemExit(
+                      f"Malformed axiom list for {name}"
+                  )
+
+              found = {
+                  x.strip()
+                  for x in payload[1:-1].split(",")
+                  if x.strip()
+              }
+
+              unexpected = found - allowed
+              if unexpected:
+                  raise SystemExit(
+                      f"Unauthorized axioms in {name}: "
+                      f"{sorted(unexpected)}"
+                  )
+
+              print(f"PASS {name}: {sorted(found)}")
           PY
