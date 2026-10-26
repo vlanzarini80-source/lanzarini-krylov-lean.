@@ -8,6 +8,7 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,7 +23,7 @@ jobs:
           lake update
           lake exe cache get
 
-      - name: Verify Lean proofs through P77.1a
+      - name: Verify Lean proofs through P77.1b
         run: |
           set -euo pipefail
 
@@ -58,8 +59,9 @@ jobs:
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P76_6_EnergySpeedLimit.olean P76_6_EnergySpeedLimit.lean | tee p76-6-check.log
 
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P77_1a_PropagatorCommutes.olean P77_1a_PropagatorCommutes.lean | tee p77-1a-check.log
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P77_1b_HamiltonianIntertwining.olean P77_1b_HamiltonianIntertwining.lean | tee p77-1b-check.log
 
-          if grep -q 'sorryAx' p74-1-axioms.log p74-2-axioms.log p75-1-check.log p75-2a-check.log p75-2b-check.log p75-3-check.log p75-4-check.log p76-1-check.log p76-2-check.log p76-3-check.log p76-4-check.log p76-5-check.log p76-5b-check.log p76-6-check.log p77-1a-check.log; then
+          if grep -q 'sorryAx' p74-1-axioms.log p74-2-axioms.log p75-1-check.log p75-2a-check.log p75-2b-check.log p75-3-check.log p75-4-check.log p76-1-check.log p76-2-check.log p76-3-check.log p76-4-check.log p76-5-check.log p76-5b-check.log p76-6-check.log p77-1a-check.log p77-1b-check.log; then
             echo 'Forbidden sorryAx dependency found' >&2
             exit 1
           fi
@@ -67,6 +69,7 @@ jobs:
           grep -F "'Lanzarini.p74_jacobiState_component_hasDerivAt' depends on axioms:" p74-1-axioms.log
           grep -F "'Lanzarini.p74_jacobiState_parts_hasDerivAt' depends on axioms:" p74-1-axioms.log
           grep -F "'Lanzarini.p74_krylovComplexityAt_hasDerivAt' depends on axioms:" p74-2-axioms.log
+
           grep -F "'Lanzarini.p75_centeredState_orthogonal' depends on axioms:" p75-1-check.log
           grep -F "'Lanzarini.p75_antiHermitian_real_orthogonal' depends on axioms:" p75-2a-check.log
           grep -F "'Lanzarini.p75_state_velocity_real_orthogonal' depends on axioms:" p75-2a-check.log
@@ -75,6 +78,7 @@ jobs:
           grep -F "'Lanzarini.p75_centered_quadratic_bound' depends on axioms:" p75-3-check.log
           grep -F "'Lanzarini.p75_physical_quadratic_bound' depends on axioms:" p75-3-check.log
           grep -F "'Lanzarini.p75_derivative_speed_bound' depends on axioms:" p75-4-check.log
+
           grep -F "'Lanzarini.p76_energyVariance_nonneg' depends on axioms:" p76-1-check.log
           grep -F "'Lanzarini.p76_energyVarianceAt_nonneg' depends on axioms:" p76-1-check.log
           grep -F "'Lanzarini.p76_energyVariance_identity' depends on axioms:" p76-2-check.log
@@ -88,4 +92,6 @@ jobs:
           grep -F "'Lanzarini.p76_5b_jacobiNormSq_negI' depends on axioms:" p76-5b-check.log
           grep -F "'Lanzarini.p76_5b_centeredVelocity_variance' depends on axioms:" p76-5b-check.log
           grep -F "'Lanzarini.p76_6_energy_speed_limit' depends on axioms:" p76-6-check.log
+
           grep -F "'Lanzarini.p77_1a_jacobi_commutes_propagator' depends on axioms:" p77-1a-check.log
+          grep -F "'Lanzarini.p77_1b_hamiltonian_intertwining' depends on axioms:" p77-1b-check.log
