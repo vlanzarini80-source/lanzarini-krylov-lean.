@@ -153,16 +153,8 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
 
-          log = Path("p78-1-check.log").read_text(
-              encoding="utf-8"
-          )
-
-          allowed = {
-              "propext",
-              "Classical.choice",
-              "Quot.sound",
-          }
-
+          log = Path("p78-1-check.log").read_text(encoding="utf-8")
+          allowed = {"propext", "Classical.choice", "Quot.sound"}
           names = (
               "p78_1_exact_speed_residual",
               "p78_1_speed_residual_nonneg",
@@ -180,6 +172,7 @@ jobs:
                   raise SystemExit(f"Missing or duplicate audit: {name}")
 
               payload = matches[0][len(prefix):].strip()
+
               if not (payload.startswith("[") and payload.endswith("]")):
                   raise SystemExit(f"Malformed axiom list for {name}")
 
@@ -190,6 +183,7 @@ jobs:
               }
 
               extra = found - allowed
+
               if extra:
                   raise SystemExit(f"Unauthorized axioms in {name}: {sorted(extra)}")
 
@@ -215,16 +209,8 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
 
-          log = Path("p78-2-check.log").read_text(
-              encoding="utf-8"
-          )
-
-          allowed = {
-              "propext",
-              "Classical.choice",
-              "Quot.sound",
-          }
-
+          log = Path("p78-2-check.log").read_text(encoding="utf-8")
+          allowed = {"propext", "Classical.choice", "Quot.sound"}
           names = (
               "p78_2_speedChannel_derivative",
               "p78_2_exact_physical_residual",
@@ -242,6 +228,7 @@ jobs:
                   raise SystemExit(f"Missing or duplicate audit: {name}")
 
               payload = matches[0][len(prefix):].strip()
+
               if not (payload.startswith("[") and payload.endswith("]")):
                   raise SystemExit(f"Malformed axiom list for {name}")
 
@@ -252,6 +239,7 @@ jobs:
               }
 
               extra = found - allowed
+
               if extra:
                   raise SystemExit(f"Unauthorized axioms in {name}: {sorted(extra)}")
 
@@ -279,7 +267,6 @@ jobs:
 
           log = Path("p79-check.log").read_text(encoding="utf-8")
           allowed = {"propext", "Classical.choice", "Quot.sound"}
-
           names = (
               "p79_r0_minor12_formula",
               "p79_r0_minor13_formula",
@@ -299,6 +286,7 @@ jobs:
                   raise SystemExit(f"Missing or duplicate audit: {name}")
 
               payload = matches[0][len(prefix):].strip()
+
               if not (payload.startswith("[") and payload.endswith("]")):
                   raise SystemExit(f"Malformed axiom list for {name}")
 
@@ -309,6 +297,7 @@ jobs:
               }
 
               extra = found - allowed
+
               if extra:
                   raise SystemExit(f"Unauthorized axioms in {name}: {sorted(extra)}")
 
@@ -336,7 +325,6 @@ jobs:
 
           log = Path("p80-1-check.log").read_text(encoding="utf-8")
           allowed = {"propext", "Classical.choice", "Quot.sound"}
-
           names = (
               "p80_1_state_iteratedDeriv",
               "p80_1_initial_derivative",
@@ -354,6 +342,7 @@ jobs:
                   raise SystemExit(f"Missing or duplicate audit: {name}")
 
               payload = matches[0][len(prefix):].strip()
+
               if not (payload.startswith("[") and payload.endswith("]")):
                   raise SystemExit(f"Malformed axiom list for {name}")
 
@@ -364,8 +353,72 @@ jobs:
               }
 
               extra = found - allowed
+
               if extra:
                   raise SystemExit(f"Unauthorized axioms in {name}: {sorted(extra)}")
+
+              print(f"PASS {name}: {sorted(found)}")
+          PY
+
+      - name: Verify P81.1 physical Jacobi powers and axioms
+        run: |
+          set -euo pipefail
+
+          if grep -En '(^|[[:space:]])(sorry|admit|axiom|sorryAx)([[:space:]]|$)' P81_1_JacobiPhysicalPowers.lean; then
+            echo 'Forbidden proof placeholder or axiom in P81.1' >&2
+            exit 1
+          fi
+
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P81_1_JacobiPhysicalPowers.olean P81_1_JacobiPhysicalPowers.lean | tee p81-1-check.log
+
+          if grep -Fq 'sorryAx' p81-1-check.log; then
+            echo 'Forbidden sorryAx dependency in P81.1' >&2
+            exit 1
+          fi
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          log = Path("p81-1-check.log").read_text(encoding="utf-8")
+          allowed = {"propext", "Classical.choice", "Quot.sound"}
+
+          names = (
+              "p81_H_action",
+              "p81_H1",
+              "p81_H2",
+              "p81_H3",
+              "p81_H4",
+              "p81_true_initial_derivatives",
+          )
+
+          for name in names:
+              prefix = f"'Lanzarini.{name}' depends on axioms:"
+              matches = [
+                  line.strip()
+                  for line in log.splitlines()
+                  if line.strip().startswith(prefix)
+              ]
+
+              if len(matches) != 1:
+                  raise SystemExit(f"Missing or duplicate audit: {name}")
+
+              payload = matches[0][len(prefix):].strip()
+
+              if not (payload.startswith("[") and payload.endswith("]")):
+                  raise SystemExit(f"Malformed axiom list for {name}")
+
+              found = {
+                  x.strip()
+                  for x in payload[1:-1].split(",")
+                  if x.strip()
+              }
+
+              extra = found - allowed
+
+              if extra:
+                  raise SystemExit(
+                      f"Unauthorized axioms in {name}: {sorted(extra)}"
+                  )
 
               print(f"PASS {name}: {sorted(found)}")
           PY
