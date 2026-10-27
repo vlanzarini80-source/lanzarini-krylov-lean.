@@ -135,7 +135,7 @@ All development-only rows above refer to the development branch and the correspo
 For finite complex vectors `u`, `v`, define the Gram-minor sum
 
 $$
-G(u,v)=\sum_{0\leq i<j<n}|u_i v_j-u_j v_i|^2.
+G(u,v)=\sum_{i=0}^{n-1}\sum_{j=i+1}^{n-1}\left|u_i v_j-u_j v_i\right|^2.
 $$
 
 The classical finite complex Lagrange identity is
