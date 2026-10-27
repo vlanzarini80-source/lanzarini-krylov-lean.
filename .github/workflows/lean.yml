@@ -23,7 +23,7 @@ jobs:
           lake update
           lake exe cache get
 
-      - name: Verify Lean proofs through P77.2
+      - name: Verify all Lean modules through P81.2a
         run: |
           set -euo pipefail
 
@@ -31,394 +31,194 @@ jobs:
           lake env lean Jacobi2.lean
           lake env lean JacobiGeneral.lean
 
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o JacobiReal.olean JacobiReal.lean
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o JacobiEvolution.olean JacobiEvolution.lean
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o MatrixExpProbe.olean MatrixExpProbe.lean
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o KrylovNumber.olean KrylovNumber.lean
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o KrylovGram.olean KrylovGram.lean
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o KrylovLagrange.olean KrylovLagrange.lean
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o KrylovGap.olean KrylovGap.lean
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P73_RealTime.olean P73_RealTime.lean
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P73_2_State.olean P73_2_State.lean
+          for mod in \
+            JacobiReal JacobiEvolution MatrixExpProbe \
+            KrylovNumber KrylovGram KrylovLagrange KrylovGap \
+            P73_RealTime P73_2_State \
+            P74_1_Components P74_2_KrylovDerivative \
+            P75_1_Orthogonality P75_2a_VelocityOrthogonality \
+            P75_2b_CenteredDerivative P75_3_QuadraticSpeedBound \
+            P75_4_DerivativeSpeedBound \
+            P76_1_EnergyVariance P76_2_EnergyVarianceIdentity \
+            P76_3_EnergySecondMoment P76_4_CenteredEnergySpeed \
+            P76_5_CenteredVelocity P76_5b_CenteredVelocityNorm \
+            P76_6_EnergySpeedLimit \
+            P77_1a_PropagatorCommutes \
+            P77_1b_HamiltonianIntertwining \
+            P77_2_EnergyMeanConservation \
+            P78_1_ExactSpeedResidual \
+            P78_2_PhysicalSpeedResidual \
+            P79_R0_CoefficientJet \
+            P80_1_TrueEvolutionJets \
+            P81_1_JacobiPhysicalPowers \
+            P81_2a_PhysicalGramBridge
+          do
+            echo "=== Compiling $mod.lean ==="
+            test -f "$mod.lean"
+            LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+              -o "$mod.olean" "$mod.lean" | tee "$mod.log"
+          done
 
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P74_1_Components.olean P74_1_Components.lean | tee p74-1-axioms.log
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P74_2_KrylovDerivative.olean P74_2_KrylovDerivative.lean | tee p74-2-axioms.log
+      - name: Audit source files and all required theorem axioms
+        run: |
+          set -euo pipefail
 
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P75_1_Orthogonality.olean P75_1_Orthogonality.lean | tee p75-1-check.log
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P75_2a_VelocityOrthogonality.olean P75_2a_VelocityOrthogonality.lean | tee p75-2a-check.log
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P75_2b_CenteredDerivative.olean P75_2b_CenteredDerivative.lean | tee p75-2b-check.log
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P75_3_QuadraticSpeedBound.olean P75_3_QuadraticSpeedBound.lean | tee p75-3-check.log
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P75_4_DerivativeSpeedBound.olean P75_4_DerivativeSpeedBound.lean | tee p75-4-check.log
+          for mod in \
+            P78_1_ExactSpeedResidual \
+            P78_2_PhysicalSpeedResidual \
+            P79_R0_CoefficientJet \
+            P80_1_TrueEvolutionJets \
+            P81_1_JacobiPhysicalPowers \
+            P81_2a_PhysicalGramBridge
+          do
+            if grep -En '(^|[[:space:]])(sorry|admit|axiom|sorryAx)([[:space:]]|$)' "$mod.lean"; then
+              echo "Forbidden proof placeholder or axiom in $mod" >&2
+              exit 1
+            fi
+          done
 
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P76_1_EnergyVariance.olean P76_1_EnergyVariance.lean | tee p76-1-check.log
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P76_2_EnergyVarianceIdentity.olean P76_2_EnergyVarianceIdentity.lean | tee p76-2-check.log
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P76_3_EnergySecondMoment.olean P76_3_EnergySecondMoment.lean | tee p76-3-check.log
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P76_4_CenteredEnergySpeed.olean P76_4_CenteredEnergySpeed.lean | tee p76-4-check.log
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P76_5_CenteredVelocity.olean P76_5_CenteredVelocity.lean | tee p76-5-check.log
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P76_5b_CenteredVelocityNorm.olean P76_5b_CenteredVelocityNorm.lean | tee p76-5b-check.log
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P76_6_EnergySpeedLimit.olean P76_6_EnergySpeedLimit.lean | tee p76-6-check.log
-
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P77_1a_PropagatorCommutes.olean P77_1a_PropagatorCommutes.lean | tee p77-1a-check.log
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P77_1b_HamiltonianIntertwining.olean P77_1b_HamiltonianIntertwining.lean | tee p77-1b-check.log
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P77_2_EnergyMeanConservation.olean P77_2_EnergyMeanConservation.lean | tee p77-2-check.log
-
-          if grep -q 'sorryAx' p74-1-axioms.log p74-2-axioms.log p75-1-check.log p75-2a-check.log p75-2b-check.log p75-3-check.log p75-4-check.log p76-1-check.log p76-2-check.log p76-3-check.log p76-4-check.log p76-5-check.log p76-5b-check.log p76-6-check.log p77-1a-check.log p77-1b-check.log p77-2-check.log; then
+          if grep -F 'sorryAx' ./*.log; then
             echo 'Forbidden sorryAx dependency found' >&2
             exit 1
           fi
 
-          grep -F "'Lanzarini.p74_jacobiState_component_hasDerivAt' depends on axioms:" p74-1-axioms.log
-          grep -F "'Lanzarini.p74_jacobiState_parts_hasDerivAt' depends on axioms:" p74-1-axioms.log
-          grep -F "'Lanzarini.p74_krylovComplexityAt_hasDerivAt' depends on axioms:" p74-2-axioms.log
-
-          grep -F "'Lanzarini.p75_centeredState_orthogonal' depends on axioms:" p75-1-check.log
-          grep -F "'Lanzarini.p75_antiHermitian_real_orthogonal' depends on axioms:" p75-2a-check.log
-          grep -F "'Lanzarini.p75_state_velocity_real_orthogonal' depends on axioms:" p75-2a-check.log
-          grep -F "'Lanzarini.p75_centered_inner_identity' depends on axioms:" p75-2b-check.log
-          grep -F "'Lanzarini.p75_centered_derivative' depends on axioms:" p75-2b-check.log
-          grep -F "'Lanzarini.p75_centered_quadratic_bound' depends on axioms:" p75-3-check.log
-          grep -F "'Lanzarini.p75_physical_quadratic_bound' depends on axioms:" p75-3-check.log
-          grep -F "'Lanzarini.p75_derivative_speed_bound' depends on axioms:" p75-4-check.log
-
-          grep -F "'Lanzarini.p76_energyVariance_nonneg' depends on axioms:" p76-1-check.log
-          grep -F "'Lanzarini.p76_energyVarianceAt_nonneg' depends on axioms:" p76-1-check.log
-          grep -F "'Lanzarini.p76_energyVariance_identity' depends on axioms:" p76-2-check.log
-          grep -F "'Lanzarini.p76_energyVarianceAt_identity' depends on axioms:" p76-2-check.log
-          grep -F "'Lanzarini.p76_energyNormSq_secondMoment' depends on axioms:" p76-3-check.log
-          grep -F "'Lanzarini.p76_energyVariance_secondMoment' depends on axioms:" p76-3-check.log
-          grep -F "'Lanzarini.p76_energyVarianceAt_secondMoment' depends on axioms:" p76-3-check.log
-          grep -F "'Lanzarini.p76_4_centeredState_orthogonal_left' depends on axioms:" p76-4-check.log
-          grep -F "'Lanzarini.p76_4_centeredEnergy_inner' depends on axioms:" p76-4-check.log
-          grep -F "'Lanzarini.p76_5_centered_velocity_inner' depends on axioms:" p76-5-check.log
-          grep -F "'Lanzarini.p76_5b_jacobiNormSq_negI' depends on axioms:" p76-5b-check.log
-          grep -F "'Lanzarini.p76_5b_centeredVelocity_variance' depends on axioms:" p76-5b-check.log
-          grep -F "'Lanzarini.p76_6_energy_speed_limit' depends on axioms:" p76-6-check.log
-
-          grep -F "'Lanzarini.p77_1a_jacobi_commutes_propagator' depends on axioms:" p77-1a-check.log
-          grep -F "'Lanzarini.p77_1b_hamiltonian_intertwining' depends on axioms:" p77-1b-check.log
-          grep -F "'Lanzarini.p77_2_energy_pair_conserved' depends on axioms:" p77-2-check.log
-          grep -F "'Lanzarini.p77_2_energyMean_conserved' depends on axioms:" p77-2-check.log
-
           python3 - <<'PY'
-          import re
           from pathlib import Path
 
-          log = Path("p77-2-check.log").read_text()
-          allowed = {"propext", "Classical.choice", "Quot.sound"}
+          allowed = {'propext', 'Classical.choice', 'Quot.sound'}
+          expected = {
+              'P74_1_Components': (
+                  'p74_jacobiState_component_hasDerivAt',
+                  'p74_jacobiState_parts_hasDerivAt',
+              ),
+              'P74_2_KrylovDerivative': (
+                  'p74_krylovComplexityAt_hasDerivAt',
+              ),
+              'P75_1_Orthogonality': (
+                  'p75_centeredState_orthogonal',
+              ),
+              'P75_2a_VelocityOrthogonality': (
+                  'p75_antiHermitian_real_orthogonal',
+                  'p75_state_velocity_real_orthogonal',
+              ),
+              'P75_2b_CenteredDerivative': (
+                  'p75_centered_inner_identity',
+                  'p75_centered_derivative',
+              ),
+              'P75_3_QuadraticSpeedBound': (
+                  'p75_centered_quadratic_bound',
+                  'p75_physical_quadratic_bound',
+              ),
+              'P75_4_DerivativeSpeedBound': (
+                  'p75_derivative_speed_bound',
+              ),
+              'P76_1_EnergyVariance': (
+                  'p76_energyVariance_nonneg',
+                  'p76_energyVarianceAt_nonneg',
+              ),
+              'P76_2_EnergyVarianceIdentity': (
+                  'p76_energyVariance_identity',
+                  'p76_energyVarianceAt_identity',
+              ),
+              'P76_3_EnergySecondMoment': (
+                  'p76_energyNormSq_secondMoment',
+                  'p76_energyVariance_secondMoment',
+                  'p76_energyVarianceAt_secondMoment',
+              ),
+              'P76_4_CenteredEnergySpeed': (
+                  'p76_4_centeredState_orthogonal_left',
+                  'p76_4_centeredEnergy_inner',
+              ),
+              'P76_5_CenteredVelocity': (
+                  'p76_5_centered_velocity_inner',
+              ),
+              'P76_5b_CenteredVelocityNorm': (
+                  'p76_5b_jacobiNormSq_negI',
+                  'p76_5b_centeredVelocity_variance',
+              ),
+              'P76_6_EnergySpeedLimit': (
+                  'p76_6_energy_speed_limit',
+              ),
+              'P77_1a_PropagatorCommutes': (
+                  'p77_1a_jacobi_commutes_propagator',
+              ),
+              'P77_1b_HamiltonianIntertwining': (
+                  'p77_1b_hamiltonian_intertwining',
+              ),
+              'P77_2_EnergyMeanConservation': (
+                  'p77_2_energy_pair_conserved',
+                  'p77_2_energyMean_conserved',
+              ),
+              'P78_1_ExactSpeedResidual': (
+                  'p78_1_exact_speed_residual',
+                  'p78_1_speed_residual_nonneg',
+              ),
+              'P78_2_PhysicalSpeedResidual': (
+                  'p78_2_speedChannel_derivative',
+                  'p78_2_exact_physical_residual',
+              ),
+              'P79_R0_CoefficientJet': (
+                  'p79_r0_minor12_formula',
+                  'p79_r0_minor13_formula',
+                  'p79_r0_gramJet_formula',
+                  'p79_r0_deficitJet_formula',
+              ),
+              'P80_1_TrueEvolutionJets': (
+                  'p80_1_state_iteratedDeriv',
+                  'p80_1_initial_derivative',
+              ),
+              'P81_1_JacobiPhysicalPowers': (
+                  'p81_H_action', 'p81_H1', 'p81_H2',
+                  'p81_H3', 'p81_H4',
+                  'p81_true_initial_derivatives',
+              ),
+              'P81_2a_PhysicalGramBridge': (
+                  'p81_2_energyMean_zero',
+                  'p81_2_centeredVelocity_eq',
+                  'p81_2_minor_physical_bridge',
+                  'p81_2_minor_algebra',
+                  'p81_2_minor_product_rule',
+                  'p81_2_state_hasDerivAt',
+              ),
+          }
 
-          for name in (
-              "p77_2_energy_pair_conserved",
-              "p77_2_energyMean_conserved",
-          ):
-              pattern = (
-                  rf"'Lanzarini\.{re.escape(name)}' "
-                  rf"depends on axioms:\s*\[([^\]]*)\]"
-              )
-              match = re.search(pattern, log)
+          for module, theorem_names in expected.items():
+              lines = Path(f'{module}.log').read_text(
+                  encoding='utf-8'
+              ).splitlines()
 
-              if not match:
-                  raise SystemExit(f"Missing axioms audit for {name}")
-
-              found = {
-                  x.strip()
-                  for x in match.group(1).split(",")
-                  if x.strip()
-              }
-
-              extra = found - allowed
-              if extra:
-                  raise SystemExit(
-                      f"Unauthorized axioms in {name}: {sorted(extra)}"
+              for name in theorem_names:
+                  prefix = (
+                      f"'Lanzarini.{name}' depends on axioms:"
                   )
-
-              print(f"{name}: standard axioms only: {sorted(found)}")
-          PY
-
-      - name: Verify P78.1 exact residual and axioms
-        run: |
-          set -euo pipefail
-
-          if grep -En '(^|[[:space:]])(sorry|admit|axiom|sorryAx)([[:space:]]|$)' P78_1_ExactSpeedResidual.lean; then
-            echo 'Forbidden proof placeholder or axiom in P78.1' >&2
-            exit 1
-          fi
-
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P78_1_ExactSpeedResidual.olean P78_1_ExactSpeedResidual.lean | tee p78-1-check.log
-
-          if grep -Fq 'sorryAx' p78-1-check.log; then
-            echo 'Forbidden sorryAx dependency in P78.1' >&2
-            exit 1
-          fi
-
-          python3 - <<'PY'
-          from pathlib import Path
-
-          log = Path("p78-1-check.log").read_text(encoding="utf-8")
-          allowed = {"propext", "Classical.choice", "Quot.sound"}
-          names = (
-              "p78_1_exact_speed_residual",
-              "p78_1_speed_residual_nonneg",
-          )
-
-          for name in names:
-              prefix = f"'Lanzarini.{name}' depends on axioms:"
-              matches = [
-                  line.strip()
-                  for line in log.splitlines()
-                  if line.strip().startswith(prefix)
-              ]
-
-              if len(matches) != 1:
-                  raise SystemExit(f"Missing or duplicate audit: {name}")
-
-              payload = matches[0][len(prefix):].strip()
-
-              if not (payload.startswith("[") and payload.endswith("]")):
-                  raise SystemExit(f"Malformed axiom list for {name}")
-
-              found = {
-                  x.strip()
-                  for x in payload[1:-1].split(",")
-                  if x.strip()
-              }
-
-              extra = found - allowed
-
-              if extra:
-                  raise SystemExit(f"Unauthorized axioms in {name}: {sorted(extra)}")
-
-              print(f"PASS {name}: {sorted(found)}")
-          PY
-
-      - name: Verify P78.2 physical derivative and axioms
-        run: |
-          set -euo pipefail
-
-          if grep -En '(^|[[:space:]])(sorry|admit|axiom|sorryAx)([[:space:]]|$)' P78_2_PhysicalSpeedResidual.lean; then
-            echo 'Forbidden proof placeholder or axiom in P78.2' >&2
-            exit 1
-          fi
-
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P78_2_PhysicalSpeedResidual.olean P78_2_PhysicalSpeedResidual.lean | tee p78-2-check.log
-
-          if grep -Fq 'sorryAx' p78-2-check.log; then
-            echo 'Forbidden sorryAx dependency in P78.2' >&2
-            exit 1
-          fi
-
-          python3 - <<'PY'
-          from pathlib import Path
-
-          log = Path("p78-2-check.log").read_text(encoding="utf-8")
-          allowed = {"propext", "Classical.choice", "Quot.sound"}
-          names = (
-              "p78_2_speedChannel_derivative",
-              "p78_2_exact_physical_residual",
-          )
-
-          for name in names:
-              prefix = f"'Lanzarini.{name}' depends on axioms:"
-              matches = [
-                  line.strip()
-                  for line in log.splitlines()
-                  if line.strip().startswith(prefix)
-              ]
-
-              if len(matches) != 1:
-                  raise SystemExit(f"Missing or duplicate audit: {name}")
-
-              payload = matches[0][len(prefix):].strip()
-
-              if not (payload.startswith("[") and payload.endswith("]")):
-                  raise SystemExit(f"Malformed axiom list for {name}")
-
-              found = {
-                  x.strip()
-                  for x in payload[1:-1].split(",")
-                  if x.strip()
-              }
-
-              extra = found - allowed
-
-              if extra:
-                  raise SystemExit(f"Unauthorized axioms in {name}: {sorted(extra)}")
-
-              print(f"PASS {name}: {sorted(found)}")
-          PY
-
-      - name: Verify P79 Gram coefficient jets
-        run: |
-          set -euo pipefail
-
-          if grep -En '(^|[[:space:]])(sorry|admit|axiom|sorryAx)([[:space:]]|$)' P79_R0_CoefficientJet.lean; then
-            echo 'Forbidden proof placeholder or axiom in P79' >&2
-            exit 1
-          fi
-
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P79_R0_CoefficientJet.olean P79_R0_CoefficientJet.lean | tee p79-check.log
-
-          if grep -Fq 'sorryAx' p79-check.log; then
-            echo 'Forbidden sorryAx dependency in P79' >&2
-            exit 1
-          fi
-
-          python3 - <<'PY'
-          from pathlib import Path
-
-          log = Path("p79-check.log").read_text(encoding="utf-8")
-          allowed = {"propext", "Classical.choice", "Quot.sound"}
-          names = (
-              "p79_r0_minor12_formula",
-              "p79_r0_minor13_formula",
-              "p79_r0_gramJet_formula",
-              "p79_r0_deficitJet_formula",
-          )
-
-          for name in names:
-              prefix = f"'Lanzarini.{name}' depends on axioms:"
-              matches = [
-                  line.strip()
-                  for line in log.splitlines()
-                  if line.strip().startswith(prefix)
-              ]
-
-              if len(matches) != 1:
-                  raise SystemExit(f"Missing or duplicate audit: {name}")
-
-              payload = matches[0][len(prefix):].strip()
-
-              if not (payload.startswith("[") and payload.endswith("]")):
-                  raise SystemExit(f"Malformed axiom list for {name}")
-
-              found = {
-                  x.strip()
-                  for x in payload[1:-1].split(",")
-                  if x.strip()
-              }
-
-              extra = found - allowed
-
-              if extra:
-                  raise SystemExit(f"Unauthorized axioms in {name}: {sorted(extra)}")
-
-              print(f"PASS {name}: {sorted(found)}")
-          PY
-
-      - name: Verify P80.1 true evolution derivatives
-        run: |
-          set -euo pipefail
-
-          if grep -En '(^|[[:space:]])(sorry|admit|axiom|sorryAx)([[:space:]]|$)' P80_1_TrueEvolutionJets.lean; then
-            echo 'Forbidden proof placeholder or axiom in P80.1' >&2
-            exit 1
-          fi
-
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P80_1_TrueEvolutionJets.olean P80_1_TrueEvolutionJets.lean | tee p80-1-check.log
-
-          if grep -Fq 'sorryAx' p80-1-check.log; then
-            echo 'Forbidden sorryAx dependency in P80.1' >&2
-            exit 1
-          fi
-
-          python3 - <<'PY'
-          from pathlib import Path
-
-          log = Path("p80-1-check.log").read_text(encoding="utf-8")
-          allowed = {"propext", "Classical.choice", "Quot.sound"}
-          names = (
-              "p80_1_state_iteratedDeriv",
-              "p80_1_initial_derivative",
-          )
-
-          for name in names:
-              prefix = f"'Lanzarini.{name}' depends on axioms:"
-              matches = [
-                  line.strip()
-                  for line in log.splitlines()
-                  if line.strip().startswith(prefix)
-              ]
-
-              if len(matches) != 1:
-                  raise SystemExit(f"Missing or duplicate audit: {name}")
-
-              payload = matches[0][len(prefix):].strip()
-
-              if not (payload.startswith("[") and payload.endswith("]")):
-                  raise SystemExit(f"Malformed axiom list for {name}")
-
-              found = {
-                  x.strip()
-                  for x in payload[1:-1].split(",")
-                  if x.strip()
-              }
-
-              extra = found - allowed
-
-              if extra:
-                  raise SystemExit(f"Unauthorized axioms in {name}: {sorted(extra)}")
-
-              print(f"PASS {name}: {sorted(found)}")
-          PY
-
-      - name: Verify P81.1 physical Jacobi powers and axioms
-        run: |
-          set -euo pipefail
-
-          if grep -En '(^|[[:space:]])(sorry|admit|axiom|sorryAx)([[:space:]]|$)' P81_1_JacobiPhysicalPowers.lean; then
-            echo 'Forbidden proof placeholder or axiom in P81.1' >&2
-            exit 1
-          fi
-
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P81_1_JacobiPhysicalPowers.olean P81_1_JacobiPhysicalPowers.lean | tee p81-1-check.log
-
-          if grep -Fq 'sorryAx' p81-1-check.log; then
-            echo 'Forbidden sorryAx dependency in P81.1' >&2
-            exit 1
-          fi
-
-          python3 - <<'PY'
-          from pathlib import Path
-
-          log = Path("p81-1-check.log").read_text(encoding="utf-8")
-          allowed = {"propext", "Classical.choice", "Quot.sound"}
-
-          names = (
-              "p81_H_action",
-              "p81_H1",
-              "p81_H2",
-              "p81_H3",
-              "p81_H4",
-              "p81_true_initial_derivatives",
-          )
-
-          for name in names:
-              prefix = f"'Lanzarini.{name}' depends on axioms:"
-              matches = [
-                  line.strip()
-                  for line in log.splitlines()
-                  if line.strip().startswith(prefix)
-              ]
-
-              if len(matches) != 1:
-                  raise SystemExit(f"Missing or duplicate audit: {name}")
-
-              payload = matches[0][len(prefix):].strip()
-
-              if not (payload.startswith("[") and payload.endswith("]")):
-                  raise SystemExit(f"Malformed axiom list for {name}")
-
-              found = {
-                  x.strip()
-                  for x in payload[1:-1].split(",")
-                  if x.strip()
-              }
-
-              extra = found - allowed
-
-              if extra:
-                  raise SystemExit(
-                      f"Unauthorized axioms in {name}: {sorted(extra)}"
-                  )
-
-              print(f"PASS {name}: {sorted(found)}")
+                  matches = [
+                      line.strip() for line in lines
+                      if line.strip().startswith(prefix)
+                  ]
+                  if len(matches) != 1:
+                      raise SystemExit(
+                          f'Missing/duplicate axiom audit: {name}'
+                      )
+
+                  payload = matches[0][len(prefix):].strip()
+                  if not (payload.startswith('[') and
+                          payload.endswith(']')):
+                      raise SystemExit(
+                          f'Invalid axiom list for {name}'
+                      )
+
+                  found = {
+                      item.strip()
+                      for item in payload[1:-1].split(',')
+                      if item.strip()
+                  }
+                  unexpected = found - allowed
+                  if unexpected:
+                      raise SystemExit(
+                          f'Unauthorized axioms for {name}: '
+                          f'{sorted(unexpected)}'
+                      )
+                  print(f'PASS {name}: {sorted(found)}')
+
+          print('All required theorem axiom audits passed.')
           PY
