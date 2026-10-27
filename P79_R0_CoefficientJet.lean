@@ -6,18 +6,18 @@ namespace Lanzarini
 /-!
 P79: Local defect coefficient, r = 0.
 
-Exact algebra of the fourth-order Taylor
-jets of the two contributing Gram minors.
+Exact algebra of fourth-order Gram minor jets.
+
+The division-based definitions are explicitly
+noncomputable, as required for real arithmetic.
 
 No sorry.
 No admit.
 No new axioms.
 
-IMPORTANT:
-The connection between these finite jets
-and the derivatives of the actual Jacobi
-evolution is a separate proof obligation.
-This file does not assert that connection.
+This file proves algebraic identities only.
+It does not yet establish the Taylor expansion
+of the physical Jacobi evolution.
 -/
 
 /-- First local defect. -/
@@ -26,13 +26,10 @@ def p79_r0_omega
   r ^ 2 - 3 * q ^ 2 + 3 * p ^ 2
 
 /--
-Fourth-order imaginary coefficient of
-the Gram minor with indices (1,2).
-
-The expression is assembled from the
-lower Taylor coefficients of w and v.
+Fourth-order coefficient of the first
+candidate Gram minor.
 -/
-def p79_r0_minor12_jet
+noncomputable def p79_r0_minor12_jet
     (p q r : ℝ) : ℝ :=
   (-p) *
       (p * q * (p ^ 2 + q ^ 2 + r ^ 2) / 6)
@@ -43,25 +40,26 @@ def p79_r0_minor12_jet
   - (p * q * (p ^ 2 + q ^ 2 + r ^ 2) / 12
       + p ^ 3 * q / 2) * (-p)
 
-/-- Derive the first minor coefficient. -/
+/-- Algebraic formula for the first jet. -/
 theorem p79_r0_minor12_formula
     (p q r : ℝ) :
     p79_r0_minor12_jet p q r =
-      -(p ^ 2 * q * p79_r0_omega p q r) / 12 := by
+      -(p ^ 2 * q *
+        p79_r0_omega p q r) / 12 := by
   unfold p79_r0_minor12_jet
   unfold p79_r0_omega
   ring
 
 /--
-Fourth-order imaginary coefficient of
-the Gram minor with indices (1,3).
+Fourth-order coefficient of the second
+candidate Gram minor.
 -/
-def p79_r0_minor13_jet
+noncomputable def p79_r0_minor13_jet
     (p q r delta : ℝ) : ℝ :=
   (-p) * (delta * p * q * r / 6)
   - (delta * p * q * r / 8) * (-p)
 
-/-- Derive the diagonal-defect contribution. -/
+/-- Algebraic formula for the second jet. -/
 theorem p79_r0_minor13_formula
     (p q r delta : ℝ) :
     p79_r0_minor13_jet p q r delta =
@@ -70,17 +68,17 @@ theorem p79_r0_minor13_formula
   ring
 
 /--
-Leading Gram coefficient assembled
-from the two fourth-order minor jets.
+Sum of the two squared candidate
+Gram-minor coefficients.
 -/
-def p79_r0_gramJetCoefficient
+noncomputable def p79_r0_gramJetCoefficient
     (p q r delta : ℝ) : ℝ :=
   (p79_r0_minor12_jet p q r) ^ 2 +
   (p79_r0_minor13_jet p q r delta) ^ 2
 
 /--
-Exact factorization, derived without
-assuming the expected coefficient.
+Exact algebraic factorization.
+No assumption of the target formula.
 -/
 theorem p79_r0_gramJet_formula
     (p q r delta : ℝ) :
@@ -94,22 +92,18 @@ theorem p79_r0_gramJet_formula
   ring
 
 /--
-Normalize the Gram jet coefficient by
-the leading denominator coefficient p^4.
-
-A nonzero initial coupling is required.
+Normalize the coefficient by p^4.
+This is an algebraic definition, not
+yet the actual dynamical deficit limit.
 -/
-def p79_r0_deficitJetCoefficient
+noncomputable def p79_r0_deficitJetCoefficient
     (p q r delta : ℝ) : ℝ :=
   p79_r0_gramJetCoefficient p q r delta /
     p ^ 4
 
 /--
-Exact candidate coefficient of t^6,
-derived from the finite Gram jets.
-
-This is not yet a theorem about the
-Taylor expansion of the actual D(t).
+Exact normalized algebraic coefficient.
+Requires the first coupling to be nonzero.
 -/
 theorem p79_r0_deficitJet_formula
     (p q r delta : ℝ)
