@@ -169,10 +169,7 @@ jobs:
           )
 
           for name in names:
-              prefix = (
-                  f"'Lanzarini.{name}' depends on axioms:"
-              )
-
+              prefix = f"'Lanzarini.{name}' depends on axioms:"
               matches = [
                   line.strip()
                   for line in log.splitlines()
@@ -180,19 +177,11 @@ jobs:
               ]
 
               if len(matches) != 1:
-                  raise SystemExit(
-                      f"Missing or duplicate audit: {name}"
-                  )
+                  raise SystemExit(f"Missing or duplicate audit: {name}")
 
               payload = matches[0][len(prefix):].strip()
-
-              if not (
-                  payload.startswith("[")
-                  and payload.endswith("]")
-              ):
-                  raise SystemExit(
-                      f"Malformed axiom list for {name}"
-                  )
+              if not (payload.startswith("[") and payload.endswith("]")):
+                  raise SystemExit(f"Malformed axiom list for {name}")
 
               found = {
                   x.strip()
@@ -200,12 +189,9 @@ jobs:
                   if x.strip()
               }
 
-              unexpected = found - allowed
-              if unexpected:
-                  raise SystemExit(
-                      f"Unauthorized axioms in {name}: "
-                      f"{sorted(unexpected)}"
-                  )
+              extra = found - allowed
+              if extra:
+                  raise SystemExit(f"Unauthorized axioms in {name}: {sorted(extra)}")
 
               print(f"PASS {name}: {sorted(found)}")
           PY
@@ -245,10 +231,7 @@ jobs:
           )
 
           for name in names:
-              prefix = (
-                  f"'Lanzarini.{name}' depends on axioms:"
-              )
-
+              prefix = f"'Lanzarini.{name}' depends on axioms:"
               matches = [
                   line.strip()
                   for line in log.splitlines()
@@ -256,19 +239,11 @@ jobs:
               ]
 
               if len(matches) != 1:
-                  raise SystemExit(
-                      f"Missing or duplicate audit: {name}"
-                  )
+                  raise SystemExit(f"Missing or duplicate audit: {name}")
 
               payload = matches[0][len(prefix):].strip()
-
-              if not (
-                  payload.startswith("[")
-                  and payload.endswith("]")
-              ):
-                  raise SystemExit(
-                      f"Malformed axiom list for {name}"
-                  )
+              if not (payload.startswith("[") and payload.endswith("]")):
+                  raise SystemExit(f"Malformed axiom list for {name}")
 
               found = {
                   x.strip()
@@ -276,12 +251,121 @@ jobs:
                   if x.strip()
               }
 
-              unexpected = found - allowed
-              if unexpected:
-                  raise SystemExit(
-                      f"Unauthorized axioms in {name}: "
-                      f"{sorted(unexpected)}"
-                  )
+              extra = found - allowed
+              if extra:
+                  raise SystemExit(f"Unauthorized axioms in {name}: {sorted(extra)}")
+
+              print(f"PASS {name}: {sorted(found)}")
+          PY
+
+      - name: Verify P79 Gram coefficient jets
+        run: |
+          set -euo pipefail
+
+          if grep -En '(^|[[:space:]])(sorry|admit|axiom|sorryAx)([[:space:]]|$)' P79_R0_CoefficientJet.lean; then
+            echo 'Forbidden proof placeholder or axiom in P79' >&2
+            exit 1
+          fi
+
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P79_R0_CoefficientJet.olean P79_R0_CoefficientJet.lean | tee p79-check.log
+
+          if grep -Fq 'sorryAx' p79-check.log; then
+            echo 'Forbidden sorryAx dependency in P79' >&2
+            exit 1
+          fi
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          log = Path("p79-check.log").read_text(encoding="utf-8")
+          allowed = {"propext", "Classical.choice", "Quot.sound"}
+
+          names = (
+              "p79_r0_minor12_formula",
+              "p79_r0_minor13_formula",
+              "p79_r0_gramJet_formula",
+              "p79_r0_deficitJet_formula",
+          )
+
+          for name in names:
+              prefix = f"'Lanzarini.{name}' depends on axioms:"
+              matches = [
+                  line.strip()
+                  for line in log.splitlines()
+                  if line.strip().startswith(prefix)
+              ]
+
+              if len(matches) != 1:
+                  raise SystemExit(f"Missing or duplicate audit: {name}")
+
+              payload = matches[0][len(prefix):].strip()
+              if not (payload.startswith("[") and payload.endswith("]")):
+                  raise SystemExit(f"Malformed axiom list for {name}")
+
+              found = {
+                  x.strip()
+                  for x in payload[1:-1].split(",")
+                  if x.strip()
+              }
+
+              extra = found - allowed
+              if extra:
+                  raise SystemExit(f"Unauthorized axioms in {name}: {sorted(extra)}")
+
+              print(f"PASS {name}: {sorted(found)}")
+          PY
+
+      - name: Verify P80.1 true evolution derivatives
+        run: |
+          set -euo pipefail
+
+          if grep -En '(^|[[:space:]])(sorry|admit|axiom|sorryAx)([[:space:]]|$)' P80_1_TrueEvolutionJets.lean; then
+            echo 'Forbidden proof placeholder or axiom in P80.1' >&2
+            exit 1
+          fi
+
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P80_1_TrueEvolutionJets.olean P80_1_TrueEvolutionJets.lean | tee p80-1-check.log
+
+          if grep -Fq 'sorryAx' p80-1-check.log; then
+            echo 'Forbidden sorryAx dependency in P80.1' >&2
+            exit 1
+          fi
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          log = Path("p80-1-check.log").read_text(encoding="utf-8")
+          allowed = {"propext", "Classical.choice", "Quot.sound"}
+
+          names = (
+              "p80_1_state_iteratedDeriv",
+              "p80_1_initial_derivative",
+          )
+
+          for name in names:
+              prefix = f"'Lanzarini.{name}' depends on axioms:"
+              matches = [
+                  line.strip()
+                  for line in log.splitlines()
+                  if line.strip().startswith(prefix)
+              ]
+
+              if len(matches) != 1:
+                  raise SystemExit(f"Missing or duplicate audit: {name}")
+
+              payload = matches[0][len(prefix):].strip()
+              if not (payload.startswith("[") and payload.endswith("]")):
+                  raise SystemExit(f"Malformed axiom list for {name}")
+
+              found = {
+                  x.strip()
+                  for x in payload[1:-1].split(",")
+                  if x.strip()
+              }
+
+              extra = found - allowed
+              if extra:
+                  raise SystemExit(f"Unauthorized axioms in {name}: {sorted(extra)}")
 
               print(f"PASS {name}: {sorted(found)}")
           PY
