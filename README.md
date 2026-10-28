@@ -274,20 +274,228 @@ The next formal milestone is precisely the **derivation of the physical fourth-o
 
 No desired coefficient may be introduced as a lemma hypothesis. No proof checkpoint is certified before a GitHub Action actually compiles the named results and its axiom audit succeeds.
 
-## 7. Historical verification records
 
-| Event | Evidence |
-| --- | --- |
-| P71 foundational checkpoint | [Actions #84](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39044208215) |
-| P72.3a complex-time derivative | [Actions #98](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39140660849) |
-| P73.1 integration | [PR #1](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/1), [Actions #103](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39153415923) |
-| P73.2 integration | [PR #2](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/2), [Actions #109](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39248613293) |
-| P74.2 on `main` | [PR #3](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./pull/3), [Actions #117](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39399857938) |
-| P76.6 development checkpoint | [Actions #159](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/40004543470) |
-| P81.2a first real CI (failed) | [Actions #196](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/40567202521) |
-| **P81.2a certified** | **[Actions #197](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/40569405991)** |
+## 7. Research History and Machine-Verified Checkpoints
 
-An Actions run proves only what its actual workflow at that commit compiled and checked. Earlier successful historical runs are not substitutes for the #197 compilation of P81.2a.
+### 7.1. Introduction: From the First Jacobi Proofs to the Research Frontier
+
+The Lanzarini Krylov–Jacobi project is an independent mathematical research initiative developed by Valentino Lanzarini.
+
+The Lean 4 repository was initialized on 12 October 2026 to construct a formally verified mathematical framework for finite-dimensional Jacobi dynamics, quantum evolution, Krylov observables and speed-limit saturation.
+
+The research preprint is available at:
+
+https://doi.org/10.5281/zenodo.23163367
+
+The formalization proceeded through several stages.
+
+**Stage I: Mathematical foundations**
+
+The initial work introduced finite Jacobi matrices, their symmetry and complex representations, the evolution generator, matrix exponentials and the unitary propagator.
+
+Formal verification was configured using Lean 4, mathlib and GitHub Actions.
+
+**Stage II: Krylov observables**
+
+The development established finite-dimensional Krylov complexity, moments, variance, normalization properties and zero-variance support results.
+
+**Stage III: Gram identities and physical derivatives**
+
+The project formalized complex Gram/Lagrange identities, centered-state variance, and derivatives of the Jacobi propagator, evolving state and Krylov complexity.
+
+**Stage IV: Physical speed-limit framework**
+
+The subsequent development established centered physical derivatives, energy-variance identities, speed bounds, energy conservation and exact Gram-based physical residual identities.
+
+**Stage V: Local-defect coefficient investigation**
+
+The latest work developed algebraic candidate coefficients for the depth-zero local-defect case, formal derivatives of the actual Jacobi evolution, four-site Hamiltonian powers and a physical Gram-minor bridge.
+
+The current certified development checkpoint is P81.2a.
+
+The next objective is P81.2b: deriving the fourth-order physical Gram-minor coefficients directly from Jacobi evolution.
+
+**Scientific limitation:** the complete saturation-deficit hierarchy proposed in the research preprint has not yet been proved in Lean. The foundational results are not presented as evidence of worldwide mathematical novelty.
+
+---
+
+### 7.2. Initial Formal Development: 12–13 October 2026
+
+Before the numbered P51 milestone, the project established its original Lean infrastructure and finite Jacobi foundations.
+
+These steps were verified using GitHub Actions.
+
+| Date | Initial development | GitHub verification |
+| --- | --- | --- |
+| 12 Oct 2026 | Lean 4 installation and first automated theorem verification | [Actions #2: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/38297517117) |
+| 12 Oct 2026 | Jacobi matrix entries and symmetry | [Actions #6: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/38298941947) |
+| 12 Oct 2026 | Finite real Jacobi matrix formalization | [Actions #11: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/38300689272) |
+| 13 Oct 2026 | Matrix exponential and evolution checks | [Actions #23: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/38432979610) |
+| 13 Oct 2026 | Further complex Jacobi matrix verification | [Actions #28: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/38442634027) |
+
+These successful workflows document the development that preceded the numbered P51 research milestone.
+
+There is no claim that fifty separately numbered P1–P50 theorems were certified.
+
+---
+
+### 7.3. Mathematical Checkpoints: P51–P74.2
+
+The following checkpoints were developed and verified during the foundational phase.
+
+| Checkpoint | Mathematical development | GitHub verification |
+| --- | --- | --- |
+| P51–P52 | Jacobi Hamiltonian and unitary propagator | [#35: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/38564356941) |
+| P53–P55 | Norm, inner-product and orthogonality conservation | [#46: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/38617582830) |
+| P56–P64 | Krylov moments, variance and zero-variance support | [#68: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/38930795218) |
+| P65–P69 | Complex Gram coordinates and finite Lagrange identity | [#80: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39039294687) |
+| P70 | Exact real-part Gram-gap identity | [#83: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39042822303) |
+| P71 | Centered Krylov state and variance bridge | [#84: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39044208215) |
+| P72.1–P72.2 | Exact complexity increment and conditional derivative | [#89: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39108316304) |
+| P72.3a | Complex-time matrix-exponential derivative | [#98: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39140660849) |
+| P73.1 | Physical Jacobi propagator derivative | [#103: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39153415923) |
+| P73.2 | Physical evolved-state derivative | [#109: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39248613293) |
+| P74.1–P74.2 | Coordinate derivatives and physical Krylov-complexity derivative | [#117: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39399857938) |
+
+P72.3a was also verified on a dedicated test branch.
+
+The subsequent P73 and P74 results were integrated into `main` through reviewed development and successful post-merge workflows.
+
+**P74.2 remains the latest mathematical checkpoint integrated and verified on `main` in the inspected repository state.**
+
+---
+
+### 7.4. Research Development: P75–P81.2a
+
+The following results were developed on the branch:
+
+`research/p75-centered-derivative`
+
+| Checkpoint | Mathematical development | GitHub verification |
+| --- | --- | --- |
+| P75.1–P75.3 | Centered orthogonality, physical derivative and quadratic estimates | [#135: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39723529933) |
+| P75.4 | Physical derivative speed bound | [#137: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39724698501) |
+| P76.1–P76.5b | Energy variance and centered-velocity identities | [#157: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39992902430) |
+| P76.6 | Finite-dimensional energy-variance speed bound | [#159: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/40004543470) |
+| P77.1a | Hamiltonian and propagator commutation | [#179: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/40219331707) |
+| P77.1b | Hamiltonian intertwining with state evolution | [#181: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/40272241027) |
+| P77.2 | Conservation of the energy expectation | [#183: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/40323940960) |
+| P78.1 | Exact Gram-based speed residual | [#185: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/40371272890) |
+| P78.2 | Connection to the actual physical derivative | [#187: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/40386259022) |
+| P79 (`r=0`) | Algebraic identities for candidate Gram-minor coefficients | [#191: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/40453775330) |
+| P80.1 | Iterated derivatives of actual Jacobi evolution | [#191: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/40453775330) |
+| P81.1 | Physical four-site Jacobi Hamiltonian powers | [#193: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/40496991584) |
+| **P81.2a** | **Physical Gram-minor bridge and first-order product rule** | **[#197: SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/40569405991)** |
+
+The P79 and P80.1 modules were both explicitly compiled in GitHub Actions #191.
+
+P81.1 was explicitly compiled and audited in #193.
+
+P81.2a was explicitly compiled and passed its six named theorem axiom audits in #197.
+
+These links provide a reproducible verification history, subject to the precise theorem statements and checks executed at each commit.
+
+---
+
+### 7.5. Latest Certified Checkpoint: P81.2a
+
+**GitHub Actions:** [#197 — SUCCESS](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/40569405991)
+
+**Verified commit:**
+
+`bfbf772ab6b4f3b1b5de062553da1c8fd798f8e8`
+
+**Source file:**
+
+`P81_2a_PhysicalGramBridge.lean`
+
+The workflow compiled the actual P81.2a module and checked these six declarations:
+
+```lean
+Lanzarini.p81_2_energyMean_zero
+Lanzarini.p81_2_centeredVelocity_eq
+Lanzarini.p81_2_minor_physical_bridge
+Lanzarini.p81_2_minor_algebra
+Lanzarini.p81_2_minor_product_rule
+Lanzarini.p81_2_state_hasDerivAt
+```
+
+The recorded axiom dependencies for all six declarations contain only:
+
+```text
+[propext, Classical.choice, Quot.sound]
+```
+
+No `sorryAx` dependency was reported for these declarations.
+
+Earlier workflows #194 and #195 succeeded but did not yet compile P81.2a as a new verified module.
+
+Workflow #196 attempted the complete compilation and failed.
+
+The subsequent correction was compiled successfully in #197.
+
+**P81.2a is therefore a machine-verified checkpoint.**
+
+However, P81.2a does not yet prove the physical fourth-order coefficients of the Gram minors.
+
+---
+
+### 7.6. Historical GitHub Actions Statistics
+
+**Repository verification snapshot: 28 October 2026**
+
+| Category | Recorded executions |
+| --- | ---: |
+| Total GitHub Actions runs | 174 |
+| Successful runs | 138 |
+| Failed runs | 36 |
+
+These numbers include:
+
+- Mathematical source verification.
+- Repeated proof and dependency checks.
+- Workflow configuration and diagnostics.
+- Documentation updates.
+- Development and main-branch executions.
+
+A successful workflow does not necessarily represent a new theorem.
+
+The table above therefore identifies representative mathematical checkpoints rather than treating every green run as an independent discovery.
+
+[Open complete GitHub Actions history](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions)
+
+---
+
+### 7.7. Current Scientific Status
+
+**Verified development frontier:** P81.2a.
+
+**Latest verified checkpoint integrated on `main`:** P74.2.
+
+**Development branch:** `research/p75-centered-derivative`.
+
+**Next checkpoint:** P81.2b.
+
+The current formal development has established significant foundational results for finite Jacobi dynamics, physical Krylov derivatives, energy-variance speed bounds and exact Gram-based residual identities.
+
+The remaining central mathematical challenge is to derive the physical fourth-order Gram-minor coefficients from the actual Jacobi evolution.
+
+This requires proving the preceding Taylor-coefficient cancellations, accounting for all Gram minors and the imaginary residual channel, and justifying the necessary asymptotic remainder.
+
+Only after that derivation can the candidate algebraic formulas from P79 be compared rigorously with the physical coefficients.
+
+The subsequent goal is to investigate the general finite-depth local-defect hierarchy, including diagonal and off-diagonal defects, mixed contributions, terminal cases and rigidity.
+
+These central results must not be declared formally proved before their corresponding Lean theorems have been compiled and independently audited.
+
+**Formal verification establishes the encoded mathematical statements relative to Lean's accepted foundations. It does not establish mathematical originality, worldwide priority or independent peer review.**
+
+Research preprint:
+
+https://doi.org/10.5281/zenodo.23163367
+
+**Copyright © 2026 Valentino Lanzarini. All rights reserved.**
+
 
 ## 8. Reproducibility and formal-integrity policy
 
