@@ -23,7 +23,7 @@ jobs:
           lake update
           lake exe cache get
 
-      - name: Verify all Lean modules through P81.2b.1
+      - name: Verify all Lean modules through P81.2b.2
         run: |
           set -euo pipefail
 
@@ -53,7 +53,8 @@ jobs:
             P81_1_JacobiPhysicalPowers \
             P81_2a_PhysicalGramBridge \
             P81_2b_InitialPhysicalData \
-            P81_2b1_PhysicalAcceleration
+            P81_2b1_PhysicalAcceleration \
+            P81_2b2_PhysicalMinorDerivative
           do
             echo "=== Compiling $mod.lean ==="
             test -f "$mod.lean"
@@ -73,7 +74,8 @@ jobs:
             P81_1_JacobiPhysicalPowers \
             P81_2a_PhysicalGramBridge \
             P81_2b_InitialPhysicalData \
-            P81_2b1_PhysicalAcceleration
+            P81_2b1_PhysicalAcceleration \
+            P81_2b2_PhysicalMinorDerivative
           do
             if grep -En '(^|[[:space:]])(sorry|admit|axiom|sorryAx)([[:space:]]|$)' "$mod.lean"; then
               echo "Forbidden proof placeholder or axiom in $mod" >&2
@@ -199,6 +201,9 @@ jobs:
                   'p81_2b1_velocity_eq_generator',
                   'p81_2b1_velocity_hasDerivAt',
                   'p81_2b1_initial_acceleration',
+              ),
+              'P81_2b2_PhysicalMinorDerivative': (
+                  'p81_2b2_rawMinor_hasDerivAt',
               ),
           }
 
