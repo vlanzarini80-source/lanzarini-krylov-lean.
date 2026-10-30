@@ -23,7 +23,7 @@ jobs:
           lake update
           lake exe cache get
 
-      - name: Verify all Lean modules through P81.2b.2
+      - name: Verify all Lean modules through P81.2b.3 Stage A
         run: |
           set -euo pipefail
 
@@ -54,12 +54,13 @@ jobs:
             P81_2a_PhysicalGramBridge \
             P81_2b_InitialPhysicalData \
             P81_2b1_PhysicalAcceleration \
-            P81_2b2_PhysicalMinorDerivative
+            P81_2b2_PhysicalMinorDerivative \
+            P81_2b3_CenteredMinorDerivative
           do
             echo "=== Compiling $mod.lean ==="
             test -f "$mod.lean"
             LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
-              -o "$mod.olean" "$mod.lean" | tee "$mod.log"
+              -o "$mod.olean" "$mod.lean" 2>&1 | tee "$mod.log"
           done
 
       - name: Audit source files and all required theorem axioms
@@ -75,7 +76,8 @@ jobs:
             P81_2a_PhysicalGramBridge \
             P81_2b_InitialPhysicalData \
             P81_2b1_PhysicalAcceleration \
-            P81_2b2_PhysicalMinorDerivative
+            P81_2b2_PhysicalMinorDerivative \
+            P81_2b3_CenteredMinorDerivative
           do
             if grep -En '(^|[[:space:]])(sorry|admit|axiom|sorryAx)([[:space:]]|$)' "$mod.lean"; then
               echo "Forbidden proof placeholder or axiom in $mod" >&2
@@ -204,6 +206,9 @@ jobs:
               ),
               'P81_2b2_PhysicalMinorDerivative': (
                   'p81_2b2_rawMinor_hasDerivAt',
+              ),
+              'P81_2b3_CenteredMinorDerivative': (
+                  'p81_2b3_K_hasDerivAt',
               ),
           }
 
