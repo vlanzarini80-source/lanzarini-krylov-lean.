@@ -1,0 +1,36 @@
+
+name: Lean NormSq Probe
+
+on:
+  push:
+    paths:
+      - 'P82_NormSqProbe.lean'
+      - '.github/workflows/normsq-probe.yml'
+  workflow_dispatch:
+
+jobs:
+  normsq-probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Lean
+        run: |
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Fetch mathlib
+        run: |
+          lake update
+          lake exe cache get
+
+      - name: Compile isolated probe
+        run: |
+          set -euo pipefail
+          lake env lean P82_NormSqProbe.lean 2>&1 | tee normsq-probe.log
+          if grep -F 'sorryAx' normsq-probe.log; then
+            echo "FAIL: sorryAx detected"
+            exit 1
+          fi
+          grep -F "'Lanzarini.p82_normSq_probe' depends on axioms:" normsq-probe.log
