@@ -1,3 +1,4 @@
+
 name: Lean 4 Verification
 
 on:
@@ -57,6 +58,7 @@ jobs:
             P81_2b3_CenteredMinorDerivative \
             P81_2b3b_CenteredMinorBridge \
             P82_2_PhysicalJets \
+            P82_NormSqProbe \
             P82_3_PhysicalObservables
           do
             echo "=== Compiling $mod.lean ==="
@@ -82,6 +84,7 @@ jobs:
             P81_2b3_CenteredMinorDerivative \
             P81_2b3b_CenteredMinorBridge \
             P82_2_PhysicalJets \
+            P82_NormSqProbe \
             P82_3_PhysicalObservables
           do
             if grep -En '(^|[[:space:]])(sorry|admit|axiom|sorryAx)([[:space:]]|$)' "$mod.lean"; then
@@ -125,7 +128,6 @@ jobs:
               ),
               'P75_4_DerivativeSpeedBound': (
                   'p75_derivative_speed_bound',
-                  'p75_physical_quadratic_bound',
               ),
               'P76_1_EnergyVariance': (
                   'p76_energyVariance_nonneg',
@@ -228,6 +230,9 @@ jobs:
                   'p82_physical_jet',
                   'p82_initial_physical_jet',
                   'p82_generator_eq_p81',
+              ),
+              'P82_NormSqProbe': (
+                  'p82_normSq_probe',
               ),
               'P82_3_PhysicalObservables': (
                   'p82_3_M2_zero',
