@@ -8,13 +8,11 @@ namespace Lanzarini
 /-!
 P82.3: Physical second moment and variance.
 
-Uses the separately verified normSq derivative
-lemma from P82_NormSqProbe.
-
-No R0 coefficient is assumed.
+Derivative of the actual Jacobi evolution.
+No assumed R0 Taylor coefficients.
 No sorry, admit, or new axioms.
 
-Requires complete CI verification.
+Candidate for Lean CI verification.
 -/
 
 noncomputable def p82_3_M2
@@ -91,18 +89,32 @@ theorem p82_3_M2_hasDerivAt
             (p81_2_velocity p q s delta t j)).re)
         t := by
 
-    have hre :=
-      (hcomponent j).re
+    let f : ℝ → ℂ :=
+      fun x => (p81_2_state p q s delta x) j
 
-    have him :=
-      (hcomponent j).im
+    let dz : ℂ :=
+      p81_2_velocity p q s delta t j
 
-    exact p82_normSq_probe
-      (fun x : ℝ =>
-        (p81_2_state p q s delta x) j)
-      t
-      (p81_2_velocity p q s delta t j)
-      hre him
+    have hc : HasDerivAt f dz t := by
+      exact hcomponent j
+
+    have hre :
+        HasDerivAt
+          (fun x : ℝ => (f x).re)
+          dz.re t := by
+      have h :=
+        Complex.reCLM.hasFDerivAt.comp_hasDerivAt t hc
+      exact h
+
+    have him :
+        HasDerivAt
+          (fun x : ℝ => (f x).im)
+          dz.im t := by
+      have h :=
+        Complex.imCLM.hasFDerivAt.comp_hasDerivAt t hc
+      exact h
+
+    exact p82_normSq_probe f t dz hre him
 
   have hsum :
       HasDerivAt
