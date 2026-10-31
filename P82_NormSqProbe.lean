@@ -1,0 +1,24 @@
+
+import Mathlib
+
+namespace Lanzarini
+
+theorem p82_normSq_probe
+    (f : ℝ → ℂ) (t : ℝ) (dz : ℂ)
+    (hre : HasDerivAt
+      (fun x : ℝ => (f x).re) dz.re t)
+    (him : HasDerivAt
+      (fun x : ℝ => (f x).im) dz.im t) :
+    HasDerivAt
+      (fun x : ℝ => Complex.normSq (f x))
+      (2 * ((star (f t)) * dz).re) t := by
+  have h := (hre.pow 2).add (him.pow 2)
+  convert h using 1
+  · ext x
+    simp only [Complex.normSq_apply]
+  · simp only [Complex.mul_re, Complex.star_def]
+    ring
+
+#print axioms p82_normSq_probe
+
+end Lanzarini
