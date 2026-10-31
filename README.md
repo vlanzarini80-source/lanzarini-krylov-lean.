@@ -6,7 +6,8 @@
 **Author:** Valentino Lanzarini  
 **Affiliation:** Independent Mathematical Researcher  
 **Project status:** Research in progress  
-**Latest development checkpoint:** P76.6  
+**Latest verified development checkpoint:** P82.3
+**Latest candidate awaiting CI verification:** P82.4a
 **Latest checkpoint on main:** P74.2  
 **Lean:** v4.24.0  
 **mathlib:** v4.24.0  
@@ -427,6 +428,54 @@ Formal verification and independent scientific evaluation are complementary but 
 
 ---
 
+Development Checkpoint — 31 October 2026
+
+Branch: "research/p75-centered-derivative"
+
+P82.3 — Verified Physical Observables
+
+GitHub Actions Lean 4 Verification #225 completed successfully at commit "65e4762".
+
+The verification workflow compiled "P82_3_PhysicalObservables.lean", including the initial-value and first-derivative theorems for the physical second moment and Krylov variance.
+
+The reported theorem dependencies were limited to the standard Lean axioms:
+
+- "propext"
+- "Classical.choice"
+- "Quot.sound"
+
+No "sorryAx" dependencies were reported for the audited P82.3 declarations.
+
+P82.4a — Physical Speed Residual Candidate
+
+The file "P82_4a_PhysicalResidual.lean" was introduced at commit "a4c1c46".
+
+GitHub Actions Verification #226 completed successfully. However, the workflow did not explicitly compile or audit this new module.
+
+Consequently, P82.4a must not yet be described as formally verified.
+
+Outstanding Mathematical Objectives
+
+The next formalization stages are:
+
+1. Derive the eighth-order coefficient of the physical R0 speed residual directly from finite-dimensional Jacobi evolution.
+2. Establish the required lower-order cancellations without assuming the target coefficient.
+3. Prove positivity of the normalization denominator in a suitable punctured neighborhood of zero.
+4. Establish the normalized sixth-order short-time saturation-deficit limit.
+5. Extend the verified analysis to higher defect depths and finite-chain terminal cases.
+
+The algebraic coefficient identities developed in P79 must remain logically distinct from the physical-evolution derivation.
+
+Scientific Status and Limitations
+
+Lean verification establishes the correctness of the formal statements under their explicitly encoded assumptions.
+
+It does not independently establish the mathematical novelty of the results, equivalence with every statement in the associated preprint, or external peer review.
+
+The complete eighth-order physical-residual coefficient and normalized saturation-deficit limit remain open formalization objectives.
+
+---
+
 ## 13. Author
 
 **Valentino Lanzarini**
@@ -442,7 +491,6 @@ https://doi.org/10.5281/zenodo.23163367
 Repository:
 
 [GitHub repository](https://github.com/vlanzarini80-source/lanzarini-krylov-lean.)
-
 
 ---
 
