@@ -4,21 +4,16 @@ import P81_2b3_CenteredMinorDerivative
 namespace Lanzarini
 
 /-!
-P82.3: Physical observables for the R0 model.
+P82.3 - Physical second moment and variance.
 
-The state is the actual four-site Jacobi evolution.
-The velocity is its proven physical derivative.
+Correction of the failed CI #217.
 
-This file establishes a derivative of the second
-Krylov moment and of the physical variance.
-
-No target R0 coefficient is assumed.
+No expected R0 coefficient is assumed.
 No sorry, admit, or new axioms.
 
-Candidate requiring Lean CI verification.
+This source requires actual Lean CI verification.
 -/
 
-/-- Physical second moment of the Krylov index. -/
 noncomputable def p82_3_M2
     (p q s delta t : ℝ) : ℝ :=
   ∑ j : Fin 4,
@@ -26,24 +21,17 @@ noncomputable def p82_3_M2
       Complex.normSq
         ((p81_2_state p q s delta t) j)
 
-/-- Physical variance, without Taylor assumptions. -/
 noncomputable def p82_3_V
     (p q s delta t : ℝ) : ℝ :=
   p82_3_M2 p q s delta t -
     (p81_2b3_K p q s delta t) ^ 2
 
-/--
-The physical second moment vanishes initially.
--/
 theorem p82_3_M2_zero
     (p q s delta : ℝ) :
     p82_3_M2 p q s delta 0 = 0 := by
   simp [p82_3_M2, p81_2b_state_zero,
     p81_e0, Fin.sum_univ_succ]
 
-/--
-The physical variance vanishes initially.
--/
 theorem p82_3_V_zero
     (p q s delta : ℝ) :
     p82_3_V p q s delta 0 = 0 := by
@@ -52,11 +40,48 @@ theorem p82_3_V_zero
     p81_2b_initial_krylov_zero]
 
 /--
-Derivative of the physical second moment.
+Derivative of the squared modulus of a
+complex-valued function of real time.
 
-The derivative is obtained from the actual
-Jacobi state and its physical velocity.
+The identity is derived from real and
+imaginary components, not assumed.
 -/
+private theorem p82_3_normSq_derivative
+    (f : ℝ → ℂ)
+    (z dz : ℂ)
+    (t : ℝ)
+    (hf : HasDerivAt f dz t)
+    (hz : f t = z) :
+    HasDerivAt
+      (fun x : ℝ => Complex.normSq (f x))
+      (2 * (star z * dz).re)
+      t := by
+
+  have hre :
+      HasDerivAt
+        (fun x : ℝ => (f x).re)
+        dz.re t :=
+    hf.re
+
+  have him :
+      HasDerivAt
+        (fun x : ℝ => (f x).im)
+        dz.im t :=
+    hf.im
+
+  have hsqre := hre.pow 2
+  have hsqim := him.pow 2
+
+  have hsum := hsqre.add hsqim
+
+  convert hsum using 1
+  · ext x
+    simp [Complex.normSq_apply]
+  · rw [hz]
+    simp only [Complex.mul_re, Complex.star_re,
+      Complex.star_im]
+    ring
+
 theorem p82_3_M2_hasDerivAt
     (p q s delta t : ℝ) :
     HasDerivAt
@@ -76,8 +101,25 @@ theorem p82_3_M2_hasDerivAt
           (p81_2_state p q s delta x) j)
         (p81_2_velocity p q s delta t j)
         t := by
-    exact (ContinuousLinearMap.proj j).hasFDerivAt.comp_hasDerivAt
-      t hstate
+
+    let L : (Fin 4 → ℂ) →ₗ[ℝ] ℂ :=
+      {
+        toFun := fun v => v j
+        map_add' := by
+          intro x y
+          rfl
+        map_smul' := by
+          intro c x
+          rfl
+      }
+
+    let LC : (Fin 4 → ℂ) →L[ℝ] ℂ :=
+      LinearMap.toContinuousLinearMap L
+
+    have h :=
+      LC.hasFDerivAt.comp_hasDerivAt t hstate
+
+    exact h
 
   have hnorm (j : Fin 4) :
       HasDerivAt
@@ -88,9 +130,11 @@ theorem p82_3_M2_hasDerivAt
           (star ((p81_2_state p q s delta t) j) *
             (p81_2_velocity p q s delta t j)).re)
         t := by
-    convert (Complex.hasFDerivAt_normSq
-      ((p81_2_state p q s delta t) j)).comp_hasDerivAt
-        t (hcomponent j) using 1 <;> ring
+    exact p82_3_normSq_derivative
+      (fun x => (p81_2_state p q s delta x) j)
+      ((p81_2_state p q s delta t) j)
+      (p81_2_velocity p q s delta t j)
+      t (hcomponent j) rfl
 
   have hsum :
       HasDerivAt
@@ -109,14 +153,25 @@ theorem p82_3_M2_hasDerivAt
     intro j hj
     exact (hnorm j).const_mul _
 
-  convert hsum using 1
-  · rfl
-  · ring
+  change
+    HasDerivAt
+      (fun x : ℝ =>
+        ∑ j : Fin 4,
+          (j.val : ℝ) ^ 2 *
+            Complex.normSq
+              ((p81_2_state p q s delta x) j))
+      (2 * ∑ j : Fin 4,
+        (j.val : ℝ) ^ 2 *
+          (star ((p81_2_state p q s delta t) j) *
+            (p81_2_velocity p q s delta t j)).re)
+      t
 
-/--
-Derivative of the physical variance.
-No deficit coefficient is used.
--/
+  convert hsum using 1
+  rw [Finset.mul_sum]
+  congr 1
+  funext j
+  ring
+
 theorem p82_3_V_hasDerivAt
     (p q s delta t : ℝ) :
     HasDerivAt
@@ -133,12 +188,13 @@ theorem p82_3_V_hasDerivAt
                (p81_2_velocity p q s delta t j)).re))
       t := by
 
-  have hm := p82_3_M2_hasDerivAt p q s delta t
-  have hk := p81_2b3_K_hasDerivAt p q s delta t
+  have hm :=
+    p82_3_M2_hasDerivAt p q s delta t
 
-  have hsq :=
-    hk.pow 2
+  have hk :=
+    p81_2b3_K_hasDerivAt p q s delta t
 
+  have hsq := hk.pow 2
   have hsub := hm.sub hsq
 
   convert hsub using 1 <;> ring
