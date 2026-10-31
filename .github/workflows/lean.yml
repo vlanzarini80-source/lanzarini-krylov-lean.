@@ -22,7 +22,7 @@ jobs:
           lake update
           lake exe cache get
 
-      - name: Verify Lean modules through P82.2
+      - name: Verify Lean modules through P82.3
         run: |
           set -euo pipefail
 
@@ -56,7 +56,8 @@ jobs:
             P81_2b2_PhysicalMinorDerivative \
             P81_2b3_CenteredMinorDerivative \
             P81_2b3b_CenteredMinorBridge \
-            P82_2_PhysicalJets
+            P82_2_PhysicalJets \
+            P82_3_PhysicalObservables
           do
             echo "=== Compiling $mod.lean ==="
             test -f "$mod.lean"
@@ -80,7 +81,8 @@ jobs:
             P81_2b2_PhysicalMinorDerivative \
             P81_2b3_CenteredMinorDerivative \
             P81_2b3b_CenteredMinorBridge \
-            P82_2_PhysicalJets
+            P82_2_PhysicalJets \
+            P82_3_PhysicalObservables
           do
             if grep -En '(^|[[:space:]])(sorry|admit|axiom|sorryAx)([[:space:]]|$)' "$mod.lean"; then
               echo "Forbidden proof placeholder or axiom in $mod" >&2
@@ -123,6 +125,7 @@ jobs:
               ),
               'P75_4_DerivativeSpeedBound': (
                   'p75_derivative_speed_bound',
+                  'p75_physical_quadratic_bound',
               ),
               'P76_1_EnergyVariance': (
                   'p76_energyVariance_nonneg',
@@ -225,6 +228,12 @@ jobs:
                   'p82_physical_jet',
                   'p82_initial_physical_jet',
                   'p82_generator_eq_p81',
+              ),
+              'P82_3_PhysicalObservables': (
+                  'p82_3_M2_zero',
+                  'p82_3_V_zero',
+                  'p82_3_M2_hasDerivAt',
+                  'p82_3_V_hasDerivAt',
               ),
           }
 
