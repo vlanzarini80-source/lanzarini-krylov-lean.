@@ -23,7 +23,7 @@ jobs:
           lake update
           lake exe cache get
 
-      - name: Verify all Lean modules through P81.2b.3 Stage A
+      - name: Verify Lean modules through P81.2b3 Stage B1
         run: |
           set -euo pipefail
 
@@ -55,7 +55,8 @@ jobs:
             P81_2b_InitialPhysicalData \
             P81_2b1_PhysicalAcceleration \
             P81_2b2_PhysicalMinorDerivative \
-            P81_2b3_CenteredMinorDerivative
+            P81_2b3_CenteredMinorDerivative \
+            P81_2b3b_CenteredMinorBridge
           do
             echo "=== Compiling $mod.lean ==="
             test -f "$mod.lean"
@@ -63,7 +64,7 @@ jobs:
               -o "$mod.olean" "$mod.lean" 2>&1 | tee "$mod.log"
           done
 
-      - name: Audit source files and all required theorem axioms
+      - name: Audit source files and required theorem axioms
         run: |
           set -euo pipefail
 
@@ -77,7 +78,8 @@ jobs:
             P81_2b_InitialPhysicalData \
             P81_2b1_PhysicalAcceleration \
             P81_2b2_PhysicalMinorDerivative \
-            P81_2b3_CenteredMinorDerivative
+            P81_2b3_CenteredMinorDerivative \
+            P81_2b3b_CenteredMinorBridge
           do
             if grep -En '(^|[[:space:]])(sorry|admit|axiom|sorryAx)([[:space:]]|$)' "$mod.lean"; then
               echo "Forbidden proof placeholder or axiom in $mod" >&2
@@ -176,8 +178,11 @@ jobs:
                   'p80_1_initial_derivative',
               ),
               'P81_1_JacobiPhysicalPowers': (
-                  'p81_H_action', 'p81_H1', 'p81_H2',
-                  'p81_H3', 'p81_H4',
+                  'p81_H_action',
+                  'p81_H1',
+                  'p81_H2',
+                  'p81_H3',
+                  'p81_H4',
                   'p81_true_initial_derivatives',
               ),
               'P81_2a_PhysicalGramBridge': (
@@ -210,6 +215,10 @@ jobs:
               'P81_2b3_CenteredMinorDerivative': (
                   'p81_2b3_K_hasDerivAt',
               ),
+              'P81_2b3b_CenteredMinorBridge': (
+                  'p81_2b3b_centeredMinor_eq',
+                  'p81_2b3b_centeredMinor_decomposition',
+              ),
           }
 
           for module, theorem_names in expected.items():
@@ -231,8 +240,10 @@ jobs:
                       )
 
                   payload = matches[0][len(prefix):].strip()
-                  if not (payload.startswith('[') and
-                          payload.endswith(']')):
+                  if not (
+                      payload.startswith('[')
+                      and payload.endswith(']')
+                  ):
                       raise SystemExit(
                           f'Invalid axiom list for {name}'
                       )
