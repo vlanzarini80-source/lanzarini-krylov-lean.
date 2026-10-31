@@ -1,17 +1,20 @@
+
 import P82_2_PhysicalJets
 import P81_2b3_CenteredMinorDerivative
+import P82_NormSqProbe
 
 namespace Lanzarini
 
 /-!
-P82.3 - Physical second moment and variance.
+P82.3: Physical second moment and variance.
 
-Correction of the failed CI #217.
+Uses the separately verified normSq derivative
+lemma from P82_NormSqProbe.
 
-No expected R0 coefficient is assumed.
+No R0 coefficient is assumed.
 No sorry, admit, or new axioms.
 
-This source requires actual Lean CI verification.
+Requires complete CI verification.
 -/
 
 noncomputable def p82_3_M2
@@ -38,49 +41,6 @@ theorem p82_3_V_zero
   simp [p82_3_V, p82_3_M2_zero,
     p81_2b3_K, p81_2b_state_zero,
     p81_2b_initial_krylov_zero]
-
-/--
-Derivative of the squared modulus of a
-complex-valued function of real time.
-
-The identity is derived from real and
-imaginary components, not assumed.
--/
-private theorem p82_3_normSq_derivative
-    (f : ℝ → ℂ)
-    (z dz : ℂ)
-    (t : ℝ)
-    (hf : HasDerivAt f dz t)
-    (hz : f t = z) :
-    HasDerivAt
-      (fun x : ℝ => Complex.normSq (f x))
-      (2 * (star z * dz).re)
-      t := by
-
-  have hre :
-      HasDerivAt
-        (fun x : ℝ => (f x).re)
-        dz.re t :=
-    hf.re
-
-  have him :
-      HasDerivAt
-        (fun x : ℝ => (f x).im)
-        dz.im t :=
-    hf.im
-
-  have hsqre := hre.pow 2
-  have hsqim := him.pow 2
-
-  have hsum := hsqre.add hsqim
-
-  convert hsum using 1
-  · ext x
-    simp [Complex.normSq_apply]
-  · rw [hz]
-    simp only [Complex.mul_re, Complex.star_re,
-      Complex.star_im]
-    ring
 
 theorem p82_3_M2_hasDerivAt
     (p q s delta t : ℝ) :
@@ -130,11 +90,19 @@ theorem p82_3_M2_hasDerivAt
           (star ((p81_2_state p q s delta t) j) *
             (p81_2_velocity p q s delta t j)).re)
         t := by
-    exact p82_3_normSq_derivative
-      (fun x => (p81_2_state p q s delta x) j)
-      ((p81_2_state p q s delta t) j)
+
+    have hre :=
+      (hcomponent j).re
+
+    have him :=
+      (hcomponent j).im
+
+    exact p82_normSq_probe
+      (fun x : ℝ =>
+        (p81_2_state p q s delta x) j)
+      t
       (p81_2_velocity p q s delta t j)
-      t (hcomponent j) rfl
+      hre him
 
   have hsum :
       HasDerivAt
