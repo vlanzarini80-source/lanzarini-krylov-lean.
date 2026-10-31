@@ -14,8 +14,7 @@ actual four-dimensional Jacobi evolution.
 
 No Taylor coefficients are assumed.
 No deficit formula is assumed.
-No new axioms.
-No sorry or admit.
+No additional mathematical assumptions.
 -/
 
 /-- Physical centered Gram coordinate. -/
