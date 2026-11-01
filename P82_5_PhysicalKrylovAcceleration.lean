@@ -92,7 +92,6 @@ private theorem p82_5_conjugate_product_derivative
       t hmul
 
   convert hre using 1
-  simp only [Complex.add_re]
 
 /--
 Genuine physical derivative of Kdot.
