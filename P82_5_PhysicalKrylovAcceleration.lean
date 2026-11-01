@@ -11,8 +11,6 @@ velocity and acceleration.
 
 No assumed Taylor coefficients.
 No assumed deficit coefficient.
-No new axioms.
-No sorry or admit.
 
 Candidate requiring Lean CI verification.
 -/
