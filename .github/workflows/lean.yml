@@ -23,7 +23,7 @@ jobs:
           lake update
           lake exe cache get
 
-      - name: Verify Lean modules through P82.7
+      - name: Verify Lean modules through P83.1
         run: |
           set -euo pipefail
 
@@ -65,7 +65,8 @@ jobs:
             P82_4c_PhysicalAccelerationBridge \
             P82_5_PhysicalKrylovAcceleration \
             P82_6_PhysicalResidualDerivative \
-            P82_7_InitialResidualCancellation
+            P82_7_InitialResidualCancellation \
+            P83_1_PhysicalGramJets
           do
             echo "=== Compiling $mod.lean ==="
             test -f "$mod.lean"
@@ -97,7 +98,8 @@ jobs:
             P82_4c_PhysicalAccelerationBridge \
             P82_5_PhysicalKrylovAcceleration \
             P82_6_PhysicalResidualDerivative \
-            P82_7_InitialResidualCancellation
+            P82_7_InitialResidualCancellation \
+            P83_1_PhysicalGramJets
           do
             if grep -En '(^|[[:space:]])(sorry|admit|axiom|sorryAx)([[:space:]]|$)' "$mod.lean"; then
               echo "Forbidden proof placeholder or axiom in $mod" >&2
@@ -277,6 +279,11 @@ jobs:
                   'p82_7_Vdot_zero',
                   'p82_7_F_initial_hasDerivAt',
               ),
+              'P83_1_PhysicalGramJets': (
+                  'p83_1_third_power_site3',
+                  'p83_1_fourth_power_site3',
+                  'p83_1_fourth_power_site2',
+              ),
           }
 
           for module, theorem_names in expected.items():
@@ -315,6 +322,12 @@ jobs:
                   }
 
                   unexpected = found - allowed
+
+                  if unexpected:
+                      raise SystemExit(
+                          f'Unauthorized axioms for {name}: '
+                          f'{sorted(unexpected)}'
+                      )
 
                   if unexpected:
                       raise SystemExit(
