@@ -23,7 +23,7 @@ jobs:
           lake update
           lake exe cache get
 
-      - name: Verify Lean modules through P83.2
+      - name: Verify Lean modules through P83.3
         run: |
           set -euo pipefail
 
@@ -67,7 +67,8 @@ jobs:
             P82_6_PhysicalResidualDerivative \
             P82_7_InitialResidualCancellation \
             P83_1_PhysicalGramJets \
-            P83_2_PhysicalMinorAcceleration
+            P83_2_PhysicalMinorAcceleration \
+            P83_3_CenteredGramDerivativeBridge
           do
             echo "=== Compiling $mod.lean ==="
             test -f "$mod.lean"
@@ -101,7 +102,8 @@ jobs:
             P82_6_PhysicalResidualDerivative \
             P82_7_InitialResidualCancellation \
             P83_1_PhysicalGramJets \
-            P83_2_PhysicalMinorAcceleration
+            P83_2_PhysicalMinorAcceleration \
+            P83_3_CenteredGramDerivativeBridge
           do
             if grep -En '(^|[[:space:]])(sorry|admit|axiom|sorryAx)([[:space:]]|$)' "$mod.lean"; then
               echo "Forbidden proof placeholder or axiom in $mod" >&2
@@ -290,6 +292,11 @@ jobs:
                   'p83_2_rawMinor_hasDerivAt',
                   'p83_2_rawMinor12_initial_derivative',
                   'p83_2_rawMinor13_initial_derivative',
+              ),
+              'P83_3_CenteredGramDerivativeBridge': (
+                  'p83_3_centered_decomposition',
+                  'p83_3_centerCorrection_hasDerivAt',
+                  'p83_3_centered_hasDerivAt_of_weighted',
               ),
           }
 
