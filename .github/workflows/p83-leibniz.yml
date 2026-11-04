@@ -65,8 +65,13 @@ jobs:
               "Quot.sound",
           }
 
+          # Catch proof placeholders in active proof
+          # positions, not explanatory comments.
+          # The axiom reports are the final authority.
           forbidden_source = re.compile(
-              r"\b(?:sorry|admit|sorryAx|axiom)\b"
+              r"(?m)^\s*(?:sorry|admit|axiom)\b"
+              r"|\bby\s+(?:sorry|admit)\b"
+              r"|\bsorryAx\b"
           )
 
           for module, names in expected.items():
@@ -91,7 +96,7 @@ jobs:
 
               if "sorryAx" in log:
                   raise SystemExit(
-                      f"FAIL: sorryAx found in {module}"
+                      f"FAIL: sorryAx in {module}"
                   )
 
               for name in names:
@@ -149,8 +154,8 @@ jobs:
 
                   if unexpected:
                       raise SystemExit(
-                          f"FAIL: unauthorized axioms "
-                          f"for {name}: {sorted(unexpected)}"
+                          f"FAIL: unauthorized axioms for "
+                          f"{name}: {sorted(unexpected)}"
                       )
 
                   print(
