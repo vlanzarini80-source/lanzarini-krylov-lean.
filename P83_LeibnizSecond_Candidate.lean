@@ -39,9 +39,17 @@ theorem p83_leibniz_second
     exact deriv_fun_mul hfy hgy
 
   rw [Filter.EventuallyEq.deriv_eq hlocal]
-  rw [deriv_fun_add (hdf.mul hgx) (hfx.mul hdg)]
-  rw [deriv_fun_mul hdf hgx]
-  rw [deriv_fun_mul hfx hdg]
+
+  change
+    deriv
+      ((deriv f * g) + (f * deriv g)) x =
+      deriv (deriv f) x * g x +
+        (2 : ℂ) * deriv f x * deriv g x +
+        f x * deriv (deriv g) x
+
+  rw [deriv_add (hdf.mul hgx) (hfx.mul hdg)]
+  rw [deriv_mul hdf hgx]
+  rw [deriv_mul hfx hdg]
   ring
 
 #print axioms p83_leibniz_second
