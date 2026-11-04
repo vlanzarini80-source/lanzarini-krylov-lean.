@@ -1,0 +1,138 @@
+
+name: P83 Physical Initial Zeros
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  verify-physical-zeros:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Lean
+        run: |
+          set -euo pipefail
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          lake update
+          lake exe cache get
+
+      - name: Compile physical dependencies
+        run: |
+          set -euo pipefail
+          for mod in \
+            JacobiReal JacobiEvolution MatrixExpProbe \
+            KrylovNumber KrylovGram KrylovLagrange KrylovGap \
+            P73_RealTime P73_2_State \
+            P74_1_Components P74_2_KrylovDerivative \
+            P75_1_Orthogonality P75_2a_VelocityOrthogonality \
+            P75_2b_CenteredDerivative P75_3_QuadraticSpeedBound \
+            P75_4_DerivativeSpeedBound \
+            P76_1_EnergyVariance P76_2_EnergyVarianceIdentity \
+            P76_3_EnergySecondMoment P76_4_CenteredEnergySpeed \
+            P76_5_CenteredVelocity P76_5b_CenteredVelocityNorm \
+            P76_6_EnergySpeedLimit \
+            P77_1a_PropagatorCommutes \
+            P77_1b_HamiltonianIntertwining \
+            P77_2_EnergyMeanConservation \
+            P78_1_ExactSpeedResidual \
+            P78_2_PhysicalSpeedResidual \
+            P79_R0_CoefficientJet \
+            P80_1_TrueEvolutionJets \
+            P81_1_JacobiPhysicalPowers \
+            P81_2a_PhysicalGramBridge \
+            P81_2b_InitialPhysicalData \
+            P81_2b1_PhysicalAcceleration \
+            P81_2b2_PhysicalMinorDerivative \
+            P81_2b3_CenteredMinorDerivative \
+            P81_2b3b_CenteredMinorBridge \
+            P82_2_PhysicalJets P82_NormSqProbe \
+            P82_3_PhysicalObservables \
+            P82_4a_PhysicalResidual \
+            P82_4b_PhysicalResidualDerivative \
+            P82_4c_PhysicalAccelerationBridge \
+            P82_5_PhysicalKrylovAcceleration \
+            P82_6_PhysicalResidualDerivative \
+            P82_7_InitialResidualCancellation \
+            P83_1_PhysicalGramJets \
+            P83_2_PhysicalMinorAcceleration
+          do
+            LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+              -o "$mod.olean" "$mod.lean"
+          done
+
+      - name: Compile four physical cancellations
+        run: |
+          set -euo pipefail
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+            P83_PhysicalInitialZeros_Candidate.lean \
+            2>&1 | tee p83-physical.log
+
+      - name: Audit four theorem axiom reports
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          log = Path("p83-physical.log").read_text()
+          expected = (
+              "p83_physical_K_zero",
+              "p83_physical_K_first_zero",
+              "p83_physical_R13_zero",
+              "p83_physical_R13_first_zero",
+          )
+          allowed = {
+              "propext",
+              "Classical.choice",
+              "Quot.sound",
+          }
+
+          if "sorryAx" in log:
+              raise SystemExit("FAIL: sorryAx in Lean log")
+
+          for name in expected:
+              prefix = (
+                  f"'Lanzarini.{name}'"
+                  " depends on axioms:"
+              )
+              matches = [
+                  line.strip()
+                  for line in log.splitlines()
+                  if line.strip().startswith(prefix)
+              ]
+              if len(matches) != 1:
+                  raise SystemExit(
+                      f"FAIL: missing axiom report: {name}"
+                  )
+
+              payload = matches[0][len(prefix):].strip()
+              if not (
+                  payload.startswith("[")
+                  and payload.endswith("]")
+              ):
+                  raise SystemExit(
+                      f"FAIL: malformed axioms: {name}"
+                  )
+
+              found = {
+                  x.strip()
+                  for x in payload[1:-1].split(",")
+                  if x.strip()
+              }
+              unexpected = found - allowed
+              if unexpected:
+                  raise SystemExit(
+                      f"FAIL {name}: {sorted(unexpected)}"
+                  )
+              print(f"PASS {name}: {sorted(found)}")
+
+          print("PASS: four physical initial zeros audited")
+          PY
