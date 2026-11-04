@@ -15,52 +15,40 @@ jobs:
 
       - name: Install Lean 4
         run: |
+          set -euo pipefail
           curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
 
       - name: Fetch mathlib dependencies
         run: |
+          set -euo pipefail
           lake update
           lake exe cache get
 
-      - name: Compile P83 auxiliary lemma
+      - name: Compile Leibniz second and third order
         run: |
           set -euo pipefail
           lake env lean P83_LeibnizSecond_Candidate.lean 2>&1 | tee p83-leibniz.log
 
-      - name: Audit theorem axioms
+      - name: Audit both theorem axioms
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
           import re
 
-          log = Path("p83-leibniz.log").read_text()
-          prefix = (
-              "'Lanzarini.p83_leibniz_second'"
-              " depends on axioms:"
+          source = Path(
+              "P83_LeibnizSecond_Candidate.lean"
+          ).read_text(encoding="utf-8")
+
+          log = Path(
+              "p83-leibniz.log"
+          ).read_text(encoding="utf-8")
+
+          expected = (
+              "p83_leibniz_second",
+              "p83_leibniz_third",
           )
-
-          matches = [
-              line.strip()
-              for line in log.splitlines()
-              if line.strip().startswith(prefix)
-          ]
-
-          if len(matches) != 1:
-              raise SystemExit(
-                  "FAIL: theorem axiom report missing"
-              )
-
-          payload = matches[0][len(prefix):].strip()
-
-          if not (
-              payload.startswith("[")
-              and payload.endswith("]")
-          ):
-              raise SystemExit(
-                  "FAIL: invalid axiom report"
-              )
 
           allowed = {
               "propext",
@@ -68,26 +56,83 @@ jobs:
               "Quot.sound",
           }
 
-          found = {
-              item.strip()
-              for item in payload[1:-1].split(",")
-              if item.strip()
-          }
+          forbidden = re.compile(
+              r"\b(?:sorry|admit|sorryAx)\b"
+          )
 
-          unexpected = found - allowed
-
-          if unexpected:
+          if forbidden.search(log):
               raise SystemExit(
-                  f"FAIL: unauthorized axioms: {unexpected}"
+                  "FAIL: proof placeholder in Lean output"
               )
 
-          if "sorryAx" in log:
-              raise SystemExit(
-                  "FAIL: sorryAx found in compiler output"
+          for name in expected:
+              declaration = re.compile(
+                  r"\btheorem\s+"
+                  + re.escape(name)
+                  + r"\b"
+              )
+
+              if len(declaration.findall(source)) != 1:
+                  raise SystemExit(
+                      f"FAIL: theorem declaration missing: {name}"
+                  )
+
+              print_command = (
+                  "#print axioms " + name
+              )
+
+              if source.count(print_command) != 1:
+                  raise SystemExit(
+                      f"FAIL: axiom print missing: {name}"
+                  )
+
+              prefix = (
+                  f"'Lanzarini.{name}'"
+                  " depends on axioms:"
+              )
+
+              matches = [
+                  line.strip()
+                  for line in log.splitlines()
+                  if line.strip().startswith(prefix)
+              ]
+
+              if len(matches) != 1:
+                  raise SystemExit(
+                      f"FAIL: missing or duplicate axiom report: {name}"
+                  )
+
+              payload = matches[0][len(prefix):].strip()
+
+              if not (
+                  payload.startswith("[")
+                  and payload.endswith("]")
+              ):
+                  raise SystemExit(
+                      f"FAIL: invalid axiom list: {name}"
+                  )
+
+              found = {
+                  item.strip()
+                  for item in payload[1:-1].split(",")
+                  if item.strip()
+              }
+
+              unexpected = found - allowed
+
+              if unexpected:
+                  raise SystemExit(
+                      f"FAIL: unauthorized axioms for {name}: "
+                      f"{sorted(unexpected)}"
+                  )
+
+              print(
+                  f"PASS {name}: "
+                  f"axioms={sorted(found)}"
               )
 
           print(
-              "PASS: p83_leibniz_second "
-              "compiled with permitted axioms only"
+              "PASS: both Leibniz theorems "
+              "compiled and audited"
           )
           PY
