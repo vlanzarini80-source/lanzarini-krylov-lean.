@@ -1,4 +1,5 @@
 
+import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.Calculus.IteratedDeriv.Lemmas
 
 open scoped Topology
@@ -8,12 +9,12 @@ namespace Lanzarini
 /-!
 P83 auxiliary: second derivative of a product.
 
+Lean 4.24.0 / mathlib v4.24.0.
 Independent of P79 and P83.4b.
-Lean 4.24.0 / mathlib v4.24.0 candidate.
 
 No new axioms.
 No sorry.
-Not yet CI verified.
+Candidate requiring CI verification.
 -/
 
 theorem p83_leibniz_second
