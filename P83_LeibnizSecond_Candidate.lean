@@ -1,15 +1,19 @@
 
 import Mathlib.Analysis.Calculus.IteratedDeriv.Lemmas
 
+open scoped Topology
+
 namespace Lanzarini
 
 /-!
 P83 auxiliary: second derivative of a product.
 
-Independent of P79 and the physical coefficient.
+Independent of P79 and P83.4b.
+Lean 4.24.0 / mathlib v4.24.0 candidate.
+
 No new axioms.
 No sorry.
-Candidate requiring CI verification.
+Not yet CI verified.
 -/
 
 theorem p83_leibniz_second
@@ -24,10 +28,12 @@ theorem p83_leibniz_second
       deriv (deriv f) x * g x +
         (2 : ℂ) * deriv f x * deriv g x +
         f x * deriv (deriv g) x := by
+
   have hlocal :
       deriv (fun t : ℝ => f t * g t) =ᶠ[𝓝 x]
         (fun y : ℝ =>
-          deriv f y * g y + f y * deriv g y) := by
+          deriv f y * g y +
+            f y * deriv g y) := by
     filter_upwards [hf, hg] with y hfy hgy
     exact deriv_fun_mul hfy hgy
 
