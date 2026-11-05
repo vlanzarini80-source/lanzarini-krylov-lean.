@@ -73,66 +73,168 @@ jobs:
         run: |
           set -euo pipefail
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+            -o P83_PhysicalInitialZeros_Candidate.olean \
             P83_PhysicalInitialZeros_Candidate.lean \
             2>&1 | tee p83-physical.log
 
-      - name: Audit four theorem axiom reports
+      - name: Compile R13 second derivative zero
+        run: |
+          set -euo pipefail
+          test -f P83_PhysicalInitialZeros_Candidate.olean
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+            -o P83_R13SecondPhysicalZero_Candidate.olean \
+            P83_R13SecondPhysicalZero_Candidate.lean \
+            2>&1 | tee p83-r13-second.log
+
+      - name: Audit all six physical theorems
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
-          log = Path("p83-physical.log").read_text()
-          expected = (
-              "p83_physical_K_zero",
-              "p83_physical_K_first_zero",
-              "p83_physical_R13_zero",
-              "p83_physical_R13_first_zero",
-          )
+          modules = {
+              "P83_PhysicalInitialZeros_Candidate": (
+                  "p83-physical.log",
+                  (
+                      "p83_physical_K_zero",
+                      "p83_physical_K_first_zero",
+                      "p83_physical_R13_zero",
+                      "p83_physical_R13_first_zero",
+                  ),
+              ),
+              "P83_R13SecondPhysicalZero_Candidate": (
+                  "p83-r13-second.log",
+                  (
+                      "p83_r13_initial_acceleration_site3",
+                      "p83_physical_R13_second_zero",
+                  ),
+              ),
+          }
+
           allowed = {
               "propext",
               "Classical.choice",
               "Quot.sound",
           }
 
-          if "sorryAx" in log:
-              raise SystemExit("FAIL: sorryAx in Lean log")
+          for module, (logfile, theorems) in modules.items():
+              source = Path(
+                  module + ".lean"
+              ).read_text(encoding="utf-8")
 
-          for name in expected:
-              prefix = (
-                  f"'Lanzarini.{name}'"
-                  " depends on axioms:"
+              log = Path(
+                  logfile
+              ).read_text(encoding="utf-8")
+
+              uncommented = re.sub(
+                  r"/-.*?-/",
+                  "",
+                  source,
+                  flags=re.S,
               )
-              matches = [
-                  line.strip()
-                  for line in log.splitlines()
-                  if line.strip().startswith(prefix)
-              ]
-              if len(matches) != 1:
+
+              uncommented = re.sub(
+                  r"--[^\n]*",
+                  "",
+                  uncommented,
+              )
+
+              bad = re.search(
+                  r"\b(?:sorry|admit|sorryAx|axiom)\b",
+                  uncommented,
+              )
+
+              if bad:
                   raise SystemExit(
-                      f"FAIL: missing axiom report: {name}"
+                      f"FAIL: forbidden Lean token "
+                      f"{bad.group()} in {module}"
                   )
 
-              payload = matches[0][len(prefix):].strip()
-              if not (
-                  payload.startswith("[")
-                  and payload.endswith("]")
-              ):
+              if "sorryAx" in log:
                   raise SystemExit(
-                      f"FAIL: malformed axioms: {name}"
+                      f"FAIL: sorryAx in compiler "
+                      f"output for {module}"
                   )
 
-              found = {
-                  x.strip()
-                  for x in payload[1:-1].split(",")
-                  if x.strip()
-              }
-              unexpected = found - allowed
-              if unexpected:
-                  raise SystemExit(
-                      f"FAIL {name}: {sorted(unexpected)}"
+              for name in theorems:
+                  declaration = (
+                      r"\btheorem\s+"
+                      + re.escape(name)
+                      + r"\b"
                   )
-              print(f"PASS {name}: {sorted(found)}")
 
-          print("PASS: four physical initial zeros audited")
+                  if len(
+                      re.findall(
+                          declaration,
+                          uncommented,
+                      )
+                  ) != 1:
+                      raise SystemExit(
+                          f"FAIL: theorem declaration "
+                          f"absent or duplicate: {name}"
+                      )
+
+                  if source.count(
+                      "#print axioms " + name
+                  ) != 1:
+                      raise SystemExit(
+                          f"FAIL: axiom print absent "
+                          f"or duplicate: {name}"
+                      )
+
+                  prefix = (
+                      f"'Lanzarini.{name}'"
+                      " depends on axioms:"
+                  )
+
+                  matching = [
+                      line.strip()
+                      for line in log.splitlines()
+                      if line.strip().startswith(prefix)
+                  ]
+
+                  if len(matching) != 1:
+                      raise SystemExit(
+                          f"FAIL: axiom report absent "
+                          f"or duplicate: {name}"
+                      )
+
+                  payload = matching[0][
+                      len(prefix):
+                  ].strip()
+
+                  if not (
+                      payload.startswith("[")
+                      and payload.endswith("]")
+                  ):
+                      raise SystemExit(
+                          f"FAIL: malformed axiom "
+                          f"list: {name}"
+                      )
+
+                  found = {
+                      x.strip()
+                      for x in payload[1:-1].split(",")
+                      if x.strip()
+                  }
+
+                  unexpected = found - allowed
+
+                  if unexpected:
+                      raise SystemExit(
+                          f"FAIL: unauthorized axioms "
+                          f"for {name}: "
+                          f"{sorted(unexpected)}"
+                      )
+
+                  print(
+                      f"PASS {name}: "
+                      f"axioms={sorted(found)}"
+                  )
+
+          print(
+              "PASS: six physical initial-data "
+              "theorems compiled and audited"
+          )
           PY
