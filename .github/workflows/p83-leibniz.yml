@@ -42,6 +42,58 @@ jobs:
             P83_LeibnizFourth_Candidate.lean \
             2>&1 | tee p83-fourth.log
 
+      - name: Compile local differentiability candidate
+        run: |
+          set -euo pipefail
+          test -f P83_LeibnizSecond_Candidate.olean
+          test -f P83_LeibnizLocal_Candidate.lean
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+            P83_LeibnizLocal_Candidate.lean \
+            2>&1 | tee p83-local.log
+          if grep -Eq 'sorryAx|error:' p83-local.log; then
+            exit 1
+          fi
+
+      - name: Audit local candidate source
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path("P83_LeibnizLocal_Candidate.lean")
+          source = path.read_text(encoding="utf-8")
+
+          forbidden = re.compile(
+              r"(?m)^\s*(?:sorry|admit|axiom)\b"
+              r"|\bby\s+(?:sorry|admit)\b"
+              r"|\bsorryAx\b"
+          )
+
+          if forbidden.search(source):
+              raise SystemExit(
+                  "FAIL: forbidden proof token in local candidate"
+              )
+
+          for name in (
+              "p83_local_diff_iterated",
+              "p83_local_eventually_diff",
+          ):
+              pattern = re.compile(
+                  r"\b(?:private\s+)?theorem\s+"
+                  + re.escape(name)
+                  + r"\b"
+              )
+              if len(pattern.findall(source)) != 1:
+                  raise SystemExit(
+                      f"FAIL: missing or duplicate theorem {name}"
+                  )
+
+          print(
+              "PASS: local candidate source checks"
+          )
+          PY
+
       - name: Audit all three theorems
         run: |
           set -euo pipefail
@@ -65,9 +117,6 @@ jobs:
               "Quot.sound",
           }
 
-          # Catch proof placeholders in active proof
-          # positions, not explanatory comments.
-          # The axiom reports are the final authority.
           forbidden_source = re.compile(
               r"(?m)^\s*(?:sorry|admit|axiom)\b"
               r"|\bby\s+(?:sorry|admit)\b"
