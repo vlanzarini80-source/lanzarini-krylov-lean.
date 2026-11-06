@@ -9,10 +9,7 @@ namespace Lanzarini
 /-!
 P83 local Leibniz bridge.
 
-Stage 1:
 Local differentiability of iterated derivatives.
-
-Stage 2:
 Local third-order Leibniz identity.
 
 No P79.
@@ -55,13 +52,8 @@ private theorem p83_local_eventually_diff
 /--
 Local third-order Leibniz formula.
 
-The hypotheses are local ContDiffAt conditions.
-
-The second-order identity is obtained
-from the previously verified Leibniz theorem
-at points in a neighborhood of x.
-
-No global differentiability is assumed.
+Uses local ContDiffAt hypotheses.
+No global differentiability assumption.
 -/
 theorem p83_local_leibniz_third
     (f g : ℝ → ℂ) (x : ℝ)
@@ -156,6 +148,7 @@ theorem p83_local_leibniz_third
       hfy_diff
       hgy_diff
       hdfy_diff
+      hdgy_diff
 
   rw [Filter.EventuallyEq.deriv_eq hsecond]
 
@@ -263,18 +256,13 @@ theorem p83_local_leibniz_third
         (2 : ℂ) *
           (deriv (deriv f) x * deriv g x +
             deriv f x * deriv (deriv g) x) := by
-    have hprod :
-        deriv
-          (fun t : ℝ =>
-            deriv f t * deriv g t) x =
-          deriv (deriv f) x * deriv g x +
-            deriv f x * deriv (deriv g) x := by
-      simpa only [Pi.mul_apply] using
-        (deriv_mul df1 dg1)
-    rw [deriv_const_mul
-      (by
-        simpa only [Pi.mul_apply] using hB)]
-    rw [hprod]
+    have hp :
+        HasDerivAt
+          (fun t : ℝ => deriv f t * deriv g t)
+          (deriv (deriv f) x * deriv g x +
+            deriv f x * deriv (deriv g) x) x := by
+      convert df1.hasDerivAt.mul dg1.hasDerivAt using 1
+    exact (hp.const_mul (2 : ℂ)).deriv
 
   rw [deriv_add hsum hC]
   rw [deriv_add hA hB2]
