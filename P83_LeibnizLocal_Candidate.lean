@@ -156,7 +156,6 @@ theorem p83_local_leibniz_third
       hfy_diff
       hgy_diff
       hdfy_diff
-      hdgy_diff
 
   rw [Filter.EventuallyEq.deriv_eq hsecond]
 
@@ -264,14 +263,18 @@ theorem p83_local_leibniz_third
         (2 : ℂ) *
           (deriv (deriv f) x * deriv g x +
             deriv f x * deriv (deriv g) x) := by
-    rw [deriv_const_mul]
-    change
-      (2 : ℂ) *
-        deriv (deriv f * deriv g) x =
-      (2 : ℂ) *
-        (deriv (deriv f) x * deriv g x +
-          deriv f x * deriv (deriv g) x)
-    rw [deriv_mul df1 dg1]
+    have hprod :
+        deriv
+          (fun t : ℝ =>
+            deriv f t * deriv g t) x =
+          deriv (deriv f) x * deriv g x +
+            deriv f x * deriv (deriv g) x := by
+      simpa only [Pi.mul_apply] using
+        (deriv_mul df1 dg1)
+    rw [deriv_const_mul
+      (by
+        simpa only [Pi.mul_apply] using hB)]
+    rw [hprod]
 
   rw [deriv_add hsum hC]
   rw [deriv_add hA hB2]
