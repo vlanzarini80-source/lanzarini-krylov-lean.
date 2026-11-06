@@ -265,6 +265,12 @@ theorem p83_local_leibniz_third
           (deriv (deriv f) x * deriv g x +
             deriv f x * deriv (deriv g) x) := by
     rw [deriv_const_mul]
+    change
+      (2 : ℂ) *
+        deriv (deriv f * deriv g) x =
+      (2 : ℂ) *
+        (deriv (deriv f) x * deriv g x +
+          deriv f x * deriv (deriv g) x)
     rw [deriv_mul df1 dg1]
 
   rw [deriv_add hsum hC]
