@@ -240,13 +240,21 @@ theorem p83_local_leibniz_third
               (deriv f t * deriv g t))) x :=
     hA.add hB2
 
-  change
-    deriv
-      ((deriv (deriv f) * g) +
-        (fun t : ℝ =>
-          (2 : ℂ) *
-            (deriv f t * deriv g t)) +
-        (f * deriv (deriv g))) x = _
+  have hfun :
+      (fun t : ℝ =>
+        deriv (deriv f) t * g t +
+          (2 : ℂ) * deriv f t * deriv g t +
+          f t * deriv (deriv g) t) =
+        ((deriv (deriv f) * g) +
+          (fun t : ℝ =>
+            (2 : ℂ) *
+              (deriv f t * deriv g t)) +
+          (f * deriv (deriv g))) := by
+    funext t
+    simp only [Pi.add_apply, Pi.mul_apply]
+    ring
+
+  rw [hfun]
 
   have hmiddle :
       deriv
