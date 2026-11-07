@@ -32,16 +32,28 @@ jobs:
           lake env lean JacobiGeneral.lean
 
           for mod in \
-            JacobiReal JacobiEvolution MatrixExpProbe \
-            KrylovNumber KrylovGram KrylovLagrange KrylovGap \
-            P73_RealTime P73_2_State \
-            P74_1_Components P74_2_KrylovDerivative \
-            P75_1_Orthogonality P75_2a_VelocityOrthogonality \
-            P75_2b_CenteredDerivative P75_3_QuadraticSpeedBound \
+            JacobiReal \
+            JacobiEvolution \
+            MatrixExpProbe \
+            KrylovNumber \
+            KrylovGram \
+            KrylovLagrange \
+            KrylovGap \
+            P73_RealTime \
+            P73_2_State \
+            P74_1_Components \
+            P74_2_KrylovDerivative \
+            P75_1_Orthogonality \
+            P75_2a_VelocityOrthogonality \
+            P75_2b_CenteredDerivative \
+            P75_3_QuadraticSpeedBound \
             P75_4_DerivativeSpeedBound \
-            P76_1_EnergyVariance P76_2_EnergyVarianceIdentity \
-            P76_3_EnergySecondMoment P76_4_CenteredEnergySpeed \
-            P76_5_CenteredVelocity P76_5b_CenteredVelocityNorm \
+            P76_1_EnergyVariance \
+            P76_2_EnergyVarianceIdentity \
+            P76_3_EnergySecondMoment \
+            P76_4_CenteredEnergySpeed \
+            P76_5_CenteredVelocity \
+            P76_5b_CenteredVelocityNorm \
             P76_6_EnergySpeedLimit \
             P77_1a_PropagatorCommutes \
             P77_1b_HamiltonianIntertwining \
@@ -85,272 +97,200 @@ jobs:
         run: |
           set -euo pipefail
 
-          for mod in \
-            P78_1_ExactSpeedResidual \
-            P78_2_PhysicalSpeedResidual \
-            P79_R0_CoefficientJet \
-            P80_1_TrueEvolutionJets \
-            P81_1_JacobiPhysicalPowers \
-            P81_2a_PhysicalGramBridge \
-            P81_2b_InitialPhysicalData \
-            P81_2b1_PhysicalAcceleration \
-            P81_2b2_PhysicalMinorDerivative \
-            P81_2b3_CenteredMinorDerivative \
-            P81_2b3b_CenteredMinorBridge \
-            P82_2_PhysicalJets \
-            P82_NormSqProbe \
-            P82_3_PhysicalObservables \
-            P82_4a_PhysicalResidual \
-            P82_4b_PhysicalResidualDerivative \
-            P82_4c_PhysicalAccelerationBridge \
-            P82_5_PhysicalKrylovAcceleration \
-            P82_6_PhysicalResidualDerivative \
-            P82_7_InitialResidualCancellation \
-            P83_1_PhysicalGramJets \
-            P83_2_PhysicalMinorAcceleration \
-            P83_3_CenteredGramDerivativeBridge \
-            P83_4a_W13PhysicalFourthJetNumerator \
-            P83_LeibnizSecond_Candidate \
-            P83_LeibnizLocal_Candidate \
-            P83_LocalFourthCancellation_Candidate \
-            P83_4b_W13CenteringFourthCancellation
-          do
-            if grep -En '(^|[[:space:]])(sorry|admit|axiom|sorryAx)([[:space:]]|$)' "$mod.lean"; then
-              echo "Forbidden proof placeholder or axiom in $mod" >&2
-              exit 1
-            fi
-          done
-
-          if grep -F 'sorryAx' ./*.log; then
-            echo 'Forbidden sorryAx dependency found' >&2
-            exit 1
-          fi
-
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
-          allowed = {'propext', 'Classical.choice', 'Quot.sound'}
+          def strip_comments(src):
+              out = []
+              i = 0
+              depth = 0
+              in_string = False
+              while i < len(src):
+                  if depth:
+                      if src.startswith("/-", i):
+                          depth += 1
+                          i += 2
+                      elif src.startswith("-/", i):
+                          depth -= 1
+                          i += 2
+                      else:
+                          if src[i] == "\n":
+                              out.append("\n")
+                          i += 1
+                  elif in_string:
+                      if src[i] == "\\":
+                          i += 2
+                      elif src[i] == "\"":
+                          in_string = False
+                          i += 1
+                      else:
+                          i += 1
+                  elif src.startswith("--", i):
+                      j = src.find("\n", i)
+                      if j < 0:
+                          break
+                      out.append("\n")
+                      i = j + 1
+                  elif src.startswith("/-", i):
+                      depth = 1
+                      i += 2
+                  elif src[i] == "\"":
+                      in_string = True
+                      i += 1
+                  else:
+                      out.append(src[i])
+                      i += 1
+              if depth or in_string:
+                  raise SystemExit(
+                      "Unterminated comment/string in Lean source"
+                  )
+              return "".join(out)
 
-          expected = {
-              'P74_1_Components': (
-                  'p74_jacobiState_component_hasDerivAt',
-                  'p74_jacobiState_parts_hasDerivAt',
-              ),
-              'P74_2_KrylovDerivative': (
-                  'p74_krylovComplexityAt_hasDerivAt',
-              ),
-              'P75_1_Orthogonality': (
-                  'p75_centeredState_orthogonal',
-              ),
-              'P75_2a_VelocityOrthogonality': (
-                  'p75_antiHermitian_real_orthogonal',
-                  'p75_state_velocity_real_orthogonal',
-              ),
-              'P75_2b_CenteredDerivative': (
-                  'p75_centered_inner_identity',
-                  'p75_centered_derivative',
-              ),
-              'P75_3_QuadraticSpeedBound': (
-                  'p75_centered_quadratic_bound',
-                  'p75_physical_quadratic_bound',
-              ),
-              'P75_4_DerivativeSpeedBound': (
-                  'p75_derivative_speed_bound',
-              ),
-              'P76_1_EnergyVariance': (
-                  'p76_energyVariance_nonneg',
-                  'p76_energyVarianceAt_nonneg',
-              ),
-              'P76_2_EnergyVarianceIdentity': (
-                  'p76_energyVariance_identity',
-                  'p76_energyVarianceAt_identity',
-              ),
-              'P76_3_EnergySecondMoment': (
-                  'p76_energyNormSq_secondMoment',
-                  'p76_energyVariance_secondMoment',
-                  'p76_energyVarianceAt_secondMoment',
-              ),
-              'P76_4_CenteredEnergySpeed': (
-                  'p76_4_centeredState_orthogonal_left',
-                  'p76_4_centeredEnergy_inner',
-              ),
-              'P76_5_CenteredVelocity': (
-                  'p76_5_centered_velocity_inner',
-              ),
-              'P76_5b_CenteredVelocityNorm': (
-                  'p76_5b_jacobiNormSq_negI',
-                  'p76_5b_centeredVelocity_variance',
-              ),
-              'P76_6_EnergySpeedLimit': (
-                  'p76_6_energy_speed_limit',
-              ),
-              'P77_1a_PropagatorCommutes': (
-                  'p77_1a_jacobi_commutes_propagator',
-              ),
-              'P77_1b_HamiltonianIntertwining': (
-                  'p77_1b_hamiltonian_intertwining',
-              ),
-              'P77_2_EnergyMeanConservation': (
-                  'p77_2_energy_pair_conserved',
-                  'p77_2_energyMean_conserved',
-              ),
-              'P78_1_ExactSpeedResidual': (
-                  'p78_1_exact_speed_residual',
-                  'p78_1_speed_residual_nonneg',
-              ),
-              'P78_2_PhysicalSpeedResidual': (
-                  'p78_2_speedChannel_derivative',
-                  'p78_2_exact_physical_residual',
-              ),
-              'P79_R0_CoefficientJet': (
-                  'p79_r0_minor12_formula',
-                  'p79_r0_minor13_formula',
-                  'p79_r0_gramJet_formula',
-                  'p79_r0_deficitJet_formula',
-              ),
-              'P80_1_TrueEvolutionJets': (
-                  'p80_1_state_iteratedDeriv',
-                  'p80_1_initial_derivative',
-              ),
-              'P81_1_JacobiPhysicalPowers': (
-                  'p81_H_action',
-                  'p81_H1',
-                  'p81_H2',
-                  'p81_H3',
-                  'p81_H4',
-                  'p81_true_initial_derivatives',
-              ),
-              'P81_2a_PhysicalGramBridge': (
-                  'p81_2_energyMean_zero',
-                  'p81_2_centeredVelocity_eq',
-                  'p81_2_minor_physical_bridge',
-                  'p81_2_minor_algebra',
-                  'p81_2_minor_product_rule',
-                  'p81_2_state_hasDerivAt',
-              ),
-              'P81_2b_InitialPhysicalData': (
-                  'p81_2b_state_zero',
-                  'p81_2b_initial_krylov_zero',
-                  'p81_2b_centered_state_zero',
-                  'p81_2b_velocity_at_zero',
-                  'p81_2b_state_initial_derivative',
-                  'p81_2b_minor_zero',
-                  'p81_2b_krylov_initial_hasDerivAt',
-                  'p81_2b_speedChannel_zero',
-              ),
-              'P81_2b1_PhysicalAcceleration': (
-                  'p81_2b1_generator_action',
-                  'p81_2b1_velocity_eq_generator',
-                  'p81_2b1_velocity_hasDerivAt',
-                  'p81_2b1_initial_acceleration',
-              ),
-              'P81_2b2_PhysicalMinorDerivative': (
-                  'p81_2b2_rawMinor_hasDerivAt',
-              ),
-              'P81_2b3_CenteredMinorDerivative': (
-                  'p81_2b3_K_hasDerivAt',
-              ),
-              'P81_2b3b_CenteredMinorBridge': (
-                  'p81_2b3b_centeredMinor_eq',
-                  'p81_2b3b_centeredMinor_decomposition',
-              ),
-              'P82_2_PhysicalJets': (
-                  'p82_physical_jet',
-                  'p82_initial_physical_jet',
-                  'p82_generator_eq_p81',
-              ),
-              'P82_NormSqProbe': (
-                  'p82_normSq_probe',
-              ),
-              'P82_3_PhysicalObservables': (
-                  'p82_3_M2_zero',
-                  'p82_3_V_zero',
-                  'p82_3_M2_hasDerivAt',
-                  'p82_3_V_hasDerivAt',
-              ),
-              'P82_4a_PhysicalResidual': (
-                  'p82_4a_K_derivative',
-                  'p82_4a_F_identity',
-                  'p82_4a_F_zero',
-              ),
-              'P82_4b_PhysicalResidualDerivative': (
-                  'p82_4b_F_hasDerivAt',
-              ),
-              'P82_4c_PhysicalAccelerationBridge': (
-                  'p82_4c_velocity_hasDerivAt',
-                  'p82_4c_acceleration_eq',
-                  'p82_4c_acceleration_hamiltonian',
-              ),
-              'P82_5_PhysicalKrylovAcceleration': (
-                  'p82_5_Kdot_hasDerivAt',
-                  'p82_5_physical_second_derivative',
-              ),
-              'P82_6_PhysicalResidualDerivative': (
-                  'p82_6_V_hasDerivAt',
-                  'p82_6_F_hasDerivAt',
-              ),
-              'P82_7_InitialResidualCancellation': (
-                  'p82_7_Vdot_zero',
-                  'p82_7_F_initial_hasDerivAt',
-              ),
-              'P83_1_PhysicalGramJets': (
-                  'p83_1_third_power_site3',
-                  'p83_1_fourth_power_site3',
-                  'p83_1_fourth_power_site2',
-              ),
-              'P83_2_PhysicalMinorAcceleration': (
-                  'p83_2_rawMinor_hasDerivAt',
-                  'p83_2_rawMinor12_initial_derivative',
-                  'p83_2_rawMinor13_initial_derivative',
-              ),
-              'P83_3_CenteredGramDerivativeBridge': (
-                  'p83_3_centered_decomposition',
-                  'p83_3_centerCorrection_hasDerivAt',
-                  'p83_3_centered_hasDerivAt_of_weighted',
-              ),
-              'P83_4a_W13PhysicalFourthJetNumerator': (
-                  'p83_4a_w13_fourth_jet_numerator',
-              ),
-              'P83_LocalFourthCancellation_Candidate': (
-                  'p83_local_fourth_product_zero',
-              ),
-              'P83_4b_W13CenteringFourthCancellation': (
-                  'p83_4b_w13_centering_fourth_zero',
-              ),
+          modules = """
+          JacobiReal JacobiEvolution MatrixExpProbe
+          KrylovNumber KrylovGram KrylovLagrange KrylovGap
+          P73_RealTime P73_2_State
+          P74_1_Components P74_2_KrylovDerivative
+          P75_1_Orthogonality P75_2a_VelocityOrthogonality
+          P75_2b_CenteredDerivative P75_3_QuadraticSpeedBound
+          P75_4_DerivativeSpeedBound
+          P76_1_EnergyVariance P76_2_EnergyVarianceIdentity
+          P76_3_EnergySecondMoment P76_4_CenteredEnergySpeed
+          P76_5_CenteredVelocity P76_5b_CenteredVelocityNorm
+          P76_6_EnergySpeedLimit
+          P77_1a_PropagatorCommutes
+          P77_1b_HamiltonianIntertwining
+          P77_2_EnergyMeanConservation
+          P78_1_ExactSpeedResidual
+          P78_2_PhysicalSpeedResidual
+          P79_R0_CoefficientJet
+          P80_1_TrueEvolutionJets
+          P81_1_JacobiPhysicalPowers
+          P81_2a_PhysicalGramBridge
+          P81_2b_InitialPhysicalData
+          P81_2b1_PhysicalAcceleration
+          P81_2b2_PhysicalMinorDerivative
+          P81_2b3_CenteredMinorDerivative
+          P81_2b3b_CenteredMinorBridge
+          P82_2_PhysicalJets P82_NormSqProbe
+          P82_3_PhysicalObservables
+          P82_4a_PhysicalResidual
+          P82_4b_PhysicalResidualDerivative
+          P82_4c_PhysicalAccelerationBridge
+          P82_5_PhysicalKrylovAcceleration
+          P82_6_PhysicalResidualDerivative
+          P82_7_InitialResidualCancellation
+          P83_1_PhysicalGramJets
+          P83_2_PhysicalMinorAcceleration
+          P83_3_CenteredGramDerivativeBridge
+          P83_4a_W13PhysicalFourthJetNumerator
+          P83_LeibnizSecond_Candidate
+          P83_LeibnizLocal_Candidate
+          P83_LocalFourthCancellation_Candidate
+          P83_4b_W13CenteringFourthCancellation
+          """.split()
+
+          forbidden = re.compile(
+              r"\b(?:sorry|admit|axiom|sorryAx)\b"
+          )
+
+          for mod in modules:
+              source = Path(
+                  f"{mod}.lean"
+              ).read_text(encoding="utf-8")
+              clean = strip_comments(source)
+              hit = forbidden.search(clean)
+              if hit:
+                  raise SystemExit(
+                      f"Forbidden Lean token in {mod}: {hit.group()}"
+                  )
+              print(f"PASS source scan: {mod}")
+
+          allowed = {
+              "propext",
+              "Classical.choice",
+              "Quot.sound"
           }
 
+          expected = {}
+          expected["P74_1_Components"] = ("p74_jacobiState_component_hasDerivAt", "p74_jacobiState_parts_hasDerivAt")
+          expected["P74_2_KrylovDerivative"] = ("p74_krylovComplexityAt_hasDerivAt",)
+          expected["P75_1_Orthogonality"] = ("p75_centeredState_orthogonal",)
+          expected["P75_2a_VelocityOrthogonality"] = ("p75_antiHermitian_real_orthogonal", "p75_state_velocity_real_orthogonal")
+          expected["P75_2b_CenteredDerivative"] = ("p75_centered_inner_identity", "p75_centered_derivative")
+          expected["P75_3_QuadraticSpeedBound"] = ("p75_centered_quadratic_bound", "p75_physical_quadratic_bound")
+          expected["P75_4_DerivativeSpeedBound"] = ("p75_derivative_speed_bound",)
+          expected["P76_1_EnergyVariance"] = ("p76_energyVariance_nonneg", "p76_energyVarianceAt_nonneg")
+          expected["P76_2_EnergyVarianceIdentity"] = ("p76_energyVariance_identity", "p76_energyVarianceAt_identity")
+          expected["P76_3_EnergySecondMoment"] = ("p76_energyNormSq_secondMoment", "p76_energyVariance_secondMoment", "p76_energyVarianceAt_secondMoment")
+          expected["P76_4_CenteredEnergySpeed"] = ("p76_4_centeredState_orthogonal_left", "p76_4_centeredEnergy_inner")
+          expected["P76_5_CenteredVelocity"] = ("p76_5_centered_velocity_inner",)
+          expected["P76_5b_CenteredVelocityNorm"] = ("p76_5b_jacobiNormSq_negI", "p76_5b_centeredVelocity_variance")
+          expected["P76_6_EnergySpeedLimit"] = ("p76_6_energy_speed_limit",)
+          expected["P77_1a_PropagatorCommutes"] = ("p77_1a_jacobi_commutes_propagator",)
+          expected["P77_1b_HamiltonianIntertwining"] = ("p77_1b_hamiltonian_intertwining",)
+          expected["P77_2_EnergyMeanConservation"] = ("p77_2_energy_pair_conserved", "p77_2_energyMean_conserved")
+          expected["P78_1_ExactSpeedResidual"] = ("p78_1_exact_speed_residual", "p78_1_speed_residual_nonneg")
+          expected["P78_2_PhysicalSpeedResidual"] = ("p78_2_speedChannel_derivative", "p78_2_exact_physical_residual")
+          expected["P79_R0_CoefficientJet"] = ("p79_r0_minor12_formula", "p79_r0_minor13_formula", "p79_r0_gramJet_formula", "p79_r0_deficitJet_formula")
+          expected["P80_1_TrueEvolutionJets"] = ("p80_1_state_iteratedDeriv", "p80_1_initial_derivative")
+          expected["P81_1_JacobiPhysicalPowers"] = ("p81_H_action", "p81_H1", "p81_H2", "p81_H3", "p81_H4", "p81_true_initial_derivatives")
+          expected["P81_2a_PhysicalGramBridge"] = ("p81_2_energyMean_zero", "p81_2_centeredVelocity_eq", "p81_2_minor_physical_bridge", "p81_2_minor_algebra", "p81_2_minor_product_rule", "p81_2_state_hasDerivAt")
+          expected["P81_2b_InitialPhysicalData"] = ("p81_2b_state_zero", "p81_2b_initial_krylov_zero", "p81_2b_centered_state_zero", "p81_2b_velocity_at_zero", "p81_2b_state_initial_derivative", "p81_2b_minor_zero", "p81_2b_krylov_initial_hasDerivAt", "p81_2b_speedChannel_zero")
+          expected["P81_2b1_PhysicalAcceleration"] = ("p81_2b1_generator_action", "p81_2b1_velocity_eq_generator", "p81_2b1_velocity_hasDerivAt", "p81_2b1_initial_acceleration")
+          expected["P81_2b2_PhysicalMinorDerivative"] = ("p81_2b2_rawMinor_hasDerivAt",)
+          expected["P81_2b3_CenteredMinorDerivative"] = ("p81_2b3_K_hasDerivAt",)
+          expected["P81_2b3b_CenteredMinorBridge"] = ("p81_2b3b_centeredMinor_eq", "p81_2b3b_centeredMinor_decomposition")
+          expected["P82_2_PhysicalJets"] = ("p82_physical_jet", "p82_initial_physical_jet", "p82_generator_eq_p81")
+          expected["P82_NormSqProbe"] = ("p82_normSq_probe",)
+          expected["P82_3_PhysicalObservables"] = ("p82_3_M2_zero", "p82_3_V_zero", "p82_3_M2_hasDerivAt", "p82_3_V_hasDerivAt")
+          expected["P82_4a_PhysicalResidual"] = ("p82_4a_K_derivative", "p82_4a_F_identity", "p82_4a_F_zero")
+          expected["P82_4b_PhysicalResidualDerivative"] = ("p82_4b_F_hasDerivAt",)
+          expected["P82_4c_PhysicalAccelerationBridge"] = ("p82_4c_velocity_hasDerivAt", "p82_4c_acceleration_eq", "p82_4c_acceleration_hamiltonian")
+          expected["P82_5_PhysicalKrylovAcceleration"] = ("p82_5_Kdot_hasDerivAt", "p82_5_physical_second_derivative")
+          expected["P82_6_PhysicalResidualDerivative"] = ("p82_6_V_hasDerivAt", "p82_6_F_hasDerivAt")
+          expected["P82_7_InitialResidualCancellation"] = ("p82_7_Vdot_zero", "p82_7_F_initial_hasDerivAt")
+          expected["P83_1_PhysicalGramJets"] = ("p83_1_third_power_site3", "p83_1_fourth_power_site3", "p83_1_fourth_power_site2")
+          expected["P83_2_PhysicalMinorAcceleration"] = ("p83_2_rawMinor_hasDerivAt", "p83_2_rawMinor12_initial_derivative", "p83_2_rawMinor13_initial_derivative")
+          expected["P83_3_CenteredGramDerivativeBridge"] = ("p83_3_centered_decomposition", "p83_3_centerCorrection_hasDerivAt", "p83_3_centered_hasDerivAt_of_weighted")
+          expected["P83_4a_W13PhysicalFourthJetNumerator"] = ("p83_4a_w13_fourth_jet_numerator",)
+          expected["P83_LocalFourthCancellation_Candidate"] = ("p83_local_fourth_product_zero",)
+          expected["P83_4b_W13CenteringFourthCancellation"] = ("p83_4b_w13_centering_fourth_zero",)
+
           for module, theorem_names in expected.items():
-              lines = Path(f'{module}.log').read_text(
-                  encoding='utf-8'
-              ).splitlines()
+              lines = Path(
+                  f"{module}.log"
+              ).read_text(encoding="utf-8").splitlines()
 
               for name in theorem_names:
                   prefix = (
                       f"'Lanzarini.{name}' depends on axioms:"
                   )
                   matches = [
-                      line.strip() for line in lines
+                      line.strip()
+                      for line in lines
                       if line.strip().startswith(prefix)
                   ]
 
                   if len(matches) != 1:
                       raise SystemExit(
-                          f'Missing/duplicate axiom audit: {name}'
+                          f"Missing/duplicate axiom audit: {name}"
                       )
 
                   payload = matches[0][len(prefix):].strip()
 
                   if not (
-                      payload.startswith('[')
-                      and payload.endswith(']')
+                      payload.startswith("[")
+                      and payload.endswith("]")
                   ):
                       raise SystemExit(
-                          f'Invalid axiom list for {name}'
+                          f"Invalid axiom list for {name}: {payload}"
                       )
 
                   found = {
                       item.strip()
-                      for item in payload[1:-1].split(',')
+                      for item in payload[1:-1].split(",")
                       if item.strip()
                   }
 
@@ -358,11 +298,11 @@ jobs:
 
                   if unexpected:
                       raise SystemExit(
-                          f'Unauthorized axioms for {name}: '
-                          f'{sorted(unexpected)}'
+                          f"Unauthorized axioms for {name}: "
+                          f"{sorted(unexpected)}"
                       )
 
-                  print(f'PASS {name}: {sorted(found)}')
+                  print(f"PASS {name}: {sorted(found)}")
 
-          print('All required theorem axiom audits passed.')
+          print("All required theorem axiom audits passed.")
           PY
