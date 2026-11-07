@@ -6,233 +6,747 @@
 **Author:** Valentino Lanzarini  
 **Affiliation:** Independent Mathematical Researcher  
 **Project status:** Research in progress  
-**Latest verified development checkpoint:** P82.3
-**Latest candidate awaiting CI verification:** P82.4a
-**Latest checkpoint on main:** P74.2  
+**Latest recorded CI-verified checkpoint on development branch:** P83.4b  
+**Verification record:** Lean 4 Verification #283, commit `d448949`  
+**Latest known verified checkpoint on `main`:** P74.2  
+**Development branch:** `research/p75-centered-derivative`  
 **Lean:** v4.24.0  
 **mathlib:** v4.24.0  
-**Date of audit:** 23 October 2026
+**Documentation status:** 7 November 2026  
 
-**Research preprint:**  
-https://doi.org/10.5281/zenodo.23163367
+**Research preprint:** *Local Defect Hierarchies for Krylov Speed-Limit Saturation in General Real Jacobi Dynamics*
 
+**Repository:** [lanzarini-krylov-lean.](https://github.com/vlanzarini80-source/lanzarini-krylov-lean.)
 
-**Repository:** [GitHub repository](https://github.com/vlanzarini80-source/lanzarini-krylov-lean.)
+**Verification workflow:** [Lean 4 Verification](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/workflows/lean.yml)
 
+**Preprint DOI:** [10.5281/zenodo.23163367](https://doi.org/10.5281/zenodo.23163367)
 
 **Copyright © 2026 Valentino Lanzarini. All rights reserved.**
 
 ---
 
-## 1. Scientific Status
+# Research Mission: From the Preprint to Formal Mathematical Verification
 
-This repository contains a Lean 4 formalization of finite-dimensional real Jacobi dynamics, unitary quantum evolution, Krylov observables, and related variance inequalities.
+## Scientific Question
 
-The latest verified development milestone is **P76.6**, established on the branch:
+How do the local coefficients of a Jacobi Hamiltonian determine whether Krylov complexity saturates its quantum speed limit, and how does the system depart from saturation at short times?
 
-`research/p75-centered-derivative`
+This repository develops a Lean 4 formalization of mathematical structures investigated in the associated preprint.
 
-The corresponding GitHub Actions verification is:
+The objective is to examine:
 
-**Run #159: SUCCESS**
+- The foundational energy-variance speed-limit inequality.
+- The short-time saturation deficit.
+- The leading physical coefficients of that deficit.
+- The local Jacobi defect structure.
+- Finite-chain boundary behavior.
+- The distinction between algebraic identities and physical evolution.
+- The formal verification of mathematical statements under explicit hypotheses.
 
-https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/40004543470
+## Mathematical Strategy
 
-Verified commit:
-
-`178b6a0f57c18708ac0818b76d411fc630311969`
-
-The latest verified checkpoint integrated into `main` is P74.2.
-
-**P76.6 has not yet been merged into main.**
-
-The formal development does not establish the novelty of the preprint's local-defect hierarchy, nor does it constitute independent peer review.
-
----
-
-## 2. Mathematical Framework
-
-Consider a finite real symmetric Jacobi Hamiltonian H.
-
-Its diagonal coefficients are real numbers, and its off-diagonal coefficients couple adjacent sites.
-
-The corresponding quantum evolution is:
+For a finite real symmetric Jacobi Hamiltonian \(H\), consider the physical evolution
 
 $$
 \psi(t)=e^{-itH}\psi_0.
 $$
 
-The state satisfies:
+In the encoded finite coordinate basis, define the Krylov number operator \(N\) and observables
 
 $$
+K(t)=\langle\psi(t),N\psi(t)\rangle,
+$$
+
+$$
+V_K(t)=\langle\psi(t),N^2\psi(t)\rangle-K(t)^2.
+$$
+
+A foundational energy-variance speed limit is
+
+$$
+(K'(t))^2\leq 4V_K(t)V_H(t).
+$$
+
+For the relevant initial-state specialization, the proposed saturation deficit is
+
+$$
+D(t)=1-\frac{[K'(t)]^2}{4b_1^2V_K(t)},
+$$
+
+where the denominator must be strictly positive.
+
+The research aims to derive the leading short-time behavior directly from physical evolution, without assuming the coefficient to be proved.
+
+## Verified Progress and Current Boundary
+
+The recorded Lean development includes:
+
+- **P73–P74:** Physical evolution and complexity derivatives.
+- **P75–P76:** Centered-state identities and speed-limit inequalities.
+- **P77–P78:** Energy conservation and residual identities.
+- **P79–P81:** Algebraic jets and physical Gram bridges.
+- **P82:** Physical jets, observables, and residual derivatives.
+- **P83:** Physical Gram-minor identities and fourth-order centering cancellation.
+
+The latest recorded full-workflow checkpoint on `research/p75-centered-derivative` is **P83.4b**, associated with Lean 4 Verification #283 and commit `d448949`.
+
+The supplied CI evidence reports successful module compilation through P83.4b and a successful required-theorem axiom audit.
+
+The development-branch result must not be confused with integration into `main`.
+
+## Open Mathematical Target
+
+For the four-site Jacobi model detailed in Section 6, set
+
+$$
+\Omega_0=s^2-3q^2+3p^2.
+$$
+
+The proposed short-time result is
+
+$$
+\boxed{
+\lim_{t\to0}\frac{D(t)}{t^6}
+=
+\frac{q^2}{576}
+\left(4\Omega_0^2+s^2\delta^2\right)
+}.
+$$
+
+**Status: Open research target, not a Lean-verified theorem about the complete physical evolution.**
+
+Establishing this result requires:
+
+1. Lower-order physical derivative cancellations.
+2. Derivation of the exact physical coefficient.
+3. Strict positivity of the denominator near zero.
+4. Justification of the normalized limit.
+5. Explicit treatment of degenerate couplings and terminal cases.
+
+Further research concerns the general local-defect hierarchy, finite-chain rigidity, and extensions beyond finite dimension.
+
+## Why Formal Verification?
+
+Lean 4 makes theorem statements, assumptions, and proof dependencies explicit and independently inspectable.
+
+Successful compilation and axiom auditing support the precise encoded statements.
+
+They do not establish:
+
+- Mathematical novelty.
+- General equivalence with the intended physical interpretation.
+- Independent peer review.
+- Completion of every theorem in the associated preprint.
+
+**Scientific objective:** Build a formally verified mathematical foundation for Krylov speed-limit saturation and local-defect results while clearly distinguishing established theorems from open research objectives.
+
+---
+
+# 1. Scientific Status
+
+This repository develops Lean 4 formalizations of finite-dimensional real Jacobi dynamics, quantum evolution, Krylov observables, variance inequalities, physical derivatives, and related residual identities.
+
+The current recorded development-branch verification milestone is **P83.4b**, associated with:
+
+| Field | Recorded value |
+|---|---|
+| Workflow | Lean 4 Verification |
+| Run | #283 |
+| Commit | `d448949` |
+| Branch | `research/p75-centered-derivative` |
+| Reported result | SUCCESS |
+| Required-theorem axiom audit | PASS |
+
+The recorded workflow explicitly compiled the relevant P83 fourth-order dependencies:
+
+- `P83_LeibnizSecond_Candidate.lean`
+- `P83_LeibnizLocal_Candidate.lean`
+- `P83_LocalFourthCancellation_Candidate.lean`
+- `P83_4b_W13CenteringFourthCancellation.lean`
+
+Its source and required-theorem axiom audits passed according to the supplied CI record.
+
+The reported axioms for the fourth-order cancellation declarations were limited to:
+
+```text
+propext
+Classical.choice
+Quot.sound
+```
+
+## What P83.4b Establishes
+
+Under the theorem's explicitly stated local regularity and vanishing-jet hypotheses, the fourth derivative at zero of the W13 centering correction vanishes.
+
+It does not independently establish:
+
+- All required hypotheses from physical Jacobi evolution.
+- The fourth derivative of the complete physical centered Gram minor.
+- The physical eighth-order residual coefficient.
+- The normalized sixth-order saturation-deficit limit.
+
+The latest verified checkpoint known on `main` is P74.2.
+
+Results on the development branch are not described as merged into `main`.
+
+The repository does not establish the novelty of the preprint or constitute independent peer review.
+
+---
+
+# 2. Mathematical Framework
+
+Let \(H\) be a finite real symmetric Jacobi Hamiltonian with real diagonal entries and nearest-neighbor off-diagonal couplings.
+
+The physical evolution is
+
+$$
+\psi(t)=e^{-itH}\psi_0,
+\qquad
 \dot{\psi}(t)=-iH\psi(t).
 $$
 
-The Krylov number operator is the diagonal matrix:
+The Krylov number operator in the encoded finite index basis is
 
 $$
-N=\mathrm{diag}(0,1,\ldots,n-1).
+N=\operatorname{diag}(0,1,\ldots,n-1).
 $$
 
-For a normalized state, Krylov complexity is:
+For a normalized state, the intended observables are
 
 $$
-K(t)=\langle\psi(t),N\psi(t)\rangle.
+K(t)=\langle\psi(t),N\psi(t)\rangle,
 $$
 
-The Krylov variance is:
-
 $$
-V_K(t)=
-\langle\psi(t),N^2\psi(t)\rangle
--K(t)^2.
+V_K(t)=\langle\psi(t),N^2\psi(t)\rangle-K(t)^2,
 $$
 
-The energy expectation is:
-
 $$
-E(t)=\langle\psi(t),H\psi(t)\rangle.
+E(t)=\langle\psi(t),H\psi(t)\rangle,
 $$
 
-The energy variance is:
-
 $$
-V_H(t)=
-\|(H-E(t)I)\psi(t)\|^2.
+V_H(t)=\left\|(H-E(t)I)\psi(t)\right\|^2.
 $$
 
-These formulas describe the intended mathematical interpretation. The exact Lean definitions and hypotheses determine the formal scope.
+These equations describe the intended mathematical interpretation.
 
-The current development concerns finite-dimensional Jacobi matrices.
+The actual Lean definitions and theorem hypotheses determine the formal scope.
 
-It does not establish a general infinite-dimensional result or a Lanczos basis-equivalence theorem for arbitrary Hamiltonians.
+## Basis-Identification Limitation
+
+The encoded number operator acts in the finite `Fin n` coordinate basis.
+
+The repository has not established a general theorem identifying this basis with the Lanczos basis for an arbitrary Hamiltonian and initial state.
+
+## Dimensional Limitation
+
+The currently recorded verified development is finite-dimensional.
+
+No general semi-infinite or unbounded-operator theorem follows from these files.
 
 ---
 
-## 3. Formal Verification History
+# 3. Formal Verification History
 
-The development has progressed through the following milestones.
+The following table distinguishes historical milestones from development-branch results.
 
-| Checkpoint | Main result |
-| --- | --- |
-| P51-P55 | Jacobi Hamiltonians and unitary evolution |
-| P56-P64 | Krylov observables, moments, and variance |
-| P65-P69 | Complex Gram and Lagrange identities |
-| P70 | Real-part Gram-gap identity |
-| P71 | Centered-state variance identity |
-| P72 | Complexity differentiation and matrix exponential derivatives |
-| P73.1 | Physical propagator derivative |
-| P73.2 | Physical evolved-state derivative |
-| P74.1 | Componentwise state derivatives |
-| P74.2 | Physical Krylov complexity derivative |
-| P75.1 | Centered-state orthogonality |
-| P75.2a | Physical velocity orthogonality |
-| P75.2b | Centered physical complexity derivative |
-| P75.3 | Quadratic speed estimate |
-| P75.4 | Physical derivative speed bound |
-| P76.1 | Energy variance definition |
-| P76.2 | Energy variance identities |
-| P76.3 | Energy second-moment representation |
-| P76.4 | Centered energy orthogonality |
-| P76.5 | Centered velocity inner-product identity |
-| P76.5b | Centered velocity norm identity |
-| P76.6 | Complete energy-variance speed bound |
+**Verified** refers to recorded CI compilation and axiom auditing, not an independent assessment of the preprint's originality.
 
-P75 and P76 are verified on the development branch.
+| Checkpoint | Formalization or result | Evidence status |
+|---|---|---|
+| P51–P55 | Jacobi Hamiltonians and unitary evolution | Earlier development history |
+| P56–P64 | Krylov observables, moments, and variance | Earlier development history |
+| P65–P69 | Complex Gram and Lagrange identities | Earlier development history |
+| P70 | Real-part Gram-gap identity | Earlier development history |
+| P71 | Centered-state variance identity | Historical CI record |
+| P72 | Complexity differentiation and matrix exponential derivatives | Historical CI record |
+| P73.1 | Physical propagator derivative | Historical CI record |
+| P73.2 | Physical evolved-state derivative | Historical CI record |
+| P74.1 | Componentwise state derivatives | Audited in historical full CI |
+| P74.2 | Physical Krylov complexity derivative | Latest known verified `main` checkpoint |
+| P75.1 | Centered-state orthogonality | Audited in full CI |
+| P75.2a | Physical velocity orthogonality | Audited in full CI |
+| P75.2b | Centered physical complexity derivative | Audited in full CI |
+| P75.3 | Quadratic speed estimate | Audited in full CI |
+| P75.4 | Physical derivative speed bound | Audited in full CI |
+| P76.1 | Energy variance nonnegativity | Audited in full CI |
+| P76.2 | Energy variance identities | Audited in full CI |
+| P76.3 | Energy second-moment representation | Audited in full CI |
+| P76.4 | Centered energy orthogonality | Audited in full CI |
+| P76.5 | Centered velocity inner-product identity | Audited in full CI |
+| P76.5b | Centered velocity norm identity | Audited in full CI |
+| P76.6 | Energy-variance speed bound | Audited; earlier #159 success |
+| P77.1a | Jacobi Hamiltonian and propagator commutation | Audited in full CI |
+| P77.1b | Hamiltonian intertwining with physical evolution | Audited in full CI |
+| P77.2 | Energy-pair and energy-mean conservation | Audited in full CI |
+| P78.1 | Exact speed-residual identity and nonnegativity | Audited in full CI |
+| P78.2 | Physical speed-channel derivative and residual identity | Audited in full CI |
+| P79 R0 | Algebraic minor, Gram-jet, and deficit-jet identities | Audited; not the physical coefficient derivation |
+| P80.1 | Iterated physical-evolution derivatives | Audited in full CI |
+| P81.1 | Physical Jacobi powers \(H^1\) through \(H^4\) and initial derivatives | Audited in full CI |
+| P81.2a | Physical Gram bridge and product rule | Audited in full CI |
+| P81.2b | Initial physical state and observable data | Audited in full CI |
+| P81.2b1 | Physical acceleration | Audited in full CI |
+| P81.2b2 | Physical raw-minor derivative | Audited in full CI |
+| P81.2b3 | Physical Krylov derivative bridge | Audited in full CI |
+| P81.2b3b | Centered-minor decomposition | Audited in full CI |
+| P82.2 | Physical evolution jets | Audited in full CI |
+| P82 NormSqProbe | Complex norm-square derivative lemma | Audited in full CI |
+| P82.3 | Physical second moment and variance: zero values and first derivatives | Audited in #225 and later full CI |
+| P82.4a | Physical R0 residual definition, derivative bridge, and zero value | Compiled and audited in later full CI |
+| P82.4b | Physical residual derivative | Compiled and audited in later full CI |
+| P82.4c | Physical acceleration bridge | Compiled and audited in later full CI |
+| P82.5 | Physical Krylov acceleration | Compiled and audited in later full CI |
+| P82.6 | Physical residual derivatives | Compiled and audited in later full CI |
+| P82.7 | Initial residual cancellation | Compiled and audited in later full CI |
+| P83.1 | Physical Gram and Jacobi-power jets | Compiled and audited in later full CI |
+| P83.2 | Physical minor acceleration | Compiled and audited in later full CI |
+| P83.3 | Centered Gram derivative and centering-correction bridge | Compiled and audited in #283 |
+| P83.4a | W13 physical fourth-jet numerator algebraic identity | Compiled and audited in #283; not the complete physical minor derivative |
+| P83 Leibniz | Local second- and third-order product derivative rules | Compiled and audited in #283 |
+| P83 local fourth | Fourth-order product cancellation under local smoothness and vanishing jets | Compiled and audited in #283 |
+| P83.4b | Fourth derivative of W13 centering correction vanishes under seven explicit hypotheses | Full CI #283 PASS; axiom audit PASS; development branch only |
 
-They are not yet part of the verified main branch.
+The results beyond P74.2 are recorded on `research/p75-centered-derivative`.
+
+They are not asserted here to be integrated into `main`.
 
 ---
 
-## 4. Main Development Result: P76.6
+# 4. Foundational Energy-Variance Speed Limit: P76.6
 
-The verified Lean theorem is:
+The theorem
 
-`Lanzarini.p76_6_energy_speed_limit`
+```lean
+Lanzarini.p76_6_energy_speed_limit
+```
 
-Source file:
-
-`P76_6_EnergySpeedLimit.lean`
-
-The theorem assumes a finite-dimensional Jacobi evolution and a normalized initial state.
-
-It establishes the existence of the physical derivative of Krylov complexity and proves the quadratic energy-variance bound.
-
-In mathematical notation:
+establishes, under its encoded finite-dimensional and normalization assumptions, a variance-based bound:
 
 $$
-|K'(t)|^2
-\leq
-4V_K(t)V_H(t).
+(K'(t))^2\leq 4V_K(t)V_H(t).
 $$
 
-Equivalently:
+Equivalently, for nonnegative variances,
 
 $$
-|K'(t)|
-\leq
-2\sqrt{V_K(t)V_H(t)}.
+|K'(t)|\leq 2\sqrt{V_K(t)V_H(t)}.
 $$
 
-The proof uses previously established results concerning:
+The proof builds on:
 
-- Physical Krylov complexity differentiation.
-- Centered Krylov states.
-- Complex Gram inequalities.
+- Physical differentiation.
+- Centered states.
+- Gram inequalities.
 - Centered energy.
 - Physical velocity.
-- Energy variance.
+- Energy-variance identities.
 
 The desired inequality is not introduced as an assumption.
 
-This is a formalization of a classical type of variance-based speed limit.
-
-It is not presented as a newly discovered universal physical law.
+This is a formalization of a variance-based speed-limit result, not a claim to have discovered a new universal physical law.
 
 ---
 
-## 5. Lean Verification Evidence
+# 5. Physical Evolution, Gram Bridges, and Observables: P77–P83.4b
 
-GitHub Actions run #159 completed successfully on 23 October 2026.
+## 5.1. Conservation and Physical Residuals: P77–P78
 
-The verification workflow explicitly compiled:
+The development includes Hamiltonian–propagator commutation, Hamiltonian intertwining, energy conservation, and exact physical speed-residual identities.
 
-`P76_6_EnergySpeedLimit.lean`
-
-The recorded axiom audit for the final theorem was:
+Relevant files:
 
 ```text
-'Lanzarini.p76_6_energy_speed_limit'
+P77_1a_PropagatorCommutes.lean
+P77_1b_HamiltonianIntertwining.lean
+P77_2_EnergyMeanConservation.lean
+P78_1_ExactSpeedResidual.lean
+P78_2_PhysicalSpeedResidual.lean
+```
+
+These identities are useful prerequisites.
+
+They do not themselves prove the required short-time coefficient.
+
+## 5.2. Algebraic Jets Versus Physical Jets: P79–P81
+
+`P79_R0_CoefficientJet.lean` contains audited algebraic formulas for R0 minors, a Gram jet, and a deficit jet.
+
+Those formulas must not be treated as a substitute for deriving the coefficient from the actual evolved state.
+
+`P80_1_TrueEvolutionJets.lean` formalizes iterated physical derivatives.
+
+The P81 series establishes:
+
+- Hamiltonian powers.
+- Initial physical derivatives.
+- Physical Gram bridges.
+- Physical acceleration.
+- Raw-minor differentiation.
+- Centered-minor decomposition.
+
+## 5.3. Physical Observables and Residual Derivatives: P82
+
+### P82.2
+
+`P82_2_PhysicalJets.lean`
+
+Physical state jets and their initial values.
+
+### P82 NormSqProbe
+
+`P82_NormSqProbe.lean`
+
+Complex norm-square derivative lemma.
+
+### P82.3
+
+`P82_3_PhysicalObservables.lean`
+
+Initial values and first derivatives for the physical second moment and variance.
+
+### P82.4a
+
+`P82_4a_PhysicalResidual.lean`
+
+Physical R0 residual definitions and identities.
+
+### P82.4b–P82.7
+
+Physical residual derivative and acceleration bridges, and initial residual cancellation.
+
+The four P82.3 declarations audited in historical run #225 are:
+
+```lean
+Lanzarini.p82_3_M2_zero
+Lanzarini.p82_3_V_zero
+Lanzarini.p82_3_M2_hasDerivAt
+Lanzarini.p82_3_V_hasDerivAt
+```
+
+P82.4a was not compiled in the earlier #226 workflow, despite that run being green.
+
+Later full-workflow verification explicitly included P82.4a and subsequent modules.
+
+This historical limitation is preserved to avoid attributing verification to the wrong run.
+
+## 5.4. Fourth-Order W13 Centering: P83
+
+### P83.4a: Physical Fourth-Jet Numerator
+
+`P83_4a_W13PhysicalFourthJetNumerator.lean`
+
+This module proves an algebraic identity involving physical Jacobi-power jets, with expression
+
+$$
+-i\delta p^2qs.
+$$
+
+**Scope:** This is a numerator/jet identity.
+
+It is not, by itself, the fourth derivative of the complete physical W13 centered Gram minor.
+
+### P83 Local Leibniz Rule
+
+`P83_LeibnizLocal_Candidate.lean`
+
+This module develops a local third-order Leibniz rule.
+
+### P83 Local Fourth-Order Cancellation
+
+`P83_LocalFourthCancellation_Candidate.lean`
+
+This module proves a local fourth-order product cancellation under `ContDiffAt ℝ 4` hypotheses and vanishing lower-order jets.
+
+### P83.4b: W13 Centering Fourth-Order Cancellation
+
+`P83_4b_W13CenteringFourthCancellation.lean`
+
+This module applies the cancellation lemma to the physical W13 centering correction.
+
+Its theorem retains the original seven hypotheses:
+
+- Two fourth-order local smoothness assumptions.
+- Two initial Krylov jets.
+- Three initial raw-minor jets.
+
+The formal conclusion is
+
+$$
+\left.
+\frac{d^4}{dt^4}
+\bigl(K(t)R_{13}(t)\bigr)
+\right|_{t=0}
+=0
+$$
+
+under those hypotheses.
+
+The supplied full CI #283 record reports successful compilation and axiom auditing.
+
+The remaining physical bridge must derive the necessary hypotheses from Jacobi evolution and connect the algebraic numerator to the complete centered minor.
+
+---
+
+# 6. R0 Model and Outstanding Short-Time Coefficient
+
+The four-site Jacobi model under study is
+
+$$
+H=
+\begin{pmatrix}
+0 & p & 0 & 0\\
+p & 0 & q & 0\\
+0 & q & 0 & s\\
+0 & 0 & s & \delta
+\end{pmatrix},
+$$
+
+with
+
+$$
+\psi_0=e_0,
+\qquad
+N=\operatorname{diag}(0,1,2,3).
+$$
+
+Define
+
+$$
+K(t)=\sum_{j=0}^{3}j|\psi_j(t)|^2,
+$$
+
+$$
+V_K(t)=
+\sum_{j=0}^{3}j^2|\psi_j(t)|^2-K(t)^2,
+$$
+
+$$
+F(t)=4p^2V_K(t)-[K'(t)]^2,
+$$
+
+and
+
+$$
+D(t)=\frac{F(t)}{4p^2V_K(t)},
+$$
+
+where the denominator must be strictly positive.
+
+Define
+
+$$
+\Omega_0=s^2-3q^2+3p^2.
+$$
+
+## Research Target
+
+Under suitable explicit coupling and regularity assumptions, derive from physical evolution
+
+$$
+F^{(k)}(0)=0
+\qquad
+(0\leq k\leq 7),
+$$
+
+and
+
+$$
+\boxed{
+\frac{F^{(8)}(0)}{8!}
+=
+\frac{p^4q^2}{144}
+\left(4\Omega_0^2+s^2\delta^2\right)
+}.
+$$
+
+Then justify
+
+$$
+\lim_{t\to0}\frac{V_K(t)}{t^2}=p^2,
+$$
+
+and
+
+$$
+\boxed{
+\lim_{t\to0}\frac{D(t)}{t^6}
+=
+\frac{q^2}{576}
+\left(4\Omega_0^2+s^2\delta^2\right)
+}.
+$$
+
+**Status: Research target, not yet a Lean-certified theorem.**
+
+The derivation must:
+
+1. Establish positivity for sufficiently small nonzero \(t\).
+2. Avoid circular use of the target coefficient.
+3. Prove the lower-order cancellations.
+4. Derive the coefficient from actual physical evolution.
+5. Treat degeneracies and terminal cases separately.
+
+The displayed coefficient is a candidate under investigation, not an independently certified mathematical discovery.
+
+---
+
+# 7. Lean Verification Evidence and Axiom Audit
+
+## 7.1. Historical Checkpoint: P82.3
+
+GitHub Actions Lean 4 Verification #225, on `research/p75-centered-derivative`, commit `65e4762`, completed successfully according to the recorded evidence.
+
+The audit included:
+
+```text
+PASS p82_normSq_probe:
+['Classical.choice', 'Quot.sound', 'propext']
+
+PASS p82_3_M2_zero:
+['Classical.choice', 'Quot.sound', 'propext']
+
+PASS p82_3_V_zero:
+['Classical.choice', 'Quot.sound', 'propext']
+
+PASS p82_3_M2_hasDerivAt:
+['Classical.choice', 'Quot.sound', 'propext']
+
+PASS p82_3_V_hasDerivAt:
+['Classical.choice', 'Quot.sound', 'propext']
+```
+
+All required theorem axiom audits passed.
+
+The subsequently added P82.4a candidate was not included in run #226's compile/audit list.
+
+A green CI run must never be used to claim verification of a module it did not compile.
+
+## 7.2. Current Full-Workflow Checkpoint: P83.4b
+
+Recorded verification:
+
+| Property | Value |
+|---|---|
+| Workflow | Lean 4 Verification |
+| Run | #283 |
+| Branch | `research/p75-centered-derivative` |
+| Commit | `d448949` |
+| Reported status | SUCCESS |
+| Required-theorem axiom audit | PASS |
+
+The supplied CI logs include:
+
+```text
+=== Compiling P83_4a_W13PhysicalFourthJetNumerator.lean ===
+
+'Lanzarini.p83_4a_w13_fourth_jet_numerator'
+depends on axioms:
+[propext, Classical.choice, Quot.sound]
+
+=== Compiling P83_LeibnizSecond_Candidate.lean ===
+
+'Lanzarini.p83_leibniz_second'
+depends on axioms:
+[propext, Classical.choice, Quot.sound]
+
+'Lanzarini.p83_leibniz_third'
+depends on axioms:
+[propext, Classical.choice, Quot.sound]
+
+=== Compiling P83_LeibnizLocal_Candidate.lean ===
+
+'Lanzarini.p83_local_leibniz_third'
+depends on axioms:
+[propext, Classical.choice, Quot.sound]
+
+=== Compiling P83_LocalFourthCancellation_Candidate.lean ===
+
+'Lanzarini.p83_local_fourth_product_zero'
+depends on axioms:
+[propext, Classical.choice, Quot.sound]
+
+=== Compiling P83_4b_W13CenteringFourthCancellation.lean ===
+
+'Lanzarini.p83_4b_w13_centering_fourth_zero'
 depends on axioms:
 [propext, Classical.choice, Quot.sound]
 ```
 
-No `sorryAx` dependency was reported for this theorem.
+The workflow's **Audit source files and required theorem axioms** step passed.
 
-The workflow also checked the earlier declarations included in its verification sequence.
+The recorded allowed axioms are:
 
-This establishes that the formal theorem compiled under the recorded Lean environment and depends only on the listed axioms.
+```text
+propext
+Classical.choice
+Quot.sound
+```
+
+The reported fourth-order declarations did not depend on `sorryAx`.
+
+Linter warnings about unused simplification arguments or unnecessary tactic sequencing do not invalidate compilation.
+
+Such warnings may be cleaned up in a separate, tested commit.
+
+### Scope of Verification
+
+The audit supports the statements and dependencies actually encoded in the compiled Lean files.
+
+It does not prove:
+
+- The complete DOI preprint.
+- A general physical fourth-derivative coefficient.
+- The eighth-order physical residual coefficient.
+- The normalized sixth-order deficit limit.
+- Mathematical novelty.
+
+## 7.3. Next Verification Gate
+
+The next target is a theorem that:
+
+1. Derives the necessary W13 initial jets from physical Jacobi evolution.
+2. Derives the required local smoothness conditions.
+3. Connects the P83.4a algebraic numerator to the actual physical fourth derivative.
+4. Identifies the complete centered-minor fourth derivative.
+5. Does not assume the desired coefficient.
+6. Does not import P79 as the source of the physical coefficient.
+
+The verification gate requires:
+
+- An explicit Lean source file.
+- Successful Lean compilation.
+- Required-theorem axiom audit.
+- Exact commit evidence.
+- Exact GitHub Actions run evidence.
+
+Only then should the physical bridge be marked verified.
+
+## 7.4. Limits of CI Evidence
+
+Successful Lean compilation verifies the encoded theorem relative to its dependencies and accepted logical foundations.
 
 It does not establish:
 
-- Mathematical originality.
+- Scientific novelty.
 - Independent peer review.
-- Correctness of every informal interpretation.
-- Formal verification of the entire preprint.
-- Validity of an unproved infinite-dimensional extension.
+- Equivalence of every encoded object with the intended physical model.
+- Completion of the preprint.
 
 ---
 
-## 6. Reproducibility
+# 8. Reproducibility and Verification Records
 
-The project uses:
+The project specifies:
 
 ```text
 Lean 4: v4.24.0
 mathlib: v4.24.0
 ```
 
-The repository contains:
+Relevant files include:
 
 ```text
 lean-toolchain
@@ -240,171 +754,186 @@ lakefile.toml
 .github/workflows/lean.yml
 ```
 
-The GitHub Actions workflow installs the Lean environment, resolves dependencies, and compiles the required source files.
+The workflow resolves mathlib dependencies using `lake update` and retrieves the cache.
 
-At the audited P76.6 commit, no committed `lake-manifest.json` was present.
+A previously identified reproducibility limitation was the absence of a committed `lake-manifest.json` at the P76.6 audit checkpoint.
 
-A reviewed dependency lockfile would improve reproducibility.
+A dependency lockfile and an exact commit remain important for independently repeating the result.
 
-The exact source commit and successful CI logs are the authoritative verification records.
+The lockfile's status at later commits must be checked rather than assumed.
+
+## Selected Historical Verification Records
+
+| Milestone | GitHub Actions record |
+|---|---|
+| P71 | [Run 39044208215](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39044208215) |
+| P72.3a | [Run 39140660849](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39140660849) |
+| P73.1 | [Run 39153415923](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39153415923) |
+| P73.2 | [Run 39248613293](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39248613293) |
+| P74.2 | [Run 39399857938](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39399857938) |
+| P76.6 | [Run 40004543470](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/40004543470) |
+| P82.3 | Verification #225, commit `65e4762` |
+| P82.4a historical candidate | Verification #226, commit `a4c1c46`; module not included at that time |
+| P83.4b | Verification #283, commit `d448949`; full compilation and audit PASS |
+
+## Repository Links
+
+- [Repository](https://github.com/vlanzarini80-source/lanzarini-krylov-lean.)
+- [Development branch](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./tree/research/p75-centered-derivative)
+- [Lean verification workflow](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/workflows/lean.yml)
+- [GitHub Actions history](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions)
+- [Recorded P83.4b commit](https://github.com/vlanzarini80-source/lanzarini-krylov-lean./commit/d448949)
+- [Research preprint](https://doi.org/10.5281/zenodo.23163367)
+
+The intended integration commit should be reviewed and verified before merging development changes into `main`.
 
 ---
 
-## 7. Remaining Mathematical Research
+# 9. Remaining Mathematical Research
 
-### 7.1. Initial-state speed limit
+## 9.1. Complete Physical W13 Fourth Derivative
 
-The next objective is to specialize the energy-variance speed limit to the initial-state assumptions used in the preprint.
+Use the verified P83.4b centering cancellation as one component.
 
-This requires the appropriate energy conservation and first-coupling identities.
+Then:
 
-The specialization must preserve all necessary normalization, dimension, and coupling hypotheses.
+1. Derive the required initial conditions from Jacobi evolution.
+2. Establish the required local regularity.
+3. Connect the P83.4a algebraic numerator to the actual physical fourth derivative.
+4. Identify the complete centered W13 minor derivative.
 
-### 7.2. Saturation deficit
+Do not assume the target coefficient.
 
-For the first physical coupling b_1, the proposed saturation deficit is:
+Do not substitute the P79 algebraic coefficient formula for its physical derivation.
 
-$$
-D(t)=
-1-\frac{K'(t)^2}
-{4b_1^2V_K(t)}.
-$$
+## 9.2. Physical Eighth-Order Residual Coefficient
 
-The denominator must be nonzero wherever this expression is used.
+The decisive later task is to extract the eighth-order physical speed-residual coefficient from derivatives of the actual evolved state.
 
-The behavior near zero variance requires a separate mathematical treatment.
+All lower-order cancellations must be proved.
 
-The nonnegativity and short-time expansion of this deficit are not yet established as Lean theorems.
-
-### 7.3. Finite-depth local defects
-
-In the preprint's indexing convention, define:
+The intended target is
 
 $$
-c_j=b_j^2.
+\frac{F^{(8)}(0)}{8!}
+=
+\frac{p^4q^2}{144}
+\left(4\Omega_0^2+s^2\delta^2\right).
 $$
 
-With the boundary convention:
+This remains unverified as a complete physical Lean theorem.
+
+## 9.3. Positive Denominator and Normalized Deficit
+
+For the first coupling \(b_1\), the proposed saturation deficit is
 
 $$
-c_0=0.
+D(t)=1-\frac{[K'(t)]^2}{4b_1^2V_K(t)},
 $$
 
-The off-diagonal defect is:
+only where the denominator is nonzero.
+
+The positive-denominator argument and normalized limit must be proved.
+
+They must not be inferred merely from a formal quotient.
+
+## 9.4. Finite-Depth Local Defects
+
+Using the preprint's indexing convention,
 
 $$
-\Omega_r=
-c_{r+3}-3c_{r+2}
-+3c_{r+1}-c_r.
+c_j=b_j^2,
+\qquad
+c_0=0,
 $$
 
-The diagonal defect is:
+and
+
+$$
+\Omega_r
+=
+c_{r+3}-3c_{r+2}+3c_{r+1}-c_r,
+$$
 
 $$
 \delta_r=a_{r+3}-a_0.
 $$
 
-The proposed hierarchy relates the first nonzero saturation-deficit coefficient to these two defect mechanisms.
-
-Its mathematical treatment requires:
+The proposed hierarchy requires:
 
 - Explicit prefix assumptions.
-- Correct coupling-index conventions.
-- Finite-chain boundary conditions.
-- Positivity hypotheses where necessary.
+- Correct coupling indices.
+- Finite-chain boundary conventions.
+- Positivity conditions.
 - Exact leading coefficients.
-- Rigorous remainder estimates.
-- Independent mathematical verification.
+- Remainder bounds.
+- Independent verification.
 
-These results are not consequences of P76.6 alone.
+None of these conclusions follows from P76.6 or P83.4b alone.
 
-### 7.4. Finite-chain rigidity
+## 9.5. Finite-Chain Rigidity and Terminal Cases
 
-The proposed rigidity results require separate proofs.
+Rigidity claims and terminal boundary cases require their own statements and proofs.
 
-Terminal boundary cases must be treated explicitly.
+Nonterminal formulas must not be extended to terminal chains without justification.
 
-### 7.5. Semi-infinite Jacobi dynamics
+## 9.6. Semi-Infinite Jacobi Dynamics and Lanczos Equivalence
 
-The existing finite-dimensional results do not establish corresponding theorems for unbounded semi-infinite Jacobi operators.
+Extensions to semi-infinite, potentially unbounded Jacobi operators require additional operator-theoretic hypotheses.
 
-Such extensions require additional operator-theoretic assumptions and proofs.
-
----
-
-## 8. Verification Records
-
-Selected historical records:
-
-**P71:**  
-https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39044208215
-
-**P72.3a:**  
-https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39140660849
-
-**P73.1:**  
-https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39153415923
-
-**P73.2:**  
-https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39248613293
-
-**P74.2:**  
-https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/39399857938
-
-**P76.6:**  
-https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/runs/40004543470
-
-The development branch must be merged into main only after review and successful verification of the intended integration commit.
+General equivalence with a Lanczos basis is also not established by the current finite-coordinate formalization.
 
 ---
 
-## 9. Research Preprint
+# 10. Research Preprint and Scientific Interpretation
 
-**Title:**  
-Local Defect Hierarchies for Krylov Speed-Limit Saturation in General Real Jacobi Dynamics
+**Title:** *Local Defect Hierarchies for Krylov Speed-Limit Saturation in General Real Jacobi Dynamics*
 
-**Author:**  
-Valentino Lanzarini
+**Author:** Valentino Lanzarini
 
-**DOI:**  
-https://doi.org/10.5281/zenodo.23163367
+**DOI:** [10.5281/zenodo.23163367](https://doi.org/10.5281/zenodo.23163367)
 
-The preprint and the Lean formalization are separate scientific artifacts.
+The preprint and the Lean repository are distinct scientific artifacts.
 
-The Lean repository currently verifies foundational results through the energy-variance speed bound.
+Verified Lean lemmas support precisely their encoded statements.
 
-The complete local-defect hierarchy remains a research objective.
+They do not automatically establish every theorem, hypothesis, coefficient, or interpretation in the preprint.
 
-The project does not claim that GitHub Actions, AI assistance, or formal verification establish worldwide mathematical novelty.
+In particular, the following are not presented as completed Lean formalizations:
 
-Independent literature comparison and specialist review remain necessary.
+- Full local-defect hierarchy.
+- Complete physical W13 fourth derivative.
+- Physical eighth-order residual coefficient.
+- Normalized sixth-order deficit limit.
+- Terminal rigidity results.
+- Semi-infinite extensions.
+
+Claims of novelty and priority require independent literature comparison and specialist evaluation.
 
 ---
 
-## 10. Scientific Integrity
+# 11. Scientific Integrity
 
 The project follows these principles:
 
-1. No fabricated experimental or verification results.
+1. No fabricated numerical, symbolic, or Lean verification results.
 2. No `sorry` or `admit` in claimed completed proofs.
-3. No artificial axioms asserting the desired conclusion.
-4. No weakening of theorem statements to obtain a successful compilation.
-5. Explicit distinction between development and main-branch verification.
-6. Reproducible source commits and verification records.
-7. No unsupported originality or priority claims.
-8. Independent review of the correspondence between formal and informal mathematics.
+3. No new axioms that simply assert the desired conclusion.
+4. No weakening of statements solely to obtain a green CI run.
+5. No claim that a module is verified unless the recorded workflow actually compiled and audited it.
+6. Explicit distinction among numerical checks, symbolic computations, Lean proofs, and external peer review.
+7. Reproducible source commits and accessible verification records.
+8. No unsupported claims of originality, priority, or universal validity.
+9. Independent checking of the correspondence between the encoded theorem and the intended mathematical statement.
+10. No changes to the published preprint or verified `main` branch solely on the basis of an unverified development candidate.
 
-A Lean verification establishes that the encoded statement follows from its formal foundations.
-
-It does not independently establish the novelty of the mathematical statement.
+The research process prioritizes mathematical correctness, reproducibility, and falsifiability over the number of completed checkpoints.
 
 ---
 
-## 11. Copyright and Permissions
+# 12. Copyright and Permissions
 
-Copyright © 2026 Valentino Lanzarini.
-
-**All rights reserved.**
+**Copyright © 2026 Valentino Lanzarini. All rights reserved.**
 
 The repository is publicly accessible for inspection and scientific discussion.
 
@@ -416,82 +945,43 @@ Copyright protects original expression but does not grant exclusive ownership of
 
 ---
 
-## 12. AI-Assisted Research
+# 13. AI-Assisted Research and Author
 
-Artificial intelligence tools have assisted the development and formalization of this project.
+Artificial intelligence tools have assisted the development, checking, and formalization of this project.
 
 AI assistance does not constitute independent peer review.
 
-The author remains responsible for reviewing mathematical claims, documentation, and scientific conclusions.
+The author remains responsible for reviewing mathematical claims, code, documentation, and scientific conclusions.
 
 Formal verification and independent scientific evaluation are complementary but distinct processes.
 
----
+## Author
 
-Development Checkpoint — 31 October 2026
-
-Branch: "research/p75-centered-derivative"
-
-P82.3 — Verified Physical Observables
-
-GitHub Actions Lean 4 Verification #225 completed successfully at commit "65e4762".
-
-The verification workflow compiled "P82_3_PhysicalObservables.lean", including the initial-value and first-derivative theorems for the physical second moment and Krylov variance.
-
-The reported theorem dependencies were limited to the standard Lean axioms:
-
-- "propext"
-- "Classical.choice"
-- "Quot.sound"
-
-No "sorryAx" dependencies were reported for the audited P82.3 declarations.
-
-P82.4a — Physical Speed Residual Candidate
-
-The file "P82_4a_PhysicalResidual.lean" was introduced at commit "a4c1c46".
-
-GitHub Actions Verification #226 completed successfully. However, the workflow did not explicitly compile or audit this new module.
-
-Consequently, P82.4a must not yet be described as formally verified.
-
-Outstanding Mathematical Objectives
-
-The next formalization stages are:
-
-1. Derive the eighth-order coefficient of the physical R0 speed residual directly from finite-dimensional Jacobi evolution.
-2. Establish the required lower-order cancellations without assuming the target coefficient.
-3. Prove positivity of the normalization denominator in a suitable punctured neighborhood of zero.
-4. Establish the normalized sixth-order short-time saturation-deficit limit.
-5. Extend the verified analysis to higher defect depths and finite-chain terminal cases.
-
-The algebraic coefficient identities developed in P79 must remain logically distinct from the physical-evolution derivation.
-
-Scientific Status and Limitations
-
-Lean verification establishes the correctness of the formal statements under their explicitly encoded assumptions.
-
-It does not independently establish the mathematical novelty of the results, equivalence with every statement in the associated preprint, or external peer review.
-
-The complete eighth-order physical-residual coefficient and normalized saturation-deficit limit remain open formalization objectives.
-
----
-
-## 13. Author
-
-**Valentino Lanzarini**
-
+**Valentino Lanzarini**  
 Independent Mathematical Researcher
+
+**Research areas:**
 
 Krylov Dynamics | Jacobi Operators | Quantum Evolution | Formal Verification
 
-Research preprint:
-
+**Preprint:**  
 https://doi.org/10.5281/zenodo.23163367
 
-Repository:
+**Repository:**  
+https://github.com/vlanzarini80-source/lanzarini-krylov-lean.
 
-[GitHub repository](https://github.com/vlanzarini80-source/lanzarini-krylov-lean.)
+**Development branch:**  
+https://github.com/vlanzarini80-source/lanzarini-krylov-lean./tree/research/p75-centered-derivative
+
+**Verification workflow:**  
+https://github.com/vlanzarini80-source/lanzarini-krylov-lean./actions/workflows/lean.yml
 
 ---
 
 **Copyright © 2026 Valentino Lanzarini. All rights reserved.**
+
+**Project status: Research in progress.**
+
+**Latest recorded development-branch verification checkpoint: P83.4b.**
+
+**Next mathematical objective: Complete the physical W13 fourth-derivative bridge from Jacobi evolution without assuming the target coefficient.**
