@@ -1,0 +1,158 @@
+
+name: P83 Local Fourth Cancellation
+
+on:
+  push:
+    branches:
+      - research/p75-centered-derivative
+    paths:
+      - 'P83_LocalFourthCancellation_Candidate.lean'
+      - 'P83_LeibnizLocal_Candidate.lean'
+      - 'P83_LeibnizSecond_Candidate.lean'
+      - '.github/workflows/p83-local-fourth-cancellation.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Lean 4
+        run: |
+          set -euo pipefail
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Fetch mathlib dependencies
+        run: |
+          set -euo pipefail
+          lake update
+          lake exe cache get
+
+      - name: Compile second-order dependency
+        run: |
+          set -euo pipefail
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+            -o P83_LeibnizSecond_Candidate.olean \
+            P83_LeibnizSecond_Candidate.lean
+
+      - name: Compile local third-order dependency
+        run: |
+          set -euo pipefail
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+            -o P83_LeibnizLocal_Candidate.olean \
+            P83_LeibnizLocal_Candidate.lean
+
+      - name: Compile fourth-order cancellation
+        run: |
+          set -euo pipefail
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+            -o P83_LocalFourthCancellation_Candidate.olean \
+            P83_LocalFourthCancellation_Candidate.lean \
+            2>&1 | tee fourth.log
+
+          if grep -Eq 'error:|sorryAx' fourth.log; then
+            echo "FAIL: Lean compilation or axiom error"
+            exit 1
+          fi
+
+      - name: Audit fourth-order theorem
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path(
+              "P83_LocalFourthCancellation_Candidate.lean"
+          )
+          src = path.read_text(encoding="utf-8")
+          log = Path("fourth.log").read_text(encoding="utf-8")
+
+          # Strip comments for source-token checks.
+          clean = re.sub(
+              r"/-.*?-/", "", src, flags=re.S
+          )
+          clean = re.sub(r"--[^\n]*", "", clean)
+
+          forbidden = re.compile(
+              r"\b(sorry|admit|axiom|sorryAx)\b"
+          )
+
+          if forbidden.search(clean):
+              raise SystemExit(
+                  "FAIL: forbidden proof token"
+              )
+
+          theorem = "p83_local_fourth_product_zero"
+
+          declarations = re.findall(
+              r"\btheorem\s+" + theorem + r"\b",
+              clean
+          )
+
+          if len(declarations) != 1:
+              raise SystemExit(
+                  "FAIL: theorem missing or duplicated"
+              )
+
+          if src.count(
+              "#print axioms " + theorem
+          ) != 1:
+              raise SystemExit(
+                  "FAIL: missing axiom audit command"
+              )
+
+          prefix = (
+              "'Lanzarini." + theorem + "'"
+              " depends on axioms:"
+          )
+
+          matches = [
+              line.strip()
+              for line in log.splitlines()
+              if line.strip().startswith(prefix)
+          ]
+
+          if len(matches) != 1:
+              raise SystemExit(
+                  "FAIL: missing theorem axiom report"
+              )
+
+          payload = matches[0][len(prefix):].strip()
+
+          if not (
+              payload.startswith("[")
+              and payload.endswith("]")
+          ):
+              raise SystemExit(
+                  "FAIL: malformed axiom report"
+              )
+
+          found = {
+              item.strip()
+              for item in payload[1:-1].split(",")
+              if item.strip()
+          }
+
+          allowed = {
+              "propext",
+              "Classical.choice",
+              "Quot.sound",
+          }
+
+          unexpected = found - allowed
+
+          if unexpected:
+              raise SystemExit(
+                  f"FAIL: unexpected axioms {unexpected}"
+              )
+
+          print(
+              "PASS: fourth-order theorem compiled "
+              "and axioms audited"
+          )
+          PY
