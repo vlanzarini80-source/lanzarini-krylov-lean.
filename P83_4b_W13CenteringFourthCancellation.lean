@@ -1,5 +1,6 @@
 
 import P83_3_CenteredGramDerivativeBridge
+import P83_LocalFourthCancellation_Candidate
 import Mathlib.Analysis.Calculus.IteratedDeriv.Lemmas
 
 namespace Lanzarini
@@ -8,21 +9,15 @@ namespace Lanzarini
 P83.4b: Fourth-order cancellation of
 physical W13 centering.
 
-The theorem uses explicitly stated
-lower-order jets and smoothness.
+The original seven hypotheses are preserved.
+The proof uses the independently verified
+local fourth-order product cancellation.
 
-No P79 coefficient is imported.
-No fourth-order coefficient is assumed.
+No P79.
+No assumed fourth-order coefficient.
+No sorry, admit, or new axioms.
 -/
 
-/--
-The fourth derivative of the physical
-centering correction vanishes provided
-the required lower-order jets vanish.
-
-The physical verification of these
-hypotheses remains a separate obligation.
--/
 theorem p83_4b_w13_centering_fourth_zero
     (p q s delta : ℝ)
     (hK : ContDiffAt ℝ 4
@@ -62,13 +57,13 @@ theorem p83_4b_w13_centering_fourth_zero
           p81_2b2_rawMinor
             p q s delta t 1 3) 0 = 0
 
-  rw [iteratedDeriv_fun_mul hK hR]
-
-  norm_num [
-    Finset.sum_range_succ,
-    hK0, hK1,
-    hR0, hR1, hR2
-  ]
+  exact p83_local_fourth_product_zero
+    (fun t : ℝ =>
+      (p81_2b3_K p q s delta t : ℂ))
+    (fun t : ℝ =>
+      p81_2b2_rawMinor
+        p q s delta t 1 3)
+    hK hR hK0 hK1 hR0 hR1 hR2
 
 #print axioms p83_4b_w13_centering_fourth_zero
 
