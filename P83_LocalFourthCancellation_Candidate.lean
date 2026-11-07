@@ -9,12 +9,11 @@ namespace Lanzarini
 /-!
 P83: local fourth-order product cancellation.
 
-The fourth derivative is derived from the
-previously established local third-order
-Leibniz identity.
+Derived from the local third-order Leibniz
+identity and fourth-order regularity.
 
 No P79.
-No physical coefficient assumptions.
+No assumed physical coefficients.
 No new axioms.
 -/
 
@@ -159,22 +158,15 @@ theorem p83_local_fourth_product_zero
 
   let E : ℝ → ℂ := fun t =>
     deriv (deriv (deriv f)) t * g t +
-    (3 : ℂ) * deriv (deriv f) t * deriv g t +
-    (3 : ℂ) * deriv f t * deriv (deriv g) t +
+    (3 : ℂ) *
+      (deriv (deriv f) t * deriv g t) +
+    (3 : ℂ) *
+      (deriv f t * deriv (deriv g) t) +
     f t * deriv (deriv (deriv g)) t
 
   have hE : HasDerivAt E 0 0 := by
-    change HasDerivAt
-      (fun t : ℝ =>
-        deriv (deriv (deriv f)) t * g t +
-        (3 : ℂ) *
-          (deriv (deriv f) t * deriv g t) +
-        (3 : ℂ) *
-          (deriv f t * deriv (deriv g) t) +
-        f t * deriv (deriv (deriv g)) t)
-      0 0
-    convert ((hA.add hB).add hC).add hD using 1
-    all_goals simp
+    dsimp only [E]
+    exact ((hA.add hB).add hC).add hD
 
   have hfnear :
       ∀ᶠ t in 𝓝 (0 : ℝ),
@@ -192,8 +184,10 @@ theorem p83_local_fourth_product_zero
       E := by
     filter_upwards [hfnear, hgnear]
       with t hft hgt
-    exact p83_local_leibniz_third
-      f g t hft hgt
+    dsimp only [E]
+    convert p83_local_leibniz_third
+      f g t hft hgt using 1 <;>
+      simp only [mul_assoc]
 
   have hfourth :
       deriv (deriv (deriv (deriv
