@@ -1,0 +1,183 @@
+
+name: P83.5a Physical Centering Bridge
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/p75-centered-derivative
+    paths:
+      - 'P83_5a_PhysicalCenteringBridge_Candidate.lean'
+      - '.github/workflows/p83-5a-bridge.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Lean
+        run: |
+          set -euo pipefail
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Prepare dependencies
+        run: |
+          set -euo pipefail
+          lake update
+          lake exe cache get
+
+      - name: Compile physical and mathematical dependencies
+        run: |
+          set -euo pipefail
+
+          for mod in \
+            JacobiReal \
+            JacobiEvolution \
+            MatrixExpProbe \
+            KrylovNumber \
+            KrylovGram \
+            KrylovLagrange \
+            KrylovGap \
+            P73_RealTime \
+            P73_2_State \
+            P74_1_Components \
+            P74_2_KrylovDerivative \
+            P75_1_Orthogonality \
+            P75_2a_VelocityOrthogonality \
+            P75_2b_CenteredDerivative \
+            P75_3_QuadraticSpeedBound \
+            P75_4_DerivativeSpeedBound \
+            P76_1_EnergyVariance \
+            P76_2_EnergyVarianceIdentity \
+            P76_3_EnergySecondMoment \
+            P76_4_CenteredEnergySpeed \
+            P76_5_CenteredVelocity \
+            P76_5b_CenteredVelocityNorm \
+            P76_6_EnergySpeedLimit \
+            P77_1a_PropagatorCommutes \
+            P77_1b_HamiltonianIntertwining \
+            P77_2_EnergyMeanConservation \
+            P78_1_ExactSpeedResidual \
+            P78_2_PhysicalSpeedResidual \
+            P79_R0_CoefficientJet \
+            P80_1_TrueEvolutionJets \
+            P81_1_JacobiPhysicalPowers \
+            P81_2a_PhysicalGramBridge \
+            P81_2b_InitialPhysicalData \
+            P81_2b1_PhysicalAcceleration \
+            P81_2b2_PhysicalMinorDerivative \
+            P81_2b3_CenteredMinorDerivative \
+            P81_2b3b_CenteredMinorBridge \
+            P82_2_PhysicalJets \
+            P82_NormSqProbe \
+            P82_3_PhysicalObservables \
+            P82_4a_PhysicalResidual \
+            P82_4b_PhysicalResidualDerivative \
+            P82_4c_PhysicalAccelerationBridge \
+            P82_5_PhysicalKrylovAcceleration \
+            P82_6_PhysicalResidualDerivative \
+            P82_7_InitialResidualCancellation \
+            P83_1_PhysicalGramJets \
+            P83_2_PhysicalMinorAcceleration \
+            P83_3_CenteredGramDerivativeBridge \
+            P83_4a_W13PhysicalFourthJetNumerator \
+            P83_LeibnizSecond_Candidate \
+            P83_LeibnizLocal_Candidate \
+            P83_LocalFourthCancellation_Candidate \
+            P83_4b_W13CenteringFourthCancellation \
+            P83_PhysicalInitialZeros_Candidate \
+            P83_R13SecondPhysicalZero_Candidate
+          do
+            echo "Compiling $mod"
+            test -f "$mod.lean"
+            LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+              -o "$mod.olean" "$mod.lean"
+          done
+
+      - name: Check candidate source
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          src = Path(
+              "P83_5a_PhysicalCenteringBridge_Candidate.lean"
+          ).read_text()
+
+          src = re.sub(r"/-.*?-/", "", src, flags=re.S)
+          src = re.sub(r"--[^\n]*", "", src)
+
+          forbidden = re.search(
+              r"\b(?:sorry|admit|sorryAx|axiom)\b",
+              src
+          )
+          if forbidden:
+              raise SystemExit(
+                  f"Forbidden token: {forbidden.group()}"
+              )
+
+          print("Candidate source scan PASS")
+          PY
+
+      - name: Compile P83.5a
+        run: |
+          set -euo pipefail
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+            -o P83_5a_PhysicalCenteringBridge_Candidate.olean \
+            P83_5a_PhysicalCenteringBridge_Candidate.lean \
+            2>&1 | tee p83-5a.log
+
+      - name: Audit P83.5a theorem axioms
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          log = Path("p83-5a.log").read_text()
+
+          name = (
+              "Lanzarini."
+              "p83_5a_physical_centering_fourth_zero"
+          )
+
+          pattern = (
+              re.escape("'" + name + "'")
+              + r" depends on axioms: \[([^\]]*)\]"
+          )
+
+          matches = re.findall(pattern, log)
+
+          if len(matches) != 1:
+              raise SystemExit(
+                  "FAIL: missing or duplicate axiom report"
+              )
+
+          actual = {
+              x.strip()
+              for x in matches[0].split(",")
+              if x.strip()
+          }
+
+          allowed = {
+              "propext",
+              "Classical.choice",
+              "Quot.sound"
+          }
+
+          if not actual <= allowed:
+              raise SystemExit(
+                  f"FAIL: unexpected axioms: {actual - allowed}"
+              )
+
+          print(f"PASS: {name}")
+          print(f"Allowed axioms: {sorted(actual)}")
+          PY
