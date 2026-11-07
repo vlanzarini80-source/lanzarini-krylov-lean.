@@ -165,8 +165,9 @@ theorem p83_local_fourth_product_zero
     f t * deriv (deriv (deriv g)) t
 
   have hE : HasDerivAt E 0 0 := by
-    dsimp only [E]
-    exact ((hA.add hB).add hC).add hD
+    have hsum := ((hA.add hB).add hC).add hD
+    convert hsum using 1 <;>
+      simp only [E, Pi.add_apply, add_zero]
 
   have hfnear :
       ∀ᶠ t in 𝓝 (0 : ℝ),
