@@ -70,6 +70,9 @@ jobs:
             P83_2_PhysicalMinorAcceleration \
             P83_3_CenteredGramDerivativeBridge \
             P83_4a_W13PhysicalFourthJetNumerator \
+            P83_LeibnizSecond_Candidate \
+            P83_LeibnizLocal_Candidate \
+            P83_LocalFourthCancellation_Candidate \
             P83_4b_W13CenteringFourthCancellation
           do
             echo "=== Compiling $mod.lean ==="
@@ -107,6 +110,9 @@ jobs:
             P83_2_PhysicalMinorAcceleration \
             P83_3_CenteredGramDerivativeBridge \
             P83_4a_W13PhysicalFourthJetNumerator \
+            P83_LeibnizSecond_Candidate \
+            P83_LeibnizLocal_Candidate \
+            P83_LocalFourthCancellation_Candidate \
             P83_4b_W13CenteringFourthCancellation
           do
             if grep -En '(^|[[:space:]])(sorry|admit|axiom|sorryAx)([[:space:]]|$)' "$mod.lean"; then
@@ -304,6 +310,9 @@ jobs:
               ),
               'P83_4a_W13PhysicalFourthJetNumerator': (
                   'p83_4a_w13_fourth_jet_numerator',
+              ),
+              'P83_LocalFourthCancellation_Candidate': (
+                  'p83_local_fourth_product_zero',
               ),
               'P83_4b_W13CenteringFourthCancellation': (
                   'p83_4b_w13_centering_fourth_zero',
