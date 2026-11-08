@@ -10,6 +10,9 @@ on:
       - '.github/workflows/p83-5b-regularity.yml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   regularity-probe:
     runs-on: ubuntu-latest
@@ -20,18 +23,84 @@ jobs:
 
       - name: Install Lean 4
         run: |
+          set -euo pipefail
           curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
 
       - name: Fetch mathlib dependencies
         run: |
+          set -euo pipefail
           lake update
           lake exe cache get
 
+      - name: Compile local dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          workflow = Path(
+              ".github/workflows/p83-5a-bridge.yml"
+          ).read_text()
+
+          match = re.search(
+              r"(?m)^\s*for mod in \\\s*\n"
+              r"(?P<modules>.*?)"
+              r"(?m:^\s*do\s*$)",
+              workflow,
+              flags=re.S,
+          )
+
+          if match is None:
+              raise SystemExit(
+                  "FAIL: dependency list not found"
+              )
+
+          modules = re.findall(
+              r"(?m)^\s+([A-Za-z0-9_]+)"
+              r"(?:\s*\\)?\s*$",
+              match.group("modules"),
+          )
+
+          if not modules:
+              raise SystemExit(
+                  "FAIL: empty dependency list"
+              )
+
+          required = (
+              "P81_2b3_CenteredMinorDerivative"
+          )
+
+          if required not in modules:
+              raise SystemExit(
+                  "FAIL: required module missing"
+              )
+
+          Path("p83-5b-dependencies.txt").write_text(
+              "\n".join(modules) + "\n"
+          )
+
+          print(
+              f"Dependency modules: {len(modules)}"
+          )
+          PY
+
+          while IFS= read -r mod; do
+            echo "Compiling $mod"
+            test -f "$mod.lean"
+            LEAN_PATH=".:${LEAN_PATH:-}" \
+              lake env lean \
+              -o "$mod.olean" "$mod.lean"
+          done < p83-5b-dependencies.txt
+
       - name: Compile P83.5b regularity probe
+        shell: bash
         run: |
           set -euo pipefail
           test -f P83_5b_RegularityProbe.lean
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+          LEAN_PATH=".:${LEAN_PATH:-}" \
+            lake env lean \
             P83_5b_RegularityProbe.lean \
             2>&1 | tee p83-5b-regularity.log
