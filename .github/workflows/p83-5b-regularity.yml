@@ -1,0 +1,37 @@
+
+name: P83.5b Physical Regularity Probe
+
+on:
+  push:
+    branches:
+      - research/p75-centered-derivative
+    paths:
+      - 'P83_5b_RegularityProbe.lean'
+      - '.github/workflows/p83-5b-regularity.yml'
+  workflow_dispatch:
+
+jobs:
+  regularity-probe:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Lean 4
+        run: |
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Fetch mathlib dependencies
+        run: |
+          lake update
+          lake exe cache get
+
+      - name: Compile P83.5b regularity probe
+        run: |
+          set -euo pipefail
+          test -f P83_5b_RegularityProbe.lean
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+            P83_5b_RegularityProbe.lean \
+            2>&1 | tee p83-5b-regularity.log
