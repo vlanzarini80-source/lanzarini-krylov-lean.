@@ -1,0 +1,272 @@
+
+name: P83.5e Physical Regularity Audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/p75-centered-derivative
+    paths:
+      - 'P83_5a_PhysicalCenteringBridge_Candidate.lean'
+      - 'P83_5d_PhysicalRegularityStep1.lean'
+      - 'P83_5e_ContDiffAPI_Probe.lean'
+      - 'P83_PhysicalInitialZeros_Candidate.lean'
+      - 'P83_R13SecondPhysicalZero_Candidate.lean'
+      - '.github/workflows/p83-5e-audit.yml'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Lean 4 with retry
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4; do
+            if curl --fail --location --silent \
+              --show-error --retry 3 \
+              --retry-all-errors --retry-delay 5 \
+              https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+              -o /tmp/elan-init.sh && \
+              sh /tmp/elan-init.sh -y \
+                --default-toolchain none; then
+              echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+              exit 0
+            fi
+            if [ "$attempt" -lt 4 ]; then
+              sleep 20
+            fi
+          done
+          exit 1
+
+      - name: Fetch mathlib
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake update
+          lake exe cache get
+
+      - name: Compile dependency chain and P83.5e
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          import re
+          import subprocess
+
+          workflow = Path(
+              ".github/workflows/lean.yml"
+          ).read_text(encoding="utf-8")
+
+          match = re.search(
+              r"for mod in \\\s*\n(.*?)^\s*do\s*$",
+              workflow,
+              re.MULTILINE | re.DOTALL,
+          )
+
+          if match is None:
+              raise SystemExit(
+                  "FAIL: original module list not found"
+              )
+
+          base = re.findall(
+              r"^\s*([A-Za-z0-9_]+)\s*\\?\s*$",
+              match.group(1),
+              re.MULTILINE,
+          )
+
+          if not base or (
+              base[-1] !=
+              "P83_4b_W13CenteringFourthCancellation"
+          ):
+              raise SystemExit(
+                  "FAIL: unexpected dependency list"
+              )
+
+          extra = [
+              "P83_PhysicalInitialZeros_Candidate",
+              "P83_R13SecondPhysicalZero_Candidate",
+              "P83_5a_PhysicalCenteringBridge_Candidate",
+              "P83_5d_PhysicalRegularityStep1",
+              "P83_5e_ContDiffAPI_Probe",
+          ]
+
+          modules = list(dict.fromkeys(base + extra))
+
+          env = os.environ.copy()
+          env["LEAN_PATH"] = (
+              ".:" + env.get("LEAN_PATH", "")
+          )
+
+          for mod in modules:
+              src = Path(mod + ".lean")
+              if not src.is_file():
+                  raise SystemExit(
+                      f"FAIL: missing {src}"
+                  )
+
+              print(
+                  f"=== COMPILING {src} ===",
+                  flush=True,
+              )
+
+              result = subprocess.run(
+                  [
+                      "lake", "env", "lean",
+                      "-o", mod + ".olean",
+                      str(src),
+                  ],
+                  env=env,
+                  stdout=subprocess.PIPE,
+                  stderr=subprocess.STDOUT,
+                  text=True,
+              )
+
+              Path(mod + ".log").write_text(
+                  result.stdout,
+                  encoding="utf-8",
+              )
+
+              print(result.stdout, flush=True)
+
+              if result.returncode != 0:
+                  raise SystemExit(
+                      f"FAIL: compilation of {src}"
+                  )
+
+              if "sorryAx" in result.stdout:
+                  raise SystemExit(
+                      f"FAIL: sorryAx in {src}"
+                  )
+
+          print(
+              "PASS: all listed modules compiled",
+              flush=True,
+          )
+          PY
+
+      - name: Audit new sources and theorem axioms
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          files = [
+              "P83_5a_PhysicalCenteringBridge_Candidate",
+              "P83_5d_PhysicalRegularityStep1",
+              "P83_5e_ContDiffAPI_Probe",
+          ]
+
+          forbidden = re.compile(
+              r"\b(sorry|admit|sorryAx|axiom)\b"
+          )
+
+          for mod in files:
+              source = Path(
+                  mod + ".lean"
+              ).read_text(encoding="utf-8")
+
+              source = re.sub(
+                  r"/-.*?-/",
+                  "",
+                  source,
+                  flags=re.DOTALL,
+              )
+              source = re.sub(
+                  r"--[^\n]*",
+                  "",
+                  source,
+              )
+
+              if forbidden.search(source):
+                  raise SystemExit(
+                      f"FAIL: forbidden token in {mod}"
+                  )
+
+          expected = {
+              "P83_5a_PhysicalCenteringBridge_Candidate": [
+                  "p83_5a_physical_centering_fourth_zero",
+              ],
+              "P83_5d_PhysicalRegularityStep1": [
+                  "p83_5d_state_differentiable",
+                  "p83_5d_velocity_differentiable",
+              ],
+          }
+
+          allowed = {
+              "propext",
+              "Classical.choice",
+              "Quot.sound",
+          }
+
+          for mod, names in expected.items():
+              log = Path(
+                  mod + ".log"
+              ).read_text(encoding="utf-8")
+
+              source = Path(
+                  mod + ".lean"
+              ).read_text(encoding="utf-8")
+
+              for name in names:
+                  if (
+                      source.count(
+                          "#print axioms " + name
+                      ) != 1
+                  ):
+                      raise SystemExit(
+                          f"FAIL: missing axiom check {name}"
+                      )
+
+                  prefix = (
+                      f"'Lanzarini.{name}'"
+                      " depends on axioms:"
+                  )
+
+                  matches = [
+                      line.strip()
+                      for line in log.splitlines()
+                      if line.strip().startswith(prefix)
+                  ]
+
+                  if len(matches) != 1:
+                      raise SystemExit(
+                          f"FAIL: axiom output {name}"
+                      )
+
+                  payload = matches[0][len(prefix):].strip()
+
+                  if not (
+                      payload.startswith("[")
+                      and payload.endswith("]")
+                  ):
+                      raise SystemExit(
+                          f"FAIL: invalid axiom list {name}"
+                      )
+
+                  found = {
+                      item.strip()
+                      for item in payload[1:-1].split(",")
+                      if item.strip()
+                  }
+
+                  if not found <= allowed:
+                      raise SystemExit(
+                          f"FAIL: unexpected axioms {name}: "
+                          f"{sorted(found - allowed)}"
+                      )
+
+                  print(
+                      f"PASS AXIOMS {name}: {sorted(found)}"
+                  )
+
+          print("PASS: source and axiom audit")
+          PY
