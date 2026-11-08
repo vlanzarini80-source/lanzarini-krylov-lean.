@@ -1,5 +1,5 @@
 
-name: P83.5e Physical Regularity Audit
+name: P83.6 Physical Frechet Audit
 
 on:
   workflow_dispatch:
@@ -10,6 +10,7 @@ on:
       - 'P83_5a_PhysicalCenteringBridge_Candidate.lean'
       - 'P83_5d_PhysicalRegularityStep1.lean'
       - 'P83_5e_ContDiffAPI_Probe.lean'
+      - 'P83_6_PhysicalFrechetBridge.lean'
       - 'P83_PhysicalInitialZeros_Candidate.lean'
       - 'P83_R13SecondPhysicalZero_Candidate.lean'
       - '.github/workflows/p83-5e-audit.yml'
@@ -50,7 +51,7 @@ jobs:
           lake update
           lake exe cache get
 
-      - name: Compile dependency chain and P83.5e
+      - name: Compile dependencies and P83.6
         shell: bash
         run: |
           set -euo pipefail
@@ -72,7 +73,7 @@ jobs:
 
           if match is None:
               raise SystemExit(
-                  "FAIL: original module list not found"
+                  "FAIL: dependency list not found"
               )
 
           base = re.findall(
@@ -81,8 +82,7 @@ jobs:
               re.MULTILINE,
           )
 
-          if not base or (
-              base[-1] !=
+          if not base or base[-1] != (
               "P83_4b_W13CenteringFourthCancellation"
           ):
               raise SystemExit(
@@ -95,6 +95,7 @@ jobs:
               "P83_5a_PhysicalCenteringBridge_Candidate",
               "P83_5d_PhysicalRegularityStep1",
               "P83_5e_ContDiffAPI_Probe",
+              "P83_6_PhysicalFrechetBridge",
           ]
 
           modules = list(dict.fromkeys(base + extra))
@@ -106,6 +107,7 @@ jobs:
 
           for mod in modules:
               src = Path(mod + ".lean")
+
               if not src.is_file():
                   raise SystemExit(
                       f"FAIL: missing {src}"
@@ -146,12 +148,12 @@ jobs:
                   )
 
           print(
-              "PASS: all listed modules compiled",
+              "PASS: all modules compiled",
               flush=True,
           )
           PY
 
-      - name: Audit new sources and theorem axioms
+      - name: Audit sources and theorem axioms
         shell: bash
         run: |
           set -euo pipefail
@@ -163,6 +165,7 @@ jobs:
               "P83_5a_PhysicalCenteringBridge_Candidate",
               "P83_5d_PhysicalRegularityStep1",
               "P83_5e_ContDiffAPI_Probe",
+              "P83_6_PhysicalFrechetBridge",
           ]
 
           forbidden = re.compile(
@@ -180,6 +183,7 @@ jobs:
                   source,
                   flags=re.DOTALL,
               )
+
               source = re.sub(
                   r"--[^\n]*",
                   "",
@@ -199,6 +203,10 @@ jobs:
                   "p83_5d_state_differentiable",
                   "p83_5d_velocity_differentiable",
               ],
+              "P83_6_PhysicalFrechetBridge": [
+                  "p83_6_state_hasFDerivAt",
+                  "p83_6_velocity_hasFDerivAt",
+              ],
           }
 
           allowed = {
@@ -217,11 +225,9 @@ jobs:
               ).read_text(encoding="utf-8")
 
               for name in names:
-                  if (
-                      source.count(
-                          "#print axioms " + name
-                      ) != 1
-                  ):
+                  check = "#print axioms " + name
+
+                  if source.count(check) != 1:
                       raise SystemExit(
                           f"FAIL: missing axiom check {name}"
                       )
