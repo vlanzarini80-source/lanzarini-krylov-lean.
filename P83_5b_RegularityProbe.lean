@@ -1,26 +1,40 @@
 
-import P81_2b3_PhysicalKrylovDerivative
 import Mathlib
+import P81_2b3_CenteredMinorDerivative
 
 namespace Lanzarini
 
 /-!
-P83.5b: API inspection for physical regularity.
+P83.5b - Physical regularity API probe.
 
-No assumed physical coefficients.
+Purpose:
+Check the actual physical definitions
+and basic differentiability interfaces.
+
+No P79.
+No expected Taylor coefficients.
 No sorry, admit, or new axioms.
-No theorem claimed.
+
+This file does not yet prove C^4 regularity.
 -/
 
+-- Matrix exponential used by Jacobi evolution.
 #check NormedSpace.exp
-#check contDiff_exp
-#check ContDiff.comp
-#check ContDiffAt.comp
-#check ContinuousLinearMap.contDiff
-#check contDiff_const
-#check contDiff_id
-#check ContDiff.mul
-#check ContDiff.sum
-#check Complex.normSq
+
+-- Differentiability predicates.
+#check ContDiff
+#check ContDiffAt
+
+-- Verified physical definitions.
+#check p81_2_state
+#check p81_2_velocity
+#check p81_2b3_K
+#check p81_2b2_rawMinor
+
+-- Previously established physical derivatives.
+#check p81_2_state_hasDerivAt
+#check p81_2b1_velocity_hasDerivAt
+#check p81_2b3_K_hasDerivAt
+#check p81_2b2_rawMinor_hasDerivAt
 
 end Lanzarini
