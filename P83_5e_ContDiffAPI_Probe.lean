@@ -38,7 +38,6 @@ No sorry, admit, or new axioms.
 
 -- Exponential regularity candidates
 #check NormedSpace.exp
-#check contDiff_exp
 
 -- Required final functions
 #check p81_2b3_K
