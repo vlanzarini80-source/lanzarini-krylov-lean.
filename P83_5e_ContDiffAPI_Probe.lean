@@ -6,35 +6,43 @@ import Mathlib
 namespace Lanzarini
 
 /-!
-P83.5e - Higher regularity API diagnostic.
+P83.5e - Matrix exponential regularity probe.
 
-Checks existing physical objects and
-basic regularity interfaces.
+Goal: identify the actual mathlib API
+for deriving C^4 regularity from the
+physical Jacobi evolution.
 
-No physical coefficient is assumed.
+Diagnostic only.
+No assumed physical coefficients.
+No P79.
 No sorry, admit, or new axioms.
 -/
 
--- Verified source declarations to inspect
+-- Existing physical evolution
+#check jacobiPropagator
+#check jacobiState
+#check jacobiPropagator_complex_time_eq
+#check p73_jacobiPropagator_hasDerivAt
+#check p73_jacobiState_hasDerivAt
+
+-- Existing physical state
 #check p81_2_state
 #check p81_2_velocity
-#check p81_2_state_hasDerivAt
-#check p81_2b1_velocity_hasDerivAt
 
--- General regularity interfaces
+-- Regularity interfaces
 #check ContDiff
 #check ContDiffAt
 #check ContDiff.contDiffAt
+#check ContDiff.comp
+#check ContinuousLinearMap.contDiff
 
--- Elementary smooth functions
-#check contDiff_const
-#check contDiff_id
+-- Exponential regularity candidates
+#check NormedSpace.exp
+#check contDiff_exp
 
--- Physical functions requiring C^4
+-- Required final functions
 #check p81_2b3_K
 #check p81_2b2_rawMinor
-
--- Existing conditional bridge
 #check p83_5a_physical_centering_fourth_zero
 
 end Lanzarini
