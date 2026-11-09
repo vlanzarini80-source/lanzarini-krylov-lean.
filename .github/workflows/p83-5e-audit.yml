@@ -1,5 +1,5 @@
 
-name: P83.6 Physical Frechet Audit
+name: P83.7a Physical Regularity Audit
 
 on:
   workflow_dispatch:
@@ -11,6 +11,7 @@ on:
       - 'P83_5d_PhysicalRegularityStep1.lean'
       - 'P83_5e_ContDiffAPI_Probe.lean'
       - 'P83_6_PhysicalFrechetBridge.lean'
+      - 'P83_7a_PhysicalStateC1.lean'
       - 'P83_PhysicalInitialZeros_Candidate.lean'
       - 'P83_R13SecondPhysicalZero_Candidate.lean'
       - '.github/workflows/p83-5e-audit.yml'
@@ -51,7 +52,7 @@ jobs:
           lake update
           lake exe cache get
 
-      - name: Compile dependencies and P83.6
+      - name: Compile dependencies through P83.7a
         shell: bash
         run: |
           set -euo pipefail
@@ -96,6 +97,7 @@ jobs:
               "P83_5d_PhysicalRegularityStep1",
               "P83_5e_ContDiffAPI_Probe",
               "P83_6_PhysicalFrechetBridge",
+              "P83_7a_PhysicalStateC1",
           ]
 
           modules = list(dict.fromkeys(base + extra))
@@ -166,6 +168,7 @@ jobs:
               "P83_5d_PhysicalRegularityStep1",
               "P83_5e_ContDiffAPI_Probe",
               "P83_6_PhysicalFrechetBridge",
+              "P83_7a_PhysicalStateC1",
           ]
 
           forbidden = re.compile(
@@ -206,6 +209,9 @@ jobs:
               "P83_6_PhysicalFrechetBridge": [
                   "p83_6_state_hasFDerivAt",
                   "p83_6_velocity_hasFDerivAt",
+              ],
+              "P83_7a_PhysicalStateC1": [
+                  "p83_7a_state_contDiff_one",
               ],
           }
 
