@@ -45,12 +45,30 @@ jobs:
           done
           exit 1
 
-      - name: Fetch mathlib
+      - name: Fetch mathlib with retry
         shell: bash
         run: |
           set -euo pipefail
           lake update
-          lake exe cache get
+
+          for attempt in 1 2 3 4; do
+            echo "Mathlib cache attempt $attempt/4"
+
+            rm -f "$HOME/.cache/mathlib/leantar-0.1.15.tar.gz"
+
+            if lake exe cache get; then
+              echo "PASS: mathlib cache downloaded"
+              exit 0
+            fi
+
+            if [ "$attempt" -lt 4 ]; then
+              echo "Retrying in 30 seconds..."
+              sleep 30
+            fi
+          done
+
+          echo "FAIL: mathlib cache unavailable"
+          exit 1
 
       - name: Compile dependencies through P83.7a
         shell: bash
