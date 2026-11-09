@@ -14,66 +14,90 @@ on:
       - 'P83_7a_PhysicalStateC1.lean'
       - 'P83_PhysicalInitialZeros_Candidate.lean'
       - 'P83_R13SecondPhysicalZero_Candidate.lean'
+      - '.github/workflows/lean.yml'
       - '.github/workflows/p83-5e-audit.yml'
 
 jobs:
   audit:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Lean 4 with retry
+      - name: Install Lean with bounded retries
         shell: bash
         run: |
           set -euo pipefail
-          for attempt in 1 2 3 4; do
-            if curl --fail --location --silent \
-              --show-error --retry 3 \
-              --retry-all-errors --retry-delay 5 \
+
+          for attempt in 1 2 3 4 5 6; do
+            echo "=== Lean installation $attempt/6 ==="
+
+            if curl -fL \
+              --retry 4 \
+              --retry-all-errors \
+              --retry-delay 10 \
+              --connect-timeout 20 \
+              --max-time 120 \
               https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
-              -o /tmp/elan-init.sh && \
-              sh /tmp/elan-init.sh -y \
+              -o /tmp/elan-init.sh; then
+
+              if sh /tmp/elan-init.sh -y \
                 --default-toolchain none; then
-              echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
-              exit 0
-            fi
-            if [ "$attempt" -lt 4 ]; then
-              sleep 20
-            fi
-          done
-          exit 1
 
-      - name: Fetch mathlib with retry
-        shell: bash
-        run: |
-          set -euo pipefail
-          lake update
-
-          for attempt in 1 2 3 4; do
-            echo "Mathlib cache attempt $attempt/4"
-
-            rm -f "$HOME/.cache/mathlib/leantar-0.1.15.tar.gz"
-
-            if lake exe cache get; then
-              echo "PASS: mathlib cache downloaded"
-              exit 0
+                echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+                echo "PASS: elan installed"
+                exit 0
+              fi
             fi
 
-            if [ "$attempt" -lt 4 ]; then
-              echo "Retrying in 30 seconds..."
+            if [ "$attempt" -lt 6 ]; then
               sleep 30
             fi
           done
 
-          echo "FAIL: mathlib cache unavailable"
+          echo "INFRASTRUCTURE FAILURE: Lean installer unavailable"
           exit 1
 
-      - name: Compile dependencies through P83.7a
+      - name: Verify Lean toolchain
         shell: bash
         run: |
           set -euo pipefail
+          cat lean-toolchain
+          lean --version
+          lake --version
+
+      - name: Fetch mathlib with retries
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          lake update
+
+          for attempt in 1 2 3 4 5; do
+            echo "=== Mathlib cache $attempt/5 ==="
+
+            rm -f "$HOME/.cache/mathlib/leantar-0.1.15.tar.gz"
+
+            if lake exe cache get; then
+              echo "PASS: mathlib cache"
+              exit 0
+            fi
+
+            if [ "$attempt" -lt 5 ]; then
+              sleep 30
+            fi
+          done
+
+          echo "INFRASTRUCTURE FAILURE: mathlib cache unavailable"
+          exit 1
+
+      - name: Compile modules through P83.7a
+        shell: bash
+        run: |
+          set -euo pipefail
+
           python3 - <<'PY'
           from pathlib import Path
           import os
@@ -92,7 +116,7 @@ jobs:
 
           if match is None:
               raise SystemExit(
-                  "FAIL: dependency list not found"
+                  "FAIL: baseline module list not found"
               )
 
           base = re.findall(
@@ -105,7 +129,7 @@ jobs:
               "P83_4b_W13CenteringFourthCancellation"
           ):
               raise SystemExit(
-                  "FAIL: unexpected dependency list"
+                  "FAIL: unexpected baseline module list"
               )
 
           extra = [
@@ -130,7 +154,7 @@ jobs:
 
               if not src.is_file():
                   raise SystemExit(
-                      f"FAIL: missing {src}"
+                      f"FAIL: missing source {src}"
                   )
 
               print(
@@ -159,24 +183,22 @@ jobs:
 
               if result.returncode != 0:
                   raise SystemExit(
-                      f"FAIL: compilation of {src}"
+                      f"FAIL: Lean compilation {src}"
                   )
 
               if "sorryAx" in result.stdout:
                   raise SystemExit(
-                      f"FAIL: sorryAx in {src}"
+                      f"FAIL: sorryAx reported in {src}"
                   )
 
-          print(
-              "PASS: all modules compiled",
-              flush=True,
-          )
+          print("PASS: all required modules compiled")
           PY
 
-      - name: Audit sources and theorem axioms
+      - name: Audit source and theorem axioms
         shell: bash
         run: |
           set -euo pipefail
+
           python3 - <<'PY'
           from pathlib import Path
           import re
@@ -189,8 +211,57 @@ jobs:
               "P83_7a_PhysicalStateC1",
           ]
 
+          def strip_comments(src):
+              out = []
+              i = 0
+              depth = 0
+              in_string = False
+
+              while i < len(src):
+                  if depth:
+                      if src.startswith("/-", i):
+                          depth += 1
+                          i += 2
+                      elif src.startswith("-/", i):
+                          depth -= 1
+                          i += 2
+                      else:
+                          if src[i] == "\n":
+                              out.append("\n")
+                          i += 1
+                  elif in_string:
+                      if src[i] == "\\":
+                          i += 2
+                      elif src[i] == '"':
+                          in_string = False
+                          i += 1
+                      else:
+                          i += 1
+                  elif src.startswith("--", i):
+                      j = src.find("\n", i)
+                      if j < 0:
+                          break
+                      out.append("\n")
+                      i = j + 1
+                  elif src.startswith("/-", i):
+                      depth = 1
+                      i += 2
+                  elif src[i] == '"':
+                      in_string = True
+                      i += 1
+                  else:
+                      out.append(src[i])
+                      i += 1
+
+              if depth or in_string:
+                  raise SystemExit(
+                      "FAIL: unterminated comment or string"
+                  )
+
+              return "".join(out)
+
           forbidden = re.compile(
-              r"\b(sorry|admit|sorryAx|axiom)\b"
+              r"\b(?:sorry|admit|sorryAx|axiom)\b"
           )
 
           for mod in files:
@@ -198,23 +269,14 @@ jobs:
                   mod + ".lean"
               ).read_text(encoding="utf-8")
 
-              source = re.sub(
-                  r"/-.*?-/",
-                  "",
-                  source,
-                  flags=re.DOTALL,
-              )
+              clean = strip_comments(source)
 
-              source = re.sub(
-                  r"--[^\n]*",
-                  "",
-                  source,
-              )
-
-              if forbidden.search(source):
+              if forbidden.search(clean):
                   raise SystemExit(
-                      f"FAIL: forbidden token in {mod}"
+                      f"FAIL: forbidden source token in {mod}"
                   )
+
+              print(f"PASS SOURCE: {mod}")
 
           expected = {
               "P83_5a_PhysicalCenteringBridge_Candidate": [
@@ -240,12 +302,12 @@ jobs:
           }
 
           for mod, names in expected.items():
-              log = Path(
-                  mod + ".log"
-              ).read_text(encoding="utf-8")
-
               source = Path(
                   mod + ".lean"
+              ).read_text(encoding="utf-8")
+
+              log = Path(
+                  mod + ".log"
               ).read_text(encoding="utf-8")
 
               for name in names:
@@ -253,7 +315,7 @@ jobs:
 
                   if source.count(check) != 1:
                       raise SystemExit(
-                          f"FAIL: missing axiom check {name}"
+                          f"FAIL: missing or duplicate {check}"
                       )
 
                   prefix = (
@@ -269,7 +331,7 @@ jobs:
 
                   if len(matches) != 1:
                       raise SystemExit(
-                          f"FAIL: axiom output {name}"
+                          f"FAIL: missing axiom output {name}"
                       )
 
                   payload = matches[0][len(prefix):].strip()
@@ -279,7 +341,7 @@ jobs:
                       and payload.endswith("]")
                   ):
                       raise SystemExit(
-                          f"FAIL: invalid axiom list {name}"
+                          f"FAIL: malformed axiom output {name}"
                       )
 
                   found = {
@@ -298,5 +360,5 @@ jobs:
                       f"PASS AXIOMS {name}: {sorted(found)}"
                   )
 
-          print("PASS: source and axiom audit")
+          print("PASS: P83.7a source and axiom audit")
           PY
