@@ -8,8 +8,9 @@ namespace Lanzarini
 /-!
 P83.8b - Physical Krylov C4 regularity.
 
-Explicit regularity proof for Complex.normSq.
-The physical Krylov definition is unchanged.
+Regularity is derived from the physical
+Jacobi state and the explicit real
+polynomial defining Complex.normSq.
 
 No P79.
 No expected Taylor coefficients.
@@ -30,7 +31,9 @@ theorem p83_8b_K_contDiff_four
   have hnorm :
       ContDiff ℝ 4
         (fun z : ℂ => Complex.normSq z) := by
-    unfold Complex.normSq
+    change ContDiff ℝ 4
+      (fun z : ℂ =>
+        z.re * z.re + z.im * z.im)
     fun_prop
 
   have hcoord (j : Fin 4) :
