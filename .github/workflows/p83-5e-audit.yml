@@ -1,5 +1,5 @@
 
-name: P83.7g Physical Regularity Audit
+name: P83.8a Physical Regularity Audit
 
 on:
   workflow_dispatch:
@@ -18,6 +18,7 @@ on:
       - 'P83_7e_PhysicalStateC3.lean'
       - 'P83_7f_PhysicalVelocityC3.lean'
       - 'P83_7g_PhysicalStateC4.lean'
+      - 'P83_8a_PhysicalVelocityC4.lean'
       - 'P83_PhysicalInitialZeros_Candidate.lean'
       - 'P83_R13SecondPhysicalZero_Candidate.lean'
       - '.github/workflows/lean.yml'
@@ -99,7 +100,7 @@ jobs:
           echo "INFRASTRUCTURE FAILURE: mathlib cache unavailable"
           exit 1
 
-      - name: Compile modules through P83.7g
+      - name: Compile modules through P83.8a
         shell: bash
         run: |
           set -euo pipefail
@@ -152,6 +153,7 @@ jobs:
               "P83_7e_PhysicalStateC3",
               "P83_7f_PhysicalVelocityC3",
               "P83_7g_PhysicalStateC4",
+              "P83_8a_PhysicalVelocityC4",
           ]
 
           modules = list(dict.fromkeys(base + extra))
@@ -227,6 +229,7 @@ jobs:
               "P83_7e_PhysicalStateC3",
               "P83_7f_PhysicalVelocityC3",
               "P83_7g_PhysicalStateC4",
+              "P83_8a_PhysicalVelocityC4",
           ]
 
           def strip_comments(src):
@@ -329,6 +332,9 @@ jobs:
               "P83_7g_PhysicalStateC4": [
                   "p83_7g_state_contDiff_four",
               ],
+              "P83_8a_PhysicalVelocityC4": [
+                  "p83_8a_velocity_contDiff_four",
+              ],
           }
 
           allowed = {
@@ -396,5 +402,5 @@ jobs:
                       f"PASS AXIOMS {name}: {sorted(found)}"
                   )
 
-          print("PASS: P83.7g source and axiom audit")
+          print("PASS: P83.8a source and axiom audit")
           PY
