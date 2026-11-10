@@ -34,7 +34,19 @@ theorem p83_8b_K_contDiff_four
     change ContDiff ℝ 4
       (fun z : ℂ =>
         z.re * z.re + z.im * z.im)
-    fun_prop
+    have hre :
+        ContDiff ℝ 4
+          (fun z : ℂ => z.re) := by
+      simpa only [Complex.reCLM_apply] using
+        (Complex.reCLM.contDiff : ContDiff ℝ 4
+          (fun z : ℂ => Complex.reCLM z))
+    have him :
+        ContDiff ℝ 4
+          (fun z : ℂ => z.im) := by
+      simpa only [Complex.imCLM_apply] using
+        (Complex.imCLM.contDiff : ContDiff ℝ 4
+          (fun z : ℂ => Complex.imCLM z))
+    exact (hre.mul hre).add (him.mul him)
 
   have hcoord (j : Fin 4) :
       ContDiff ℝ 4
