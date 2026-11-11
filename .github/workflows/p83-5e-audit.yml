@@ -1,5 +1,5 @@
 
-name: P83.8c Physical Raw Minor C4 Audit
+name: P83.8d Physical Centering Fourth Audit
 
 on:
   workflow_dispatch:
@@ -21,6 +21,7 @@ on:
       - 'P83_8a_PhysicalVelocityC4.lean'
       - 'P83_8b_PhysicalKrylovC4.lean'
       - 'P83_8c_PhysicalRawMinorC4.lean'
+      - 'P83_8d_PhysicalCenteringFourthCancellation.lean'
       - 'P83_PhysicalInitialZeros_Candidate.lean'
       - 'P83_R13SecondPhysicalZero_Candidate.lean'
       - '.github/workflows/lean.yml'
@@ -102,7 +103,7 @@ jobs:
           echo "INFRASTRUCTURE FAILURE: mathlib cache unavailable"
           exit 1
 
-      - name: Compile modules through P83.8c
+      - name: Compile modules through P83.8d
         shell: bash
         run: |
           set -euo pipefail
@@ -158,6 +159,7 @@ jobs:
               "P83_8a_PhysicalVelocityC4",
               "P83_8b_PhysicalKrylovC4",
               "P83_8c_PhysicalRawMinorC4",
+              "P83_8d_PhysicalCenteringFourthCancellation",
           ]
 
           modules = list(dict.fromkeys(base + extra))
@@ -236,6 +238,7 @@ jobs:
               "P83_8a_PhysicalVelocityC4",
               "P83_8b_PhysicalKrylovC4",
               "P83_8c_PhysicalRawMinorC4",
+              "P83_8d_PhysicalCenteringFourthCancellation",
           ]
 
           def strip_comments(src):
@@ -347,6 +350,9 @@ jobs:
               "P83_8c_PhysicalRawMinorC4": [
                   "p83_8c_rawMinor_contDiff_four",
               ],
+              "P83_8d_PhysicalCenteringFourthCancellation": [
+                  "p83_8d_physical_centering_fourth_zero",
+              ],
           }
 
           allowed = {
@@ -414,5 +420,5 @@ jobs:
                       f"PASS AXIOMS {name}: {sorted(found)}"
                   )
 
-          print("PASS: P83.8c source and axiom audit")
+          print("PASS: P83.8d source and axiom audit")
           PY
