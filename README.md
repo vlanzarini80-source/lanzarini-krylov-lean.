@@ -6,7 +6,7 @@
 **Author:** Valentino Lanzarini  
 **Affiliation:** Independent Mathematical Researcher  
 **Project status:** Research in progress  
-**Latest reported mathematical checkpoint:** P83.4b  
+**Latest reported mathematical checkpoint:** P83.8d (development branch) 
 **Mathematical verification:** Lean 4 Verification #283, commit `d448949`  
 **Development README verification:** Lean 4 Verification #284, commit `c437b0c`  
 **Main README verification:** Lean 4 Verification #285, commit `5a181c7`  
@@ -19,6 +19,35 @@
 **Research preprint:** *Local Defect Hierarchies for Krylov Speed-Limit Saturation in General Real Jacobi Dynamics*
 
 **Copyright © 2026 Valentino Lanzarini. All rights reserved.**
+
+---
+
+Current Development Checkpoint — 11 November 2026
+
+Branch: "research/p75-centered-derivative"
+Checkpoint: P83.8d
+Commit: "71981c4"
+Dedicated CI: P83.5e Physical Regularity Audit #20 — PASS
+
+The development branch has progressed beyond the historical P83.4b checkpoint.
+
+The P83.5a–P83.8d series establishes physical differentiability and fourth-order regularity results for the finite-dimensional Jacobi evolution, including the state, velocity, Krylov observable, and raw Gram minor.
+
+The theorem "Lanzarini.p83_8d_physical_centering_fourth_zero" establishes the fourth-order vanishing of the physical W13 centering correction without retaining the two fourth-order regularity assumptions as hypotheses.
+
+The dedicated workflow explicitly compiles "P83_8d_PhysicalCenteringFourthCancellation.lean" and audits the theorem's axioms against the permitted set:
+
+- "propext"
+- "Classical.choice"
+- "Quot.sound"
+
+Verification boundary: This result does not establish the complete physical centered-minor fourth derivative, the eighth-order speed-residual coefficient, or the normalized sixth-order saturation-deficit limit.
+
+These remain open formalization targets.
+
+P83.8d has not been merged into "main". Historical references to P83.4b below describe an earlier checkpoint, not the latest development status.
+
+---
 
 ### Project Links
 
