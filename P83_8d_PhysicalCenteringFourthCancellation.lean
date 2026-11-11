@@ -14,9 +14,6 @@ are derived from the physical Jacobi evolution.
 No P79.
 No expected Taylor coefficients.
 No sorry, admit, or new axioms.
-
-STATUS: Candidate pending explicit Lean compilation
-and axiom audit.
 -/
 
 theorem p83_8d_physical_centering_fourth_zero
@@ -29,14 +26,21 @@ theorem p83_8d_physical_centering_fourth_zero
   have hKreal :
       ContDiff ℝ 4
         (p81_2b3_K p q s delta) :=
-    p83_8b_K_contDiff_four
-      p q s delta
+    p83_8b_K_contDiff_four p q s delta
+
+  have hOfReal :
+      ContDiff ℝ 4
+        (fun x : ℝ => (x : ℂ)) := by
+    exact
+      (Complex.ofRealCLM.contDiff :
+        ContDiff ℝ 4
+          (fun x : ℝ => Complex.ofRealCLM x))
 
   have hKcomplex :
       ContDiff ℝ 4
         (fun t : ℝ =>
           (p81_2b3_K p q s delta t : ℂ)) := by
-    fun_prop
+    exact hOfReal.comp hKreal
 
   have hK :
       ContDiffAt ℝ 4
