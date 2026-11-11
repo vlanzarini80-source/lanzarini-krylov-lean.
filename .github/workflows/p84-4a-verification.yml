@@ -1,0 +1,229 @@
+
+name: P84.4a General Jacobi Verification
+
+on:
+  push:
+    branches:
+      - research/p75-centered-derivative
+    paths:
+      - 'P84_4a_GeneralJacobiPowers.lean'
+      - '.github/workflows/p84-4a-verification.yml'
+      - '.github/workflows/lean.yml'
+  workflow_dispatch:
+
+jobs:
+  verify-p84:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Lean
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 \
+            https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            -o /tmp/elan-init.sh
+          sh /tmp/elan-init.sh -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Fetch mathlib
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake update
+          lake exe cache get
+
+      - name: Compile prerequisite modules
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          source = Path(
+              ".github/workflows/lean.yml"
+          ).read_text(encoding="utf-8")
+
+          match = re.search(
+              r"for mod in\s*\\\s*\n(.*?)\n\s*do\s*\n",
+              source,
+              flags=re.S,
+          )
+
+          if match is None:
+              raise SystemExit(
+                  "Cannot locate prerequisite module list"
+              )
+
+          modules = match.group(1).replace("\\", " ").split()
+
+          if "P83_4b_W13CenteringFourthCancellation" not in modules:
+              raise SystemExit(
+                  "Unexpected prerequisite module list"
+              )
+
+          target = "P84_4a_GeneralJacobiPowers"
+          modules = [m for m in modules if m != target]
+
+          if len(modules) != len(set(modules)):
+              raise SystemExit("Duplicate prerequisite modules")
+
+          Path("/tmp/p84-prerequisites.txt").write_text(
+              "\n".join(modules) + "\n",
+              encoding="utf-8",
+          )
+
+          print("Prerequisite modules:", len(modules))
+          PY
+
+          lake env lean -o Main.olean Main.lean
+          lake env lean -o Jacobi2.olean Jacobi2.lean
+          lake env lean -o JacobiGeneral.olean JacobiGeneral.lean
+
+          while IFS= read -r mod; do
+            echo "=== Compiling $mod.lean ==="
+            test -f "$mod.lean"
+            LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+              -o "$mod.olean" "$mod.lean"
+          done < /tmp/p84-prerequisites.txt
+
+      - name: Audit P84 source
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path("P84_4a_GeneralJacobiPowers.lean")
+          source = path.read_text(encoding="utf-8")
+
+          source = re.sub(
+              r"/-.*?-/", "", source, flags=re.S
+          )
+          source = re.sub(r"--[^\n]*", "", source)
+
+          forbidden = re.search(
+              r"\b(sorry|admit|axiom|sorryAx)\b",
+              source,
+          )
+
+          if forbidden:
+              raise SystemExit(
+                  f"Forbidden Lean token: {forbidden.group()}"
+              )
+
+          required = [
+              "p84_H_action",
+              "p84_H1",
+              "p84_H2",
+              "p84_initial_derivatives",
+          ]
+
+          for name in required:
+              if not re.search(
+                  rf"\btheorem\s+{name}\b", source
+              ):
+                  raise SystemExit(
+                      f"Missing theorem: {name}"
+                  )
+
+              if f"#print axioms {name}" not in source:
+                  raise SystemExit(
+                      f"Missing axiom audit: {name}"
+                  )
+
+          print("P84 source audit PASS")
+          PY
+
+      - name: Compile P84.4a
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -f P84_4a_GeneralJacobiPowers.lean
+
+          echo "=== Compiling P84_4a_GeneralJacobiPowers.lean ==="
+
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+            -o P84_4a_GeneralJacobiPowers.olean \
+            P84_4a_GeneralJacobiPowers.lean \
+            2>&1 | tee p84-4a.log
+
+      - name: Verify P84 theorem axioms
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          lines = Path("p84-4a.log").read_text(
+              encoding="utf-8"
+          ).splitlines()
+
+          names = [
+              "p84_H_action",
+              "p84_H1",
+              "p84_H2",
+              "p84_initial_derivatives",
+          ]
+
+          allowed = {
+              "propext",
+              "Classical.choice",
+              "Quot.sound",
+          }
+
+          for name in names:
+              prefix = (
+                  f"'Lanzarini.{name}' depends on axioms:"
+              )
+
+              matches = [
+                  line.strip()
+                  for line in lines
+                  if line.strip().startswith(prefix)
+              ]
+
+              if len(matches) != 1:
+                  raise SystemExit(
+                      f"Missing or duplicate audit: {name}"
+                  )
+
+              payload = matches[0][len(prefix):].strip()
+
+              if not (
+                  payload.startswith("[")
+                  and payload.endswith("]")
+              ):
+                  raise SystemExit(
+                      f"Invalid axiom output: {name}"
+                  )
+
+              found = {
+                  x.strip()
+                  for x in payload[1:-1].split(",")
+                  if x.strip()
+              }
+
+              unexpected = found - allowed
+
+              if unexpected:
+                  raise SystemExit(
+                      f"Unauthorized axioms in {name}: "
+                      f"{sorted(unexpected)}"
+                  )
+
+              print(
+                  f"PASS {name}: {sorted(found)}"
+              )
+
+          print("P84.4a axiom audit PASS")
+          PY
