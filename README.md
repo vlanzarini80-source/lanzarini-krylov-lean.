@@ -1,40 +1,47 @@
-Lanzarini Krylov-Jacobi
 
-Lean 4 Formalization of Finite-Dimensional Jacobi Dynamics
+# Lanzarini Krylov-Jacobi
 
-Author: Valentino Lanzarini
-Affiliation: Independent Mathematical Researcher
-Project status: Research in progress
+## Lean 4 Formalization of Finite-Dimensional Jacobi Dynamics
 
-Latest reported development checkpoint: P83.8d
-Development branch: "research/p75-centered-derivative"
-Development commit: "71981c4"
-Dedicated verification: P83.5e Physical Regularity Audit #20 — PASS
+**Author:** Valentino Lanzarini  
+**Affiliation:** Independent Mathematical Researcher  
+**Project status:** Research in progress
 
-Historical mathematical checkpoint: P83.4b
-Historical mathematical verification: Lean 4 Verification #283, commit "d448949"
-Development README verification: Lean 4 Verification #284, commit "c437b0c"
-Main README verification: Lean 4 Verification #285, commit "5a181c7"
+**Latest reported development checkpoint:** P83.8d  
+**Development branch:** `research/p75-centered-derivative`  
+**Development commit:** `71981c4`  
+**Dedicated verification:** P83.5e Physical Regularity Audit #20 — PASS
 
-Latest recorded mathematical checkpoint integrated into main: P74.2, pending a fresh source-level audit
+**Historical mathematical checkpoint:** P83.4b  
+**Historical mathematical verification:** Lean 4 Verification #283, commit `d448949`  
+**Development README verification:** Lean 4 Verification #284, commit `c437b0c`  
+**Main README verification:** Lean 4 Verification #285, commit `5a181c7`
 
-Lean: v4.24.0
-mathlib: v4.24.0
-Documentation date: 11 November 2026
+**Latest recorded mathematical checkpoint integrated into main:** P74.2, pending a fresh source-level audit.
 
-Research preprint: Local Defect Hierarchies for Krylov Speed-Limit Saturation in General Real Jacobi Dynamics
+**Lean:** v4.24.0  
+**mathlib:** v4.24.0  
+**Documentation date:** 11 November 2026
 
-Copyright © 2026 Valentino Lanzarini. All rights reserved.
+**Research preprint:** *Local Defect Hierarchies for Krylov Speed-Limit Saturation in General Real Jacobi Dynamics*
 
-Verification scope
+**Copyright © 2026 Valentino Lanzarini. All rights reserved.**
 
-P83.8d establishes the fourth-order vanishing of the physical W13 centering correction using regularity results derived from finite-dimensional Jacobi dynamics.
+## Verification Scope
 
-This checkpoint does not establish the complete eighth-order physical speed-residual coefficient or the normalized sixth-order saturation-deficit limit.
+The P83.8d development checkpoint addresses the fourth-order vanishing of the physical W13 centering correction, using regularity results derived from finite-dimensional Jacobi dynamics.
 
-P83.8d remains on the development branch and has not been integrated into "main".
+The dedicated audit reported PASS for commit `71981c4`.
 
-The historical verification records above are retained for traceability.
+This checkpoint does **not** establish:
+
+- The complete eighth-order physical speed-residual coefficient.
+- The normalized sixth-order saturation-deficit limit.
+- A complete formal verification of the research preprint.
+
+P83.8d remains on the development branch and has **not** been integrated into `main`.
+
+The historical verification records are retained for traceability.
 
 ### Project Links
 
