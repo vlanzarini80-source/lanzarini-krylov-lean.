@@ -9,6 +9,7 @@ on:
       - 'P84_4a_GeneralJacobiPowers.lean'
       - 'P84_4b_GeneralThirdPower.lean'
       - 'P84_4c1_GeneralPhysicalObservables.lean'
+      - 'P84_4c2_GeneralPhysicalDeficit.lean'
       - '.github/workflows/p84-4a-verification.yml'
       - '.github/workflows/lean.yml'
   workflow_dispatch:
@@ -73,6 +74,7 @@ jobs:
               "P84_4a_GeneralJacobiPowers",
               "P84_4b_GeneralThirdPower",
               "P84_4c1_GeneralPhysicalObservables",
+              "P84_4c2_GeneralPhysicalDeficit",
           }
 
           modules = [m for m in modules if m not in targets]
@@ -123,6 +125,10 @@ jobs:
                   "p84_4c1_K_zero",
                   "p84_4c1_M2_zero",
                   "p84_4c1_V_zero",
+              ],
+              "P84_4c2_GeneralPhysicalDeficit": [
+                  "p84_4c2_velocity_identity",
+                  "p84_4c2_D_identity",
               ],
           }
 
@@ -201,6 +207,20 @@ jobs:
             P84_4c1_GeneralPhysicalObservables.lean \
             2>&1 | tee p84-4c1.log
 
+      - name: Compile P84.4c2
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -f P84_4c2_GeneralPhysicalDeficit.lean
+
+          echo "=== Compiling P84.4c2 ==="
+
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+            -o P84_4c2_GeneralPhysicalDeficit.olean \
+            P84_4c2_GeneralPhysicalDeficit.lean \
+            2>&1 | tee p84-4c2.log
+
       - name: Audit P84 theorem axioms
         shell: bash
         run: |
@@ -224,6 +244,10 @@ jobs:
                   "p84_4c1_K_zero",
                   "p84_4c1_M2_zero",
                   "p84_4c1_V_zero",
+              ],
+              "p84-4c2.log": [
+                  "p84_4c2_velocity_identity",
+                  "p84_4c2_D_identity",
               ],
           }
 
@@ -282,5 +306,8 @@ jobs:
                       f"PASS {name}: {sorted(found)}"
                   )
 
-          print("P84.4a, P84.4b and P84.4c1 audit PASS")
+          print(
+              "P84.4a, P84.4b, P84.4c1 "
+              "and P84.4c2 audit PASS"
+          )
           PY
