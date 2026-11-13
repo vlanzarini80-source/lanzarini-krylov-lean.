@@ -10,6 +10,7 @@ on:
       - 'P84_4c1_GeneralPhysicalObservables.lean'
       - 'P84_4c2_GeneralPhysicalDeficit.lean'
       - 'P84_4c3_GeneralKrylovDerivative.lean'
+      - 'P84_4d1_PhysicalObservableBridge.lean'
       - '.github/workflows/p84-4a-verification.yml'
       - '.github/workflows/lean.yml'
   workflow_dispatch:
@@ -58,6 +59,7 @@ jobs:
               'P84_4c1_GeneralPhysicalObservables',
               'P84_4c2_GeneralPhysicalDeficit',
               'P84_4c3_GeneralKrylovDerivative',
+              'P84_4d1_PhysicalObservableBridge',
           }
           modules = [m for m in modules if m not in targets]
           if len(modules) != len(set(modules)):
@@ -87,6 +89,11 @@ jobs:
               'P84_4c1_GeneralPhysicalObservables': ['p84_4c1_state_zero', 'p84_4c1_K_zero', 'p84_4c1_M2_zero', 'p84_4c1_V_zero'],
               'P84_4c2_GeneralPhysicalDeficit': ['p84_4c2_velocity_identity', 'p84_4c2_D_identity'],
               'P84_4c3_GeneralKrylovDerivative': ['p84_4c3_K_hasDerivAt'],
+              'P84_4d1_PhysicalObservableBridge': [
+                  'p84_4d1_state_initial_jet',
+                  'p84_4d1_K_deriv_eq_J',
+                  'p84_4d1_D_physical_derivative',
+              ],
           }
           for module, names in required.items():
               source = Path(f'{module}.lean').read_text(encoding='utf-8')
@@ -136,6 +143,16 @@ jobs:
           test -f P84_4c3_GeneralKrylovDerivative.lean
           LEAN_PATH=".:${LEAN_PATH:-}" lake env lean -o P84_4c3_GeneralKrylovDerivative.olean P84_4c3_GeneralKrylovDerivative.lean 2>&1 | tee p84-4c3.log
 
+      - name: Compile P84.4d1
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f P84_4d1_PhysicalObservableBridge.lean
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+            -o P84_4d1_PhysicalObservableBridge.olean \
+            P84_4d1_PhysicalObservableBridge.lean \
+            2>&1 | tee p84-4d1.log
+
       - name: Audit P84 theorem axioms
         shell: bash
         run: |
@@ -148,6 +165,11 @@ jobs:
               'p84-4c1.log': ['p84_4c1_state_zero', 'p84_4c1_K_zero', 'p84_4c1_M2_zero', 'p84_4c1_V_zero'],
               'p84-4c2.log': ['p84_4c2_velocity_identity', 'p84_4c2_D_identity'],
               'p84-4c3.log': ['p84_4c3_K_hasDerivAt'],
+              'p84-4d1.log': [
+                  'p84_4d1_state_initial_jet',
+                  'p84_4d1_K_deriv_eq_J',
+                  'p84_4d1_D_physical_derivative',
+              ],
           }
           allowed = {'propext', 'Classical.choice', 'Quot.sound'}
           for filename, names in checks.items():
@@ -165,5 +187,5 @@ jobs:
                   if unexpected:
                       raise SystemExit(f'Unauthorized axioms in {name}: {sorted(unexpected)}')
                   print(f'PASS {name}: {sorted(found)}')
-          print('P84.4a through P84.4c3 audit PASS')
+          print('P84.4a through P84.4d1 audit PASS')
           PY
