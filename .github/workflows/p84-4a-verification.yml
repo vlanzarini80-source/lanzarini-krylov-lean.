@@ -13,6 +13,7 @@ on:
       - 'P84_4c3_GeneralKrylovDerivative.lean'
       - 'P84_4d1_PhysicalObservableBridge.lean'
       - 'P84_4d2_ComponentProbabilityDerivative.lean'
+      - 'P84_4d3_PhysicalMomentDerivatives.lean'
       - '.github/workflows/p84-4a-verification.yml'
       - '.github/workflows/lean.yml'
   workflow_dispatch:
@@ -83,6 +84,7 @@ jobs:
               'P84_4c3_GeneralKrylovDerivative',
               'P84_4d1_PhysicalObservableBridge',
               'P84_4d2_ComponentProbabilityDerivative',
+              'P84_4d3_PhysicalMomentDerivatives',
           }
 
           modules = [
@@ -152,6 +154,10 @@ jobs:
               ],
               'P84_4d2_ComponentProbabilityDerivative': [
                   'p84_4d2_probability_hasDerivAt',
+              ],
+              'P84_4d3_PhysicalMomentDerivatives': [
+                  'p84_4d3_Kprob_hasDerivAt',
+                  'p84_4d3_M2prob_hasDerivAt',
               ],
           }
 
@@ -265,6 +271,16 @@ jobs:
             P84_4d2_ComponentProbabilityDerivative.lean \
             2>&1 | tee p84-4d2.log
 
+      - name: Compile P84.4d3
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f P84_4d3_PhysicalMomentDerivatives.lean
+          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+            -o P84_4d3_PhysicalMomentDerivatives.olean \
+            P84_4d3_PhysicalMomentDerivatives.lean \
+            2>&1 | tee p84-4d3.log
+
       - name: Audit P84 theorem axioms
         shell: bash
         run: |
@@ -302,6 +318,10 @@ jobs:
               ],
               'p84-4d2.log': [
                   'p84_4d2_probability_hasDerivAt',
+              ],
+              'p84-4d3.log': [
+                  'p84_4d3_Kprob_hasDerivAt',
+                  'p84_4d3_M2prob_hasDerivAt',
               ],
           }
 
@@ -363,5 +383,5 @@ jobs:
                       f'PASS {name}: {sorted(found)}'
                   )
 
-          print('P84.4a through P84.4d2 audit PASS')
+          print('P84.4a through P84.4d3 audit PASS')
           PY
