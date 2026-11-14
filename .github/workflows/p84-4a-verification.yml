@@ -14,6 +14,8 @@ on:
       - 'P84_4d1_PhysicalObservableBridge.lean'
       - 'P84_4d2_ComponentProbabilityDerivative.lean'
       - 'P84_4d3_PhysicalMomentDerivatives.lean'
+      - 'P84_4d4_PhysicalMomentIdentification.lean'
+      - 'P84_4d5_PhysicalMomentDerivativeBridge.lean'
       - '.github/workflows/p84-4a-verification.yml'
       - '.github/workflows/lean.yml'
   workflow_dispatch:
@@ -21,6 +23,7 @@ on:
 jobs:
   verify-p84:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -85,6 +88,8 @@ jobs:
               'P84_4d1_PhysicalObservableBridge',
               'P84_4d2_ComponentProbabilityDerivative',
               'P84_4d3_PhysicalMomentDerivatives',
+              'P84_4d4_PhysicalMomentIdentification',
+              'P84_4d5_PhysicalMomentDerivativeBridge',
           }
 
           modules = [
@@ -159,6 +164,15 @@ jobs:
                   'p84_4d3_Kprob_hasDerivAt',
                   'p84_4d3_M2prob_hasDerivAt',
               ],
+              'P84_4d4_PhysicalMomentIdentification': [
+                  'p84_4d4_probability_eq_normSq',
+                  'p84_4d4_Kprob_eq_K',
+                  'p84_4d4_M2prob_eq_M2',
+              ],
+              'P84_4d5_PhysicalMomentDerivativeBridge': [
+                  'p84_4d5_K_hasDerivAt',
+                  'p84_4d5_M2_hasDerivAt',
+              ],
           }
 
           for module, names in required.items():
@@ -203,83 +217,40 @@ jobs:
               print(f'PASS source audit: {module}')
           PY
 
-      - name: Compile P84.4a
+      - name: Compile P84 modules
         shell: bash
         run: |
           set -euo pipefail
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
-            -o P84_4a_GeneralJacobiPowers.olean \
-            P84_4a_GeneralJacobiPowers.lean \
-            2>&1 | tee p84-4a.log
 
-      - name: Compile P84.4b
-        shell: bash
-        run: |
-          set -euo pipefail
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
-            -o P84_4b_GeneralThirdPower.olean \
-            P84_4b_GeneralThirdPower.lean \
-            2>&1 | tee p84-4b.log
+          modules=(
+            P84_4a_GeneralJacobiPowers
+            P84_4b_GeneralThirdPower
+            P84_4c1_GeneralPhysicalObservables
+            P84_4c2_GeneralPhysicalDeficit
+            P84_4c3_GeneralKrylovDerivative
+            P84_4d1_PhysicalObservableBridge
+            P84_4d2_ComponentProbabilityDerivative
+            P84_4d3_PhysicalMomentDerivatives
+            P84_4d4_PhysicalMomentIdentification
+            P84_4d5_PhysicalMomentDerivativeBridge
+          )
 
-      - name: Compile P84.4c1
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -f P84_4c1_GeneralPhysicalObservables.lean
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
-            -o P84_4c1_GeneralPhysicalObservables.olean \
-            P84_4c1_GeneralPhysicalObservables.lean \
-            2>&1 | tee p84-4c1.log
+          labels=(
+            4a 4b 4c1 4c2 4c3
+            4d1 4d2 4d3 4d4 4d5
+          )
 
-      - name: Compile P84.4c2
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -f P84_4c2_GeneralPhysicalDeficit.lean
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
-            -o P84_4c2_GeneralPhysicalDeficit.olean \
-            P84_4c2_GeneralPhysicalDeficit.lean \
-            2>&1 | tee p84-4c2.log
+          for i in "${!modules[@]}"; do
+            mod="${modules[$i]}"
+            label="${labels[$i]}"
 
-      - name: Compile P84.4c3
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -f P84_4c3_GeneralKrylovDerivative.lean
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
-            -o P84_4c3_GeneralKrylovDerivative.olean \
-            P84_4c3_GeneralKrylovDerivative.lean \
-            2>&1 | tee p84-4c3.log
+            echo "=== Compile $mod ==="
+            test -f "$mod.lean"
 
-      - name: Compile P84.4d1
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -f P84_4d1_PhysicalObservableBridge.lean
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
-            -o P84_4d1_PhysicalObservableBridge.olean \
-            P84_4d1_PhysicalObservableBridge.lean \
-            2>&1 | tee p84-4d1.log
-
-      - name: Compile P84.4d2
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -f P84_4d2_ComponentProbabilityDerivative.lean
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
-            -o P84_4d2_ComponentProbabilityDerivative.olean \
-            P84_4d2_ComponentProbabilityDerivative.lean \
-            2>&1 | tee p84-4d2.log
-
-      - name: Compile P84.4d3
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -f P84_4d3_PhysicalMomentDerivatives.lean
-          LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
-            -o P84_4d3_PhysicalMomentDerivatives.olean \
-            P84_4d3_PhysicalMomentDerivatives.lean \
-            2>&1 | tee p84-4d3.log
+            LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+              -o "$mod.olean" "$mod.lean" \
+              2>&1 | tee "p84-${label}.log"
+          done
 
       - name: Audit P84 theorem axioms
         shell: bash
@@ -322,6 +293,15 @@ jobs:
               'p84-4d3.log': [
                   'p84_4d3_Kprob_hasDerivAt',
                   'p84_4d3_M2prob_hasDerivAt',
+              ],
+              'p84-4d4.log': [
+                  'p84_4d4_probability_eq_normSq',
+                  'p84_4d4_Kprob_eq_K',
+                  'p84_4d4_M2prob_eq_M2',
+              ],
+              'p84-4d5.log': [
+                  'p84_4d5_K_hasDerivAt',
+                  'p84_4d5_M2_hasDerivAt',
               ],
           }
 
@@ -383,5 +363,5 @@ jobs:
                       f'PASS {name}: {sorted(found)}'
                   )
 
-          print('P84.4a through P84.4d3 audit PASS')
+          print('P84.4a through P84.4d5 audit PASS')
           PY
