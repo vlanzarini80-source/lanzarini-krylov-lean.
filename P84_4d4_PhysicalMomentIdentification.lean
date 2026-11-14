@@ -27,6 +27,7 @@ theorem p84_4d4_probability_eq_normSq
     p84_4d2_probability,
     Complex.normSq_apply
   ]
+  ring
 
 /-- Identification of the physical first moment. -/
 theorem p84_4d4_Kprob_eq_K
