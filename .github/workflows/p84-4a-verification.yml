@@ -16,6 +16,7 @@ on:
       - 'P84_4d3_PhysicalMomentDerivatives.lean'
       - 'P84_4d4_PhysicalMomentIdentification.lean'
       - 'P84_4d5_PhysicalMomentDerivativeBridge.lean'
+      - 'P84_4e1_PhysicalVarianceDerivative.lean'
       - '.github/workflows/p84-4a-verification.yml'
       - '.github/workflows/lean.yml'
   workflow_dispatch:
@@ -90,6 +91,7 @@ jobs:
               'P84_4d3_PhysicalMomentDerivatives',
               'P84_4d4_PhysicalMomentIdentification',
               'P84_4d5_PhysicalMomentDerivativeBridge',
+              'P84_4e1_PhysicalVarianceDerivative',
           }
 
           modules = [
@@ -173,6 +175,9 @@ jobs:
                   'p84_4d5_K_hasDerivAt',
                   'p84_4d5_M2_hasDerivAt',
               ],
+              'P84_4e1_PhysicalVarianceDerivative': [
+                  'p84_4e1_V_hasDerivAt',
+              ],
           }
 
           for module, names in required.items():
@@ -233,12 +238,18 @@ jobs:
             P84_4d3_PhysicalMomentDerivatives
             P84_4d4_PhysicalMomentIdentification
             P84_4d5_PhysicalMomentDerivativeBridge
+            P84_4e1_PhysicalVarianceDerivative
           )
 
           labels=(
             4a 4b 4c1 4c2 4c3
-            4d1 4d2 4d3 4d4 4d5
+            4d1 4d2 4d3 4d4 4d5 4e1
           )
+
+          if [ "${#modules[@]}" -ne "${#labels[@]}" ]; then
+            echo "Module/label count mismatch"
+            exit 1
+          fi
 
           for i in "${!modules[@]}"; do
             mod="${modules[$i]}"
@@ -303,6 +314,9 @@ jobs:
                   'p84_4d5_K_hasDerivAt',
                   'p84_4d5_M2_hasDerivAt',
               ],
+              'p84-4e1.log': [
+                  'p84_4e1_V_hasDerivAt',
+              ],
           }
 
           allowed = {
@@ -363,5 +377,5 @@ jobs:
                       f'PASS {name}: {sorted(found)}'
                   )
 
-          print('P84.4a through P84.4d5 audit PASS')
+          print('P84.4a through P84.4e1 audit PASS')
           PY
