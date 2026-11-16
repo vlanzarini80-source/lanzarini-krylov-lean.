@@ -1,0 +1,38 @@
+
+name: P84.4g Algebraic Isolated Verification
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/p75-centered-derivative
+    paths:
+      - P84_4g_AlgebraicClosure_Candidate.lean
+      - .github/workflows/p84-4g-algebraic.yml
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: leanprover/lean-action@v1
+        with:
+          build: false
+          use-github-cache: true
+
+      - name: Compile candidate and audit axioms
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake env lean P84_4g_AlgebraicClosure_Candidate.lean \
+            2>&1 | tee p84-4g-algebraic.log
+
+          grep -F 'p84_4g_algebraic_closure' \
+            p84-4g-algebraic.log
+
+          if grep -Eq 'sorryAx|admitAx' \
+            p84-4g-algebraic.log; then
+            echo 'FORBIDDEN_AXIOM_DETECTED'
+            exit 1
+          fi
