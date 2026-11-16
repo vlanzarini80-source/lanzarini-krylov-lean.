@@ -1,0 +1,152 @@
+name: P84.4f1 Fourth Jacobi Power Verification
+
+on:
+  push:
+    branches:
+      - research/p75-centered-derivative
+    paths:
+      - 'P84_4f1_GeneralFourthPower.lean'
+      - 'P84_4b_GeneralThirdPower.lean'
+      - 'P84_4a_GeneralJacobiPowers.lean'
+      - '.github/workflows/p84-4f1-verification.yml'
+      - '.github/workflows/lean.yml'
+  workflow_dispatch:
+
+jobs:
+  verify-p84-4f1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Lean
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 \
+            https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            -o /tmp/elan-init.sh
+          sh /tmp/elan-init.sh -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Fetch mathlib
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake update
+          lake exe cache get
+
+      - name: Compile prerequisite modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          source = Path('.github/workflows/lean.yml').read_text(encoding='utf-8')
+          match = re.search(
+              r'for mod in\s*\\\s*\n(.*?)\n\s*do\s*\n',
+              source,
+              flags=re.S,
+          )
+          if match is None:
+              raise SystemExit('Cannot locate prerequisite module list')
+
+          modules = match.group(1).replace('\\', ' ').split()
+          if 'P83_4b_W13CenteringFourthCancellation' not in modules:
+              raise SystemExit('Unexpected prerequisite module list')
+
+          # These modules are compiled explicitly, in dependency order, below.
+          targets = {
+              'P84_4a_GeneralJacobiPowers',
+              'P84_4b_GeneralThirdPower',
+              'P84_4f1_GeneralFourthPower',
+          }
+          modules = [
+              module for module in modules
+              if module not in targets and not module.startswith('P84_')
+          ]
+          if len(modules) != len(set(modules)):
+              raise SystemExit('Duplicate prerequisite modules')
+          Path('/tmp/p84-4f1-prerequisites.txt').write_text(
+              '\n'.join(modules) + '\n', encoding='utf-8'
+          )
+          print('Prerequisite modules:', len(modules))
+          PY
+
+          lake env lean -o Main.olean Main.lean
+          lake env lean -o Jacobi2.olean Jacobi2.lean
+          lake env lean -o JacobiGeneral.olean JacobiGeneral.lean
+
+          while IFS= read -r mod; do
+            echo "=== Compiling $mod.lean ==="
+            test -f "$mod.lean"
+            LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+              -o "$mod.olean" "$mod.lean"
+          done < /tmp/p84-4f1-prerequisites.txt
+
+      - name: Audit source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          source = Path('P84_4f1_GeneralFourthPower.lean').read_text(encoding='utf-8')
+          clean = re.sub(r'/-.*?-/', '', source, flags=re.S)
+          clean = re.sub(r'--[^\n]*', '', clean)
+          forbidden = re.search(r'\b(sorry|admit|axiom|sorryAx)\b', clean)
+          if forbidden:
+              raise SystemExit(f'Forbidden token: {forbidden.group()}')
+          if not re.search(r'\btheorem\s+p84_4f1_H4\b', clean):
+              raise SystemExit('Missing theorem p84_4f1_H4')
+          if '#print axioms p84_4f1_H4' not in clean:
+              raise SystemExit('Missing #print axioms p84_4f1_H4')
+          print('P84.4f1 source audit PASS')
+          PY
+
+      - name: Compile P84.4f1
+        shell: bash
+        run: |
+          set -euo pipefail
+          for mod in \
+            P84_4a_GeneralJacobiPowers \
+            P84_4b_GeneralThirdPower \
+            P84_4f1_GeneralFourthPower
+          do
+            echo "=== Compiling $mod ==="
+            LEAN_PATH=".:${LEAN_PATH:-}" lake env lean \
+              -o "$mod.olean" "$mod.lean" \
+              2>&1 | tee "$mod.log"
+          done
+
+      - name: Audit P84.4f1 theorem axioms
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          lines = Path('P84_4f1_GeneralFourthPower.log').read_text(
+              encoding='utf-8'
+          ).splitlines()
+          prefix = "'Lanzarini.p84_4f1_H4' depends on axioms:"
+          matches = [
+              line.strip() for line in lines
+              if line.strip().startswith(prefix)
+          ]
+          if len(matches) != 1:
+              raise SystemExit('Missing or duplicate axiom audit for p84_4f1_H4')
+          payload = matches[0][len(prefix):].strip()
+          if not (payload.startswith('[') and payload.endswith(']')):
+              raise SystemExit('Invalid axiom audit format')
+          found = {
+              x.strip() for x in payload[1:-1].split(',') if x.strip()
+          }
+          allowed = {'propext', 'Classical.choice', 'Quot.sound'}
+          if found - allowed:
+              raise SystemExit(f'Unauthorized axioms: {sorted(found - allowed)}')
+          print('P84.4f1 compilation and axiom audit PASS:', sorted(found))
+          PY
