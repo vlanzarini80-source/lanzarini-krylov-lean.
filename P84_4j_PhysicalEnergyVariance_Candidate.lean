@@ -15,8 +15,6 @@ Jacobi evolution.
 No expected Taylor coefficients.
 No P79.
 No sorry, admit, or new axioms.
-
-Candidate awaiting dedicated Lean CI.
 -/
 
 /-- The initial state has unit norm. -/
@@ -62,6 +60,7 @@ theorem p84_4j_initial_energy_variance
   rw [p84_H1]
   simp [jacobiNormSq, Fin.sum_univ_succ,
     Complex.normSq_ofReal]
+  ring
 
 /--
 Energy variance is conserved under the
