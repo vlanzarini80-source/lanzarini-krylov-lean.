@@ -1,0 +1,231 @@
+
+name: P84.4k Exact Physical Gram Verification
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/p75-centered-derivative
+    paths:
+      - P84_4k_ExactPhysicalGramIdentity_Candidate.lean
+      - .github/workflows/p84-4k-exact-physical-gram.yml
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Lean 4
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          curl -sSfL \
+            https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Initialize Mathlib
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake update
+          lake exe cache get
+
+      - name: Compile dependency chain
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          export LEAN_PATH="$(pwd):${LEAN_PATH:-}"
+
+          for mod in \
+            JacobiReal \
+            JacobiEvolution \
+            MatrixExpProbe \
+            KrylovNumber \
+            KrylovGram \
+            KrylovLagrange \
+            KrylovGap \
+            P73_RealTime \
+            P73_2_State \
+            P74_1_Components \
+            P74_2_KrylovDerivative \
+            P75_1_Orthogonality \
+            P75_2a_VelocityOrthogonality \
+            P75_2b_CenteredDerivative \
+            P75_3_QuadraticSpeedBound \
+            P75_4_DerivativeSpeedBound \
+            P76_1_EnergyVariance \
+            P76_2_EnergyVarianceIdentity \
+            P76_3_EnergySecondMoment \
+            P76_4_CenteredEnergySpeed \
+            P76_5_CenteredVelocity \
+            P76_5b_CenteredVelocityNorm \
+            P76_6_EnergySpeedLimit \
+            P77_1a_PropagatorCommutes \
+            P77_1b_HamiltonianIntertwining \
+            P77_2_EnergyMeanConservation \
+            P78_1_ExactSpeedResidual \
+            P78_2_PhysicalSpeedResidual \
+            P80_1_TrueEvolutionJets \
+            P81_1_JacobiPhysicalPowers \
+            P84_4a_GeneralJacobiPowers \
+            P84_4b_GeneralThirdPower \
+            P84_4c1_GeneralPhysicalObservables \
+            P84_4c2_GeneralPhysicalDeficit \
+            P84_4c3_GeneralKrylovDerivative \
+            P84_4d1_PhysicalObservableBridge \
+            P84_4h_PhysicalGramBridge_Candidate \
+            P84_4i_VarianceSpeedBridge_Candidate \
+            P84_4j_PhysicalEnergyVariance_Candidate
+          do
+            echo "COMPILING $mod"
+
+            test -f "$mod.lean"
+
+            lake env lean \
+              -o "$mod.olean" \
+              "$mod.lean"
+          done
+
+      - name: Compile P84.4k
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          export LEAN_PATH="$(pwd):${LEAN_PATH:-}"
+
+          lake env lean \
+            P84_4k_ExactPhysicalGramIdentity_Candidate.lean \
+            2>&1 | tee p84-4k.log
+
+      - name: Audit P84.4k proof and axioms
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          filename = (
+              "P84_4k_ExactPhysicalGramIdentity_Candidate.lean"
+          )
+
+          source = Path(filename).read_text(
+              encoding="utf-8"
+          )
+
+          log = Path("p84-4k.log").read_text(
+              encoding="utf-8"
+          )
+
+          clean = re.sub(
+              r"/-.*?-/",
+              "",
+              source,
+              flags=re.S
+          )
+
+          clean = re.sub(
+              r"--[^\n]*",
+              "",
+              clean
+          )
+
+          forbidden = re.search(
+              r"\b(sorry|admit|axiom|sorryAx)\b",
+              clean
+          )
+
+          if forbidden:
+              raise SystemExit(
+                  "FORBIDDEN_PROOF_TOKEN: " +
+                  forbidden.group()
+              )
+
+          if re.search(
+              r"^import\s+P79",
+              clean,
+              flags=re.M
+          ):
+              raise SystemExit(
+                  "FORBIDDEN_P79_IMPORT"
+              )
+
+          theorem_name = (
+              "p84_4k_exact_physical_gram_identity"
+          )
+
+          declarations = re.findall(
+              r"\btheorem\s+" +
+              theorem_name +
+              r"\b",
+              clean
+          )
+
+          if len(declarations) != 1:
+              raise SystemExit(
+                  "MISSING_OR_DUPLICATE_THEOREM"
+              )
+
+          if "#print axioms " + theorem_name not in source:
+              raise SystemExit(
+                  "MISSING_PRINT_AXIOMS"
+              )
+
+          pattern = (
+              r"'Lanzarini\." +
+              theorem_name +
+              r"' depends on axioms:\s*\[([^\]]*)\]"
+          )
+
+          matches = re.findall(
+              pattern,
+              log
+          )
+
+          if len(matches) != 1:
+              raise SystemExit(
+                  "MISSING_AXIOM_REPORT"
+              )
+
+          found = {
+              item.strip()
+              for item in matches[0].split(",")
+              if item.strip()
+          }
+
+          allowed = {
+              "propext",
+              "Classical.choice",
+              "Quot.sound"
+          }
+
+          unexpected = found - allowed
+
+          if unexpected:
+              raise SystemExit(
+                  "UNEXPECTED_AXIOMS: " +
+                  str(sorted(unexpected))
+              )
+
+          print(
+              "THEOREM:",
+              theorem_name
+          )
+
+          print(
+              "ALLOWED_AXIOMS:",
+              sorted(found)
+          )
+
+          print(
+              "P84_4K_EXACT_PHYSICAL_GRAM_AUDIT_PASS"
+          )
+          PY
