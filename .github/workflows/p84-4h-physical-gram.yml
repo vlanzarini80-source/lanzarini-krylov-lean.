@@ -7,83 +7,160 @@ on:
     branches:
       - research/p75-centered-derivative
     paths:
-      - 'P84_4h_PhysicalGramBridge_Candidate.lean'
-      - '.github/workflows/p84-4h-physical-gram.yml'
+      - P84_4h_PhysicalGramBridge_Candidate.lean
+      - .github/workflows/p84-4h-physical-gram.yml
 
 jobs:
-  lean:
-    name: Verify P84.4h in Lean 4
+  verify:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout development branch
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install elan
+      - name: Install Lean
         shell: bash
         run: |
           set -euo pipefail
-          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
-            | sh -s -- -y --default-toolchain none
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh |
+            sh -s -- -y --default-toolchain none
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
 
-      - name: Generate Lake manifest
+      - name: Initialize dependencies
         shell: bash
         run: |
           set -euo pipefail
           lake update
-          test -f lake-manifest.json
-          echo "LAKE_MANIFEST_READY"
-
-      - name: Download Mathlib cache
-        shell: bash
-        run: |
-          set -euo pipefail
           lake exe cache get
 
-      - name: Audit source
+      - name: Compile local dependency chain
         shell: bash
         run: |
           set -euo pipefail
+          export LEAN_PATH="$(pwd):${LEAN_PATH:-}"
 
-          FILE="P84_4h_PhysicalGramBridge_Candidate.lean"
-          test -f "$FILE"
+          for mod in \
+            JacobiReal \
+            JacobiEvolution \
+            MatrixExpProbe \
+            KrylovNumber \
+            KrylovGram \
+            KrylovLagrange \
+            KrylovGap \
+            P73_RealTime \
+            P73_2_State \
+            P74_1_Components \
+            P74_2_KrylovDerivative \
+            P75_1_Orthogonality \
+            P75_2a_VelocityOrthogonality \
+            P75_2b_CenteredDerivative \
+            P75_3_QuadraticSpeedBound \
+            P75_4_DerivativeSpeedBound \
+            P76_1_EnergyVariance \
+            P76_2_EnergyVarianceIdentity \
+            P76_3_EnergySecondMoment \
+            P76_4_CenteredEnergySpeed \
+            P76_5_CenteredVelocity \
+            P76_5b_CenteredVelocityNorm \
+            P76_6_EnergySpeedLimit \
+            P77_1a_PropagatorCommutes \
+            P77_1b_HamiltonianIntertwining \
+            P77_2_EnergyMeanConservation \
+            P78_1_ExactSpeedResidual \
+            P78_2_PhysicalSpeedResidual \
+            P80_1_TrueEvolutionJets \
+            P81_1_JacobiPhysicalPowers \
+            P84_4a_GeneralJacobiPowers \
+            P84_4b_GeneralThirdPower \
+            P84_4c1_GeneralPhysicalObservables \
+            P84_4c2_GeneralPhysicalDeficit \
+            P84_4c3_GeneralKrylovDerivative \
+            P84_4d1_PhysicalObservableBridge
+          do
+            echo "COMPILING $mod"
+            test -f "$mod.lean"
+            lake env lean -o "$mod.olean" "$mod.lean"
+          done
 
-          if grep -En '^[[:space:]]*(sorry|admit|axiom)([[:space:]]|$)' "$FILE"; then
-            echo "FORBIDDEN_PROOF_SHORTCUT"
-            exit 1
-          fi
+          echo "LOCAL_DEPENDENCIES_COMPILED"
 
-          if grep -En '^import .*P79' "$FILE"; then
-            echo "FORBIDDEN_P79_IMPORT"
-            exit 1
-          fi
-
-          echo "SOURCE_AUDIT_PASS"
-
-      - name: Compile physical Gram bridge
+      - name: Compile P84.4h
         shell: bash
         run: |
           set -euo pipefail
+          export LEAN_PATH="$(pwd):${LEAN_PATH:-}"
 
-          lake env lean P84_4h_PhysicalGramBridge_Candidate.lean \
+          lake env lean \
+            P84_4h_PhysicalGramBridge_Candidate.lean \
             2>&1 | tee p84-4h.log
 
-          echo "LEAN_COMPILATION_PASS"
+          echo "P84_4H_COMPILATION_PASS"
 
-      - name: Check printed axioms
+      - name: Audit P84.4h
         shell: bash
         run: |
           set -euo pipefail
 
-          LOG="p84-4h.log"
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
 
-          grep -q 'p84_4h_physical_gram_bridge' "$LOG"
+          src = Path(
+              "P84_4h_PhysicalGramBridge_Candidate.lean"
+          ).read_text()
 
-          if grep -E 'sorryAx|Lean\.ofReduceBool' "$LOG"; then
-            echo "UNEXPECTED_AXIOM"
-            exit 1
-          fi
+          log = Path("p84-4h.log").read_text()
 
-          echo "PRELIMINARY_AXIOM_AUDIT_PASS"
-          cat "$LOG"
+          # Remove ordinary comments before checking tokens.
+          clean = re.sub(
+              r"/-.*?-/", "", src, flags=re.S
+          )
+          clean = re.sub(r"--[^\n]*", "", clean)
+
+          if re.search(
+              r"\b(sorry|admit|axiom|sorryAx)\b",
+              clean
+          ):
+              raise SystemExit("FORBIDDEN_PROOF_TOKEN")
+
+          if re.search(r"^import\s+P79", clean, re.M):
+              raise SystemExit("FORBIDDEN_P79_IMPORT")
+
+          name = "p84_4h_physical_gram_bridge"
+
+          if len(re.findall(
+              r"\btheorem\s+" + name + r"\b", clean
+          )) != 1:
+              raise SystemExit("MISSING_THEOREM")
+
+          pattern = (
+              r"'Lanzarini\." + name +
+              r"' depends on axioms:\s*\[([^\]]*)\]"
+          )
+
+          matches = re.findall(pattern, log)
+
+          if len(matches) != 1:
+              raise SystemExit("MISSING_AXIOM_REPORT")
+
+          allowed = {
+              "propext",
+              "Classical.choice",
+              "Quot.sound"
+          }
+
+          found = {
+              x.strip()
+              for x in matches[0].split(",")
+              if x.strip()
+          }
+
+          if not found <= allowed:
+              raise SystemExit(
+                  "UNEXPECTED_AXIOMS: " +
+                  str(found - allowed)
+              )
+
+          print("P84_4H_AXIOM_AUDIT_PASS")
+          print("Allowed axioms found:", sorted(found))
+          PY
