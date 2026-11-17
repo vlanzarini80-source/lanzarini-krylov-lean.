@@ -1,0 +1,76 @@
+
+name: P84.4h Physical Gram Bridge
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/p75-centered-derivative
+    paths:
+      - 'P84_4h_PhysicalGramBridge_Candidate.lean'
+      - '.github/workflows/p84-4h-physical-gram.yml'
+
+jobs:
+  lean:
+    name: Verify P84.4h in Lean 4
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+
+      - name: Install Lean and Mathlib
+        uses: leanprover/lean-action@v1
+        with:
+          use-mathlib-cache: true
+
+      - name: Audit forbidden proof shortcuts
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          FILE="P84_4h_PhysicalGramBridge_Candidate.lean"
+
+          test -f "$FILE"
+
+          if grep -En '(^|[^[:alnum:]_])(sorry|admit|axiom)([^[:alnum:]_]|$)' "$FILE"; then
+            echo "FORBIDDEN_PROOF_SHORTCUT"
+            exit 1
+          fi
+
+          if grep -En '(^|[^[:alnum:]_])P79([^[:alnum:]_]|$)' "$FILE"; then
+            echo "FORBIDDEN_P79_REFERENCE"
+            exit 1
+          fi
+
+          echo "SOURCE_AUDIT_PASS"
+
+      - name: Compile physical Gram bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          lake env lean P84_4h_PhysicalGramBridge_Candidate.lean \
+            2>&1 | tee p84-4h.log
+
+          echo "LEAN_COMPILATION_PASS"
+
+      - name: Check printed axioms
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          LOG="p84-4h.log"
+
+          if ! grep -q 'p84_4h_physical_gram_bridge' "$LOG"; then
+            echo "AXIOM_REPORT_MISSING"
+            exit 1
+          fi
+
+          if grep -E 'sorryAx|Lean\.ofReduceBool' "$LOG"; then
+            echo "UNEXPECTED_AXIOM_DETECTED"
+            exit 1
+          fi
+
+          echo "PRELIMINARY_AXIOM_AUDIT_PASS"
+          echo "Review the complete axiom list in the log."
