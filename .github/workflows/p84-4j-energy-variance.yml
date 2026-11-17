@@ -1,0 +1,172 @@
+
+name: P84.4j Energy Variance Verification
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/p75-centered-derivative
+    paths:
+      - P84_4j_PhysicalEnergyVariance_Candidate.lean
+      - .github/workflows/p84-4j-energy-variance.yml
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Lean
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sSfL \
+            https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Initialize Mathlib
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake update
+          lake exe cache get
+
+      - name: Compile dependency chain
+        shell: bash
+        run: |
+          set -euo pipefail
+          export LEAN_PATH="$(pwd):${LEAN_PATH:-}"
+
+          for mod in \
+            JacobiReal \
+            JacobiEvolution \
+            MatrixExpProbe \
+            KrylovNumber \
+            KrylovGram \
+            KrylovLagrange \
+            KrylovGap \
+            P73_RealTime \
+            P73_2_State \
+            P74_1_Components \
+            P74_2_KrylovDerivative \
+            P75_1_Orthogonality \
+            P75_2a_VelocityOrthogonality \
+            P75_2b_CenteredDerivative \
+            P75_3_QuadraticSpeedBound \
+            P75_4_DerivativeSpeedBound \
+            P76_1_EnergyVariance \
+            P76_2_EnergyVarianceIdentity \
+            P76_3_EnergySecondMoment \
+            P76_4_CenteredEnergySpeed \
+            P76_5_CenteredVelocity \
+            P76_5b_CenteredVelocityNorm \
+            P76_6_EnergySpeedLimit \
+            P77_1a_PropagatorCommutes \
+            P77_1b_HamiltonianIntertwining \
+            P77_2_EnergyMeanConservation \
+            P78_1_ExactSpeedResidual \
+            P78_2_PhysicalSpeedResidual \
+            P80_1_TrueEvolutionJets \
+            P81_1_JacobiPhysicalPowers \
+            P84_4a_GeneralJacobiPowers \
+            P84_4b_GeneralThirdPower \
+            P84_4c1_GeneralPhysicalObservables \
+            P84_4c2_GeneralPhysicalDeficit \
+            P84_4c3_GeneralKrylovDerivative \
+            P84_4d1_PhysicalObservableBridge \
+            P84_4h_PhysicalGramBridge_Candidate \
+            P84_4i_VarianceSpeedBridge_Candidate
+          do
+            echo "COMPILING $mod"
+            test -f "$mod.lean"
+            lake env lean -o "$mod.olean" "$mod.lean"
+          done
+
+      - name: Compile P84.4j
+        shell: bash
+        run: |
+          set -euo pipefail
+          export LEAN_PATH="$(pwd):${LEAN_PATH:-}"
+
+          lake env lean \
+            P84_4j_PhysicalEnergyVariance_Candidate.lean \
+            2>&1 | tee p84-4j.log
+
+      - name: Audit theorem axioms
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          source = Path(
+              "P84_4j_PhysicalEnergyVariance_Candidate.lean"
+          ).read_text()
+
+          log = Path("p84-4j.log").read_text()
+
+          clean = re.sub(
+              r"/-.*?-/", "", source, flags=re.S
+          )
+          clean = re.sub(r"--[^\n]*", "", clean)
+
+          if re.search(
+              r"\b(sorry|admit|axiom|sorryAx)\b",
+              clean
+          ):
+              raise SystemExit("FORBIDDEN_PROOF_TOKEN")
+
+          if re.search(r"^import\s+P79", clean, re.M):
+              raise SystemExit("FORBIDDEN_P79_IMPORT")
+
+          names = [
+              "p84_4j_initial_norm",
+              "p84_4j_initial_energy_mean",
+              "p84_4j_initial_energy_variance",
+              "p84_4j_energy_variance_conserved",
+              "p84_4j_physical_energy_variance"
+          ]
+
+          allowed = {
+              "propext",
+              "Classical.choice",
+              "Quot.sound"
+          }
+
+          for name in names:
+              if len(re.findall(
+                  r"\btheorem\s+" + name + r"\b",
+                  clean
+              )) != 1:
+                  raise SystemExit("MISSING_THEOREM: " + name)
+
+              pattern = (
+                  r"'Lanzarini\." + name +
+                  r"' depends on axioms:\s*\[([^\]]*)\]"
+              )
+
+              matches = re.findall(pattern, log)
+
+              if len(matches) != 1:
+                  raise SystemExit("MISSING_AXIOM_REPORT: " + name)
+
+              found = {
+                  x.strip()
+                  for x in matches[0].split(",")
+                  if x.strip()
+              }
+
+              if not found <= allowed:
+                  raise SystemExit(
+                      "UNEXPECTED_AXIOMS: " +
+                      str(found - allowed)
+                  )
+
+              print("PASS:", name, sorted(found))
+
+          print("P84_4J_FULL_AUDIT_PASS")
+          PY
