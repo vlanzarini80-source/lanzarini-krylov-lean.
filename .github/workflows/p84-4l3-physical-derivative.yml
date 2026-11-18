@@ -18,7 +18,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Lean
+      - name: Install Lean toolchain
         shell: bash
         run: |
           set -euo pipefail
@@ -26,7 +26,7 @@ jobs:
             https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
             | sh -s -- -y --default-toolchain none
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
-          "$HOME/.elan/bin/lean" --version
+          lean --version
 
       - name: Initialize Lake
         shell: bash
@@ -42,19 +42,33 @@ jobs:
           set -euo pipefail
           lake exe cache get
 
+      - name: Build local Lean dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          lake build \
+            P84_4l2_GramMinorDerivative_Candidate
+
+          test -f \
+            .lake/build/lib/lean/P84_4l2_GramMinorDerivative_Candidate.olean
+
+          echo "LOCAL_DEPENDENCIES_BUILT"
+
       - name: Compile physical derivative bridge
         shell: bash
         run: |
           set -euo pipefail
-          export LEAN_PATH="$(pwd):${LEAN_PATH:-}"
+
           lake env lean \
             P84_4l3_PhysicalMinorDerivativeBridge_Candidate.lean \
             2>&1 | tee p84-4l3.log
 
-      - name: Audit axioms
+      - name: Audit theorem axioms
         shell: bash
         run: |
           set -euo pipefail
+
           python3 - <<'PY'
           from pathlib import Path
           import re
@@ -67,10 +81,10 @@ jobs:
           )
 
           pattern = (
-              r"'"
+              r"(?m)^'"
               + re.escape(theorem)
-              + r"' depends on axioms:\s*"
-              + r"((?:\n[ \t]+[^\n]+)+)"
+              + r"' depends on axioms:\s*\n"
+              + r"((?:[ \t]+[^\n]+\n?)+)"
           )
 
           match = re.search(pattern, log)
@@ -92,18 +106,25 @@ jobs:
               "Quot.sound",
           }
 
-          if not actual <= allowed:
+          unexpected = actual - allowed
+
+          if unexpected:
               raise SystemExit(
-                  f"UNEXPECTED_AXIOMS: {actual - allowed}"
+                  f"UNEXPECTED_AXIOMS: {sorted(unexpected)}"
               )
 
-          if "sorryAx" in log or re.search(
-              r"(?m)^.*error:", log
-          ):
-              raise SystemExit(
-                  "COMPILATION_OR_SORRY_FAILURE"
-              )
+          if "sorryAx" in log:
+              raise SystemExit("SORRY_AXIOM_DETECTED")
 
-          print("AXIOM_AUDIT_PASS")
+          if re.search(r"(?m)^.*error:", log):
+              raise SystemExit("LEAN_ERROR_DETECTED")
+
+          print("P84_4L3_AXIOM_AUDIT_PASS")
           print("Actual axioms:", sorted(actual))
           PY
+
+      - name: Final verification marker
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "P84_4L3_COMPILATION_AND_AXIOM_AUDIT_PASS"
