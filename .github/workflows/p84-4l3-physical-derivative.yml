@@ -22,25 +22,38 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
           curl -sSfL \
             https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
             | sh -s -- -y --default-toolchain none
+
+          export PATH="$HOME/.elan/bin:$PATH"
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
-          lean --version
+
+          "$HOME/.elan/bin/lean" --version
+          "$HOME/.elan/bin/lake" --version
+
+          echo "LEAN_TOOLCHAIN_INSTALL_PASS"
 
       - name: Initialize Lake
         shell: bash
         run: |
           set -euo pipefail
+
           lake update
           test -f lake-manifest.json
           lake --version
+
+          echo "LAKE_INITIALIZATION_PASS"
 
       - name: Download mathlib cache
         shell: bash
         run: |
           set -euo pipefail
+
           lake exe cache get
+
+          echo "MATHLIB_CACHE_PASS"
 
       - name: Build local Lean dependencies
         shell: bash
@@ -63,6 +76,8 @@ jobs:
           lake env lean \
             P84_4l3_PhysicalMinorDerivativeBridge_Candidate.lean \
             2>&1 | tee p84-4l3.log
+
+          echo "PHYSICAL_DERIVATIVE_BRIDGE_COMPILED"
 
       - name: Audit theorem axioms
         shell: bash
@@ -90,12 +105,10 @@ jobs:
           match = re.search(pattern, log)
 
           if match is None:
-              raise SystemExit(
-                  "AXIOM_REPORT_NOT_FOUND"
-              )
+              raise SystemExit("AXIOM_REPORT_NOT_FOUND")
 
           actual = {
-              line.strip()
+              line.strip().rstrip(",")
               for line in match.group(1).splitlines()
               if line.strip()
           }
@@ -127,4 +140,5 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
           echo "P84_4L3_COMPILATION_AND_AXIOM_AUDIT_PASS"
