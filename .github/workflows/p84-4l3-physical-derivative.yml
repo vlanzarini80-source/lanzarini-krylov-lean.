@@ -66,22 +66,36 @@ jobs:
               if module in visited:
                   return
               if module in active:
-                  raise RuntimeError(f"CYCLIC_IMPORT: {module}")
+                  raise RuntimeError(
+                      f"CYCLIC_IMPORT: {module}"
+                  )
 
-              source = root / (module.replace(".", "/") + ".lean")
+              source = root / (
+                  module.replace(".", "/") + ".lean"
+              )
+
               if not source.is_file():
-                  raise RuntimeError(f"LOCAL_SOURCE_MISSING: {source}")
+                  raise RuntimeError(
+                      f"LOCAL_SOURCE_MISSING: {source}"
+                  )
 
               active.add(module)
-              content = source.read_text(encoding="utf-8")
+              content = source.read_text(
+                  encoding="utf-8"
+              )
 
               for line in content.splitlines():
-                  match = re.match(r"^\s*import\s+(.+?)\s*$", line)
+                  match = re.match(
+                      r"^\s*import\s+(.+?)\s*$",
+                      line,
+                  )
                   if not match:
                       continue
+
                   for dependency in match.group(1).split():
                       dep_source = root / (
-                          dependency.replace(".", "/") + ".lean"
+                          dependency.replace(".", "/")
+                          + ".lean"
                       )
                       if dep_source.is_file():
                           visit(dependency)
@@ -91,29 +105,55 @@ jobs:
               order.append(module)
 
           visit(target)
-          print("LOCAL_DEPENDENCY_ORDER:", flush=True)
+
+          print(
+              "LOCAL_DEPENDENCY_ORDER:",
+              flush=True,
+          )
           for module in order:
               print(" ", module, flush=True)
 
           env = os.environ.copy()
           old_path = env.get("LEAN_PATH", "")
+
           env["LEAN_PATH"] = (
-              str(output) + (os.pathsep + old_path if old_path else "")
+              str(output)
+              + (
+                  os.pathsep + old_path
+                  if old_path
+                  else ""
+              )
           )
 
+          combined_log = []
+
           for module in order:
-              source = root / (module.replace(".", "/") + ".lean")
+              source = root / (
+                  module.replace(".", "/") + ".lean"
+              )
               artifact = output / (
                   module.replace(".", "/") + ".olean"
               )
-              artifact.parent.mkdir(parents=True, exist_ok=True)
+
+              artifact.parent.mkdir(
+                  parents=True,
+                  exist_ok=True,
+              )
 
               command = [
-                  "lake", "env", "lean",
-                  "-o", str(artifact),
+                  "lake",
+                  "env",
+                  "lean",
+                  "-o",
+                  str(artifact),
                   str(source),
               ]
-              print("COMPILING:", module, flush=True)
+
+              print(
+                  "COMPILING:",
+                  module,
+                  flush=True,
+              )
 
               result = subprocess.run(
                   command,
@@ -122,23 +162,34 @@ jobs:
                   stdout=subprocess.PIPE,
                   stderr=subprocess.STDOUT,
               )
-              print(result.stdout, end="", flush=True)
 
-              if module == target:
-                  Path("p84-4l3.log").write_text(
-                      result.stdout, encoding="utf-8"
-                  )
+              combined_log.append(result.stdout)
+
+              print(
+                  result.stdout,
+                  end="",
+                  flush=True,
+              )
 
               if result.returncode != 0:
                   raise SystemExit(
                       f"LEAN_COMPILATION_FAILED: {module}"
                   )
+
               if not artifact.is_file():
                   raise SystemExit(
                       f"OLEAN_NOT_GENERATED: {module}"
                   )
 
-          print("LOCAL_GRAPH_COMPILATION_PASS")
+          Path("p84-4l3.log").write_text(
+              "\n".join(combined_log),
+              encoding="utf-8",
+          )
+
+          print(
+              "LOCAL_GRAPH_COMPILATION_PASS",
+              flush=True,
+          )
           PY
 
       - name: Audit theorem axioms
@@ -149,23 +200,39 @@ jobs:
           from pathlib import Path
           import re
 
-          log = Path("p84-4l3.log").read_text(encoding="utf-8")
-          theorem = "Lanzarini.p84_4l3_physical_minor_derivative"
+          log_path = Path("p84-4l3.log")
 
-          pattern = (
-              r"(?m)^'" + re.escape(theorem)
-              + r"' depends on axioms:\s*\n"
-              + r"((?:[ \t]+[^\n]+\n?)+)"
+          if not log_path.is_file():
+              raise SystemExit(
+                  "LEAN_LOG_MISSING"
+              )
+
+          log = log_path.read_text(
+              encoding="utf-8"
           )
-          match = re.search(pattern, log)
 
-          if match is None:
-              raise SystemExit("AXIOM_REPORT_NOT_FOUND")
+          theorem = (
+              "Lanzarini."
+              "p84_4l3_physical_minor_derivative"
+          )
 
-          actual = set()
-          for line in match.group(1).splitlines():
-              for name in line.strip().split():
-                  actual.add(name.rstrip(","))
+          reports = re.findall(
+              r"(?m)^'([^'\n]+)' depends on axioms:"
+              r"\s*\[([^\]\n]*)\]",
+              log,
+          )
+
+          matches = [
+              body
+              for name, body in reports
+              if name == theorem
+          ]
+
+          if len(matches) != 1:
+              raise SystemExit(
+                  "AXIOM_REPORT_COUNT_INVALID: "
+                  f"{len(matches)}"
+              )
 
           allowed = {
               "propext",
@@ -173,16 +240,42 @@ jobs:
               "Quot.sound",
           }
 
-          if actual - allowed:
+          for name, body in reports:
+              axioms = {
+                  item.strip()
+                  for item in body.split(",")
+                  if item.strip()
+              }
+
+              unexpected = axioms - allowed
+
+              if unexpected:
+                  raise SystemExit(
+                      f"UNEXPECTED_AXIOMS_IN_{name}: "
+                      f"{sorted(unexpected)}"
+                  )
+
+          actual = {
+              item.strip()
+              for item in matches[0].split(",")
+              if item.strip()
+          }
+
+          if re.search(
+              r"(?m)^.*error:",
+              log,
+          ):
               raise SystemExit(
-                  f"UNEXPECTED_AXIOMS: {sorted(actual - allowed)}"
+                  "LEAN_ERROR_DETECTED"
               )
 
-          if "sorryAx" in log or re.search(r"(?m)^.*error:", log):
-              raise SystemExit("LEAN_ERROR_OR_SORRY_DETECTED")
-
-          print("ACTUAL_AXIOMS:", sorted(actual))
-          print("P84_4L3_AXIOM_AUDIT_PASS")
+          print(
+              "ACTUAL_AXIOMS:",
+              sorted(actual),
+          )
+          print(
+              "P84_4L3_AXIOM_AUDIT_PASS"
+          )
           PY
 
       - name: Final verification
