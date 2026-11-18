@@ -13,31 +13,97 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install Lean
-        uses: leanprover/lean-action@v1
-        with:
-          auto-config: true
-          use-mathlib-cache: true
-
-      - name: Compile physical derivative bridge
+        shell: bash
         run: |
           set -euo pipefail
+          curl -sSfL \
+            https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+          "$HOME/.elan/bin/lean" --version
+
+      - name: Initialize Lake
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake update
+          test -f lake-manifest.json
+          lake --version
+
+      - name: Download mathlib cache
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake exe cache get
+
+      - name: Compile physical derivative bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+          export LEAN_PATH="$(pwd):${LEAN_PATH:-}"
           lake env lean \
             P84_4l3_PhysicalMinorDerivativeBridge_Candidate.lean \
             2>&1 | tee p84-4l3.log
 
-      - name: Check axiom audit output
+      - name: Audit axioms
+        shell: bash
         run: |
           set -euo pipefail
-          grep -F \
-            "'Lanzarini.p84_4l3_physical_minor_derivative' depends on axioms:" \
-            p84-4l3.log
-          if grep -E \
-            'sorryAx|^.*error:' p84-4l3.log; then
-            echo "AXIOM_OR_COMPILATION_AUDIT_FAILED"
-            exit 1
-          fi
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          log = Path("p84-4l3.log").read_text()
+
+          theorem = (
+              "Lanzarini."
+              "p84_4l3_physical_minor_derivative"
+          )
+
+          pattern = (
+              r"'"
+              + re.escape(theorem)
+              + r"' depends on axioms:\s*"
+              + r"((?:\n[ \t]+[^\n]+)+)"
+          )
+
+          match = re.search(pattern, log)
+
+          if match is None:
+              raise SystemExit(
+                  "AXIOM_REPORT_NOT_FOUND"
+              )
+
+          actual = {
+              line.strip()
+              for line in match.group(1).splitlines()
+              if line.strip()
+          }
+
+          allowed = {
+              "propext",
+              "Classical.choice",
+              "Quot.sound",
+          }
+
+          if not actual <= allowed:
+              raise SystemExit(
+                  f"UNEXPECTED_AXIOMS: {actual - allowed}"
+              )
+
+          if "sorryAx" in log or re.search(
+              r"(?m)^.*error:", log
+          ):
+              raise SystemExit(
+                  "COMPILATION_OR_SORRY_FAILURE"
+              )
+
+          print("AXIOM_AUDIT_PASS")
+          print("Actual axioms:", sorted(actual))
+          PY
