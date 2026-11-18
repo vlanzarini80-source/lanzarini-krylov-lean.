@@ -1,0 +1,43 @@
+
+name: P84.4l3 Physical Derivative Verification
+
+on:
+  push:
+    branches:
+      - research/p75-centered-derivative
+    paths:
+      - 'P84_4l*.lean'
+      - '.github/workflows/p84-4l3-physical-derivative.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Lean
+        uses: leanprover/lean-action@v1
+        with:
+          auto-config: true
+          use-mathlib-cache: true
+
+      - name: Compile physical derivative bridge
+        run: |
+          set -euo pipefail
+          lake env lean \
+            P84_4l3_PhysicalMinorDerivativeBridge_Candidate.lean \
+            2>&1 | tee p84-4l3.log
+
+      - name: Check axiom audit output
+        run: |
+          set -euo pipefail
+          grep -F \
+            "'Lanzarini.p84_4l3_physical_minor_derivative' depends on axioms:" \
+            p84-4l3.log
+          if grep -E \
+            'sorryAx|^.*error:' p84-4l3.log; then
+            echo "AXIOM_OR_COMPILATION_AUDIT_FAILED"
+            exit 1
+          fi
