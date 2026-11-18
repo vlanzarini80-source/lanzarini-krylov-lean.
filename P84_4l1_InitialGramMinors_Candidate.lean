@@ -27,12 +27,13 @@ theorem p84_4l1_u_zero
     (p q r d e f : ℝ) :
     p84_4l_u p q r d e f 0 = 0 := by
   ext j
-  simp [p84_4l_u,
-    p84_4l1_psi_zero,
-    krylovCenteredState,
-    krylovComplexity,
-    p81_e0,
-    Fin.sum_univ_succ]
+  fin_cases j <;>
+    simp [p84_4l_u,
+      p84_4l1_psi_zero,
+      krylovCenteredState,
+      krylovComplexity,
+      p81_e0,
+      Fin.sum_univ_succ]
 
 /-- All physical Gram minors vanish initially. -/
 theorem p84_4l1_minor_zero
