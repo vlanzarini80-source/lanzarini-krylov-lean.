@@ -6,7 +6,9 @@ on:
     branches:
       - research/p75-centered-derivative
     paths:
-      - 'P84_4l*.lean'
+      - '**.lean'
+      - 'lakefile.toml'
+      - 'lean-toolchain'
       - '.github/workflows/p84-4l3-physical-derivative.yml'
   workflow_dispatch:
 
@@ -22,96 +24,148 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
-          curl -sSfL \
-            https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
             | sh -s -- -y --default-toolchain none
-
-          export PATH="$HOME/.elan/bin:$PATH"
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
-
           "$HOME/.elan/bin/lean" --version
           "$HOME/.elan/bin/lake" --version
-
-          echo "LEAN_TOOLCHAIN_INSTALL_PASS"
 
       - name: Initialize Lake
         shell: bash
         run: |
           set -euo pipefail
-
           lake update
           test -f lake-manifest.json
-          lake --version
-
-          echo "LAKE_INITIALIZATION_PASS"
 
       - name: Download mathlib cache
         shell: bash
         run: |
           set -euo pipefail
-
           lake exe cache get
 
-          echo "MATHLIB_CACHE_PASS"
-
-      - name: Build local Lean dependencies
+      - name: Compile local dependency graph and physical bridge
         shell: bash
         run: |
           set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          import re
+          import subprocess
 
-          lake build \
-            P84_4l2_GramMinorDerivative_Candidate
+          root = Path.cwd()
+          target = "P84_4l3_PhysicalMinorDerivativeBridge_Candidate"
+          output = root / ".lake/build/lib/lean"
+          output.mkdir(parents=True, exist_ok=True)
 
-          test -f \
-            .lake/build/lib/lean/P84_4l2_GramMinorDerivative_Candidate.olean
+          visited = set()
+          active = set()
+          order = []
 
-          echo "LOCAL_DEPENDENCIES_BUILT"
+          def visit(module):
+              if module in visited:
+                  return
+              if module in active:
+                  raise RuntimeError(f"CYCLIC_IMPORT: {module}")
 
-      - name: Compile physical derivative bridge
-        shell: bash
-        run: |
-          set -euo pipefail
+              source = root / (module.replace(".", "/") + ".lean")
+              if not source.is_file():
+                  raise RuntimeError(f"LOCAL_SOURCE_MISSING: {source}")
 
-          lake env lean \
-            P84_4l3_PhysicalMinorDerivativeBridge_Candidate.lean \
-            2>&1 | tee p84-4l3.log
+              active.add(module)
+              content = source.read_text(encoding="utf-8")
 
-          echo "PHYSICAL_DERIVATIVE_BRIDGE_COMPILED"
+              for line in content.splitlines():
+                  match = re.match(r"^\s*import\s+(.+?)\s*$", line)
+                  if not match:
+                      continue
+                  for dependency in match.group(1).split():
+                      dep_source = root / (
+                          dependency.replace(".", "/") + ".lean"
+                      )
+                      if dep_source.is_file():
+                          visit(dependency)
+
+              active.remove(module)
+              visited.add(module)
+              order.append(module)
+
+          visit(target)
+          print("LOCAL_DEPENDENCY_ORDER:", flush=True)
+          for module in order:
+              print(" ", module, flush=True)
+
+          env = os.environ.copy()
+          old_path = env.get("LEAN_PATH", "")
+          env["LEAN_PATH"] = (
+              str(output) + (os.pathsep + old_path if old_path else "")
+          )
+
+          for module in order:
+              source = root / (module.replace(".", "/") + ".lean")
+              artifact = output / (
+                  module.replace(".", "/") + ".olean"
+              )
+              artifact.parent.mkdir(parents=True, exist_ok=True)
+
+              command = [
+                  "lake", "env", "lean",
+                  "-o", str(artifact),
+                  str(source),
+              ]
+              print("COMPILING:", module, flush=True)
+
+              result = subprocess.run(
+                  command,
+                  env=env,
+                  text=True,
+                  stdout=subprocess.PIPE,
+                  stderr=subprocess.STDOUT,
+              )
+              print(result.stdout, end="", flush=True)
+
+              if module == target:
+                  Path("p84-4l3.log").write_text(
+                      result.stdout, encoding="utf-8"
+                  )
+
+              if result.returncode != 0:
+                  raise SystemExit(
+                      f"LEAN_COMPILATION_FAILED: {module}"
+                  )
+              if not artifact.is_file():
+                  raise SystemExit(
+                      f"OLEAN_NOT_GENERATED: {module}"
+                  )
+
+          print("LOCAL_GRAPH_COMPILATION_PASS")
+          PY
 
       - name: Audit theorem axioms
         shell: bash
         run: |
           set -euo pipefail
-
           python3 - <<'PY'
           from pathlib import Path
           import re
 
-          log = Path("p84-4l3.log").read_text()
-
-          theorem = (
-              "Lanzarini."
-              "p84_4l3_physical_minor_derivative"
-          )
+          log = Path("p84-4l3.log").read_text(encoding="utf-8")
+          theorem = "Lanzarini.p84_4l3_physical_minor_derivative"
 
           pattern = (
-              r"(?m)^'"
-              + re.escape(theorem)
+              r"(?m)^'" + re.escape(theorem)
               + r"' depends on axioms:\s*\n"
               + r"((?:[ \t]+[^\n]+\n?)+)"
           )
-
           match = re.search(pattern, log)
 
           if match is None:
               raise SystemExit("AXIOM_REPORT_NOT_FOUND")
 
-          actual = {
-              line.strip().rstrip(",")
-              for line in match.group(1).splitlines()
-              if line.strip()
-          }
+          actual = set()
+          for line in match.group(1).splitlines():
+              for name in line.strip().split():
+                  actual.add(name.rstrip(","))
 
           allowed = {
               "propext",
@@ -119,26 +173,20 @@ jobs:
               "Quot.sound",
           }
 
-          unexpected = actual - allowed
-
-          if unexpected:
+          if actual - allowed:
               raise SystemExit(
-                  f"UNEXPECTED_AXIOMS: {sorted(unexpected)}"
+                  f"UNEXPECTED_AXIOMS: {sorted(actual - allowed)}"
               )
 
-          if "sorryAx" in log:
-              raise SystemExit("SORRY_AXIOM_DETECTED")
+          if "sorryAx" in log or re.search(r"(?m)^.*error:", log):
+              raise SystemExit("LEAN_ERROR_OR_SORRY_DETECTED")
 
-          if re.search(r"(?m)^.*error:", log):
-              raise SystemExit("LEAN_ERROR_DETECTED")
-
+          print("ACTUAL_AXIOMS:", sorted(actual))
           print("P84_4L3_AXIOM_AUDIT_PASS")
-          print("Actual axioms:", sorted(actual))
           PY
 
-      - name: Final verification marker
+      - name: Final verification
         shell: bash
         run: |
           set -euo pipefail
-
           echo "P84_4L3_COMPILATION_AND_AXIOM_AUDIT_PASS"
