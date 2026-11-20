@@ -1,0 +1,250 @@
+
+name: P84.4r2a Isolated Verification
+
+on:
+  push:
+    branches:
+      - research/p75-centered-derivative
+    paths:
+      - 'P84_4r2a_InitialHasDerivAt_Candidate.lean'
+      - '.github/workflows/p84-4r2a-verification.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Lean
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sSfL \
+            https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Initialize dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake update
+          lake exe cache get
+
+      - name: Compile physical dependency graph
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          import re
+          import subprocess
+
+          root = Path.cwd()
+          target = (
+              "P84_4r2a_InitialHasDerivAt_Candidate"
+          )
+
+          output = root / ".lake/build/lib/lean"
+          output.mkdir(parents=True, exist_ok=True)
+
+          visited = set()
+          active = set()
+          order = []
+
+          def visit(module):
+              if module in visited:
+                  return
+
+              if module in active:
+                  raise RuntimeError(
+                      f"CYCLIC_IMPORT: {module}"
+                  )
+
+              source = root / (
+                  module.replace(".", "/") + ".lean"
+              )
+
+              if not source.is_file():
+                  raise RuntimeError(
+                      f"MISSING_SOURCE: {source}"
+                  )
+
+              active.add(module)
+
+              for line in source.read_text(
+                  encoding="utf-8"
+              ).splitlines():
+
+                  match = re.match(
+                      r"^\s*import\s+(.+?)\s*$",
+                      line,
+                  )
+
+                  if match is None:
+                      continue
+
+                  for dependency in match.group(1).split():
+                      dep_source = root / (
+                          dependency.replace(".", "/")
+                          + ".lean"
+                      )
+
+                      if dep_source.is_file():
+                          visit(dependency)
+
+              active.remove(module)
+              visited.add(module)
+              order.append(module)
+
+          visit(target)
+
+          env = os.environ.copy()
+          old = env.get("LEAN_PATH", "")
+
+          env["LEAN_PATH"] = (
+              str(output)
+              + (os.pathsep + old if old else "")
+          )
+
+          for module in order:
+              source = root / (
+                  module.replace(".", "/") + ".lean"
+              )
+
+              artifact = output / (
+                  module.replace(".", "/") + ".olean"
+              )
+
+              artifact.parent.mkdir(
+                  parents=True,
+                  exist_ok=True,
+              )
+
+              print("COMPILING:", module, flush=True)
+
+              result = subprocess.run(
+                  [
+                      "lake", "env", "lean",
+                      "-o", str(artifact),
+                      str(source),
+                  ],
+                  env=env,
+                  text=True,
+                  stdout=subprocess.PIPE,
+                  stderr=subprocess.STDOUT,
+              )
+
+              print(result.stdout, flush=True)
+
+              if module == target:
+                  Path("p84-r2a.log").write_text(
+                      result.stdout,
+                      encoding="utf-8",
+                  )
+
+              if result.returncode != 0:
+                  raise SystemExit(
+                      f"LEAN_FAILED: {module}"
+                  )
+
+              if not artifact.is_file():
+                  raise SystemExit(
+                      f"OLEAN_MISSING: {module}"
+                  )
+
+          print("P84_R2A_COMPILED")
+          PY
+
+      - name: Audit both theorem axioms
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          source = Path(
+              "P84_4r2a_InitialHasDerivAt_Candidate.lean"
+          ).read_text(encoding="utf-8")
+
+          # Remove Lean block and line comments.
+          source = re.sub(
+              r"/-.*?-/", "", source, flags=re.S
+          )
+          source = re.sub(
+              r"--[^\n]*", "", source
+          )
+
+          forbidden = re.search(
+              r"\b(?:sorry|admit|axiom|sorryAx)\b",
+              source,
+          )
+
+          if forbidden:
+              raise SystemExit(
+                  "FORBIDDEN_PROOF_TOKEN"
+              )
+
+          log = Path("p84-r2a.log").read_text(
+              encoding="utf-8"
+          )
+
+          reports = re.findall(
+              r"(?m)^'([^'\n]+)' depends on axioms:"
+              r"\s*\[([^\]\n]*)\]",
+              log,
+          )
+
+          required = {
+              "Lanzarini.p84_4r2a_K_hasDerivAt",
+              "Lanzarini.p84_4r2a_psi_hasDerivAt",
+          }
+
+          allowed = {
+              "propext",
+              "Classical.choice",
+              "Quot.sound",
+          }
+
+          for theorem in sorted(required):
+              matches = [
+                  body
+                  for name, body in reports
+                  if name == theorem
+              ]
+
+              if len(matches) != 1:
+                  raise SystemExit(
+                      f"AXIOM_REPORT_MISSING: {theorem}"
+                  )
+
+              axioms = {
+                  item.strip()
+                  for item in matches[0].split(",")
+                  if item.strip()
+              }
+
+              unexpected = axioms - allowed
+
+              if unexpected:
+                  raise SystemExit(
+                      f"UNAUTHORIZED_AXIOMS: {theorem}"
+                      f" {sorted(unexpected)}"
+                  )
+
+              print(
+                  "AUDITED:", theorem,
+                  sorted(axioms)
+              )
+
+          print("P84_R2A_AXIOM_AUDIT_PASS")
+          PY
+
+      - name: Final result
+        run: |
+          echo "P84_R2A_VERIFIED"
