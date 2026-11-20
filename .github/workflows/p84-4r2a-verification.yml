@@ -1,0 +1,206 @@
+
+name: P84.4r2a Isolated Verification
+
+on:
+  push:
+    branches:
+      - research/p75-centered-derivative
+    paths:
+      - 'P84_4r2a_InitialHasDerivAt_Candidate.lean'
+      - '.github/workflows/p84-4r2a-verification.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Lean
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Prepare mathlib
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake update
+          lake exe cache get
+
+      - name: Compile P84.4r2a and dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          import re
+          import subprocess
+          from pathlib import Path
+
+          root = Path.cwd()
+          target = "P84_4r2a_InitialHasDerivAt_Candidate"
+          out = root / ".lake/build/lib/lean"
+          out.mkdir(parents=True, exist_ok=True)
+
+          visited = set()
+          active = set()
+          order = []
+
+          def visit(name):
+              if name in visited:
+                  return
+              if name in active:
+                  raise RuntimeError("CYCLIC_IMPORT: " + name)
+
+              src = root / (name.replace(".", "/") + ".lean")
+              if not src.is_file():
+                  raise RuntimeError("SOURCE_MISSING: " + str(src))
+
+              active.add(name)
+
+              for line in src.read_text(encoding="utf-8").splitlines():
+                  match = re.match(r"^\s*import\s+(.+?)\s*$", line)
+                  if match:
+                      for dep in match.group(1).split():
+                          local = root / (dep.replace(".", "/") + ".lean")
+                          if local.is_file():
+                              visit(dep)
+
+              active.remove(name)
+              visited.add(name)
+              order.append(name)
+
+          visit(target)
+
+          env = os.environ.copy()
+          previous = env.get("LEAN_PATH", "")
+          env["LEAN_PATH"] = str(out) + (
+              os.pathsep + previous if previous else ""
+          )
+
+          for name in order:
+              src = root / (name.replace(".", "/") + ".lean")
+              artifact = out / (name.replace(".", "/") + ".olean")
+              artifact.parent.mkdir(parents=True, exist_ok=True)
+
+              print("COMPILING:", name, flush=True)
+              result = subprocess.run(
+                  ["lake", "env", "lean", "-o", str(artifact), str(src)],
+                  env=env,
+                  text=True,
+                  stdout=subprocess.PIPE,
+                  stderr=subprocess.STDOUT,
+              )
+              print(result.stdout, flush=True)
+
+              if name == target:
+                  Path("p84-r2a.log").write_text(
+                      result.stdout, encoding="utf-8"
+                  )
+
+              if result.returncode != 0:
+                  raise SystemExit("LEAN_FAILED: " + name)
+              if not artifact.is_file():
+                  raise SystemExit("OLEAN_MISSING: " + name)
+
+          print("P84_R2A_COMPILATION_PASS")
+          PY
+
+      - name: Audit axioms and source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          source = Path(
+              "P84_4r2a_InitialHasDerivAt_Candidate.lean"
+          ).read_text(encoding="utf-8")
+
+          # Strip nested Lean block comments.
+          clean = []
+          depth = 0
+          i = 0
+          while i < len(source):
+              if source.startswith("/-", i):
+                  depth += 1
+                  i += 2
+              elif depth and source.startswith("-/", i):
+                  depth -= 1
+                  i += 2
+              elif depth:
+                  i += 1
+              elif source.startswith("--", i):
+                  end = source.find("\n", i)
+                  i = len(source) if end < 0 else end
+              else:
+                  clean.append(source[i])
+                  i += 1
+
+          if depth:
+              raise SystemExit("UNTERMINATED_COMMENT")
+
+          if re.search(
+              r"\b(?:sorry|admit|axiom|sorryAx)\b",
+              "".join(clean)
+          ):
+              raise SystemExit("FORBIDDEN_PROOF_TOKEN")
+
+          log = Path("p84-r2a.log").read_text(
+              encoding="utf-8"
+          )
+
+          required = (
+              "Lanzarini.p84_4r2a_K_hasDerivAt",
+              "Lanzarini.p84_4r2a_psi_hasDerivAt",
+          )
+
+          allowed = {
+              "propext",
+              "Classical.choice",
+              "Quot.sound",
+          }
+
+          reports = re.findall(
+              r"(?m)^'([^'\n]+)' depends on axioms:"
+              r"\s*\[([^\]\n]*)\]",
+              log,
+          )
+
+          for theorem in required:
+              matches = [
+                  body for name, body in reports
+                  if name == theorem
+              ]
+
+              if len(matches) != 1:
+                  raise SystemExit(
+                      "AXIOM_REPORT_INVALID: " + theorem
+                  )
+
+              found = {
+                  x.strip()
+                  for x in matches[0].split(",")
+                  if x.strip()
+              }
+
+              if found - allowed:
+                  raise SystemExit(
+                      "UNEXPECTED_AXIOMS: "
+                      + theorem + " " + str(found - allowed)
+                  )
+
+              print("AUDIT_PASS:", theorem, sorted(found))
+
+          print("P84_R2A_AXIOM_AUDIT_PASS")
+          PY
+
+      - name: Final checkpoint
+        run: |
+          echo "P84_R2A_VERIFIED"
