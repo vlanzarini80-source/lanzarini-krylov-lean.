@@ -64,10 +64,14 @@ theorem p84_4r2a_psi_hasDerivAt
       p84_4l_v p q r d e f 0 j := by
 
     rw [jacobiState_zero]
-
     rw [p84_4m_initial_energy_channel]
 
-    simp [p84_H]
+    fin_cases j <;>
+      simp [Matrix.mulVec, dotProduct,
+        p84_H, p84_a, p84_b,
+        jacobiComplex, jacobiReal,
+        jacobiRealEntry, p81_e0,
+        Fin.sum_univ_succ]
 
   rw [hv] at h
   exact h
