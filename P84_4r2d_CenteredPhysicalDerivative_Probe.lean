@@ -20,9 +20,11 @@ theorem p84_4r2d_centered_hasDerivAt
       (p84_4l_v p q r d e f 0 j)
       0 := by
 
-  have hf :=
-    (p84_4r2b_real_centered_factor
-      p q r d e f j).ofReal
+  have hfactor :=
+    p84_4r2b_real_centered_factor
+      p q r d e f j
+
+  have hf := hfactor.ofReal_comp
 
   have hg :=
     p84_4r2a_psi_hasDerivAt
