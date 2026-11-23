@@ -20,11 +20,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Lean
-        uses: leanprover/lean-action@v1
-        with:
-          auto-config: false
-          use-mathlib-cache: true
+      - name: Install Lean toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+          "$HOME/.elan/bin/lean" --version
+          "$HOME/.elan/bin/lake" --version
+
+      - name: Initialize Lake
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake update
+          test -f lake-manifest.json
+          echo "LAKE_INITIALIZATION_PASS"
+
+      - name: Download mathlib cache
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake exe cache get
 
       - name: Compile P84.4r3 and dependencies
         shell: bash
@@ -57,6 +75,7 @@ jobs:
               source = root / (
                   module.replace(".", "/") + ".lean"
               )
+
               if not source.is_file():
                   raise RuntimeError(
                       f"MISSING_SOURCE: {source}"
@@ -71,12 +90,14 @@ jobs:
                       r"^\s*import\s+(.+?)\s*$",
                       line
                   )
+
                   if match:
                       for dependency in match.group(1).split():
                           dep_source = root / (
                               dependency.replace(".", "/")
                               + ".lean"
                           )
+
                           if dep_source.is_file():
                               visit(dependency)
 
@@ -86,8 +107,13 @@ jobs:
 
           visit(target)
 
+          print("LOCAL_DEPENDENCY_ORDER:", flush=True)
+          for module in order:
+              print(module, flush=True)
+
           env = os.environ.copy()
           old = env.get("LEAN_PATH", "")
+
           env["LEAN_PATH"] = str(output) + (
               os.pathsep + old if old else ""
           )
@@ -98,11 +124,19 @@ jobs:
               source = root / (
                   module.replace(".", "/") + ".lean"
               )
+
               artifact = output / (
                   module.replace(".", "/") + ".olean"
               )
+
               artifact.parent.mkdir(
-                  parents=True, exist_ok=True
+                  parents=True,
+                  exist_ok=True
+              )
+
+              print(
+                  "COMPILING:", module,
+                  flush=True
               )
 
               result = subprocess.run(
@@ -117,7 +151,6 @@ jobs:
                   stderr=subprocess.STDOUT
               )
 
-              print("COMPILING:", module, flush=True)
               print(result.stdout, flush=True)
               logs.append(result.stdout)
 
@@ -139,7 +172,7 @@ jobs:
           print("P84_R3_COMPILATION_PASS")
           PY
 
-      - name: Audit both theorem axioms
+      - name: Audit theorem axioms
         shell: bash
         run: |
           set -euo pipefail
@@ -148,7 +181,12 @@ jobs:
           from pathlib import Path
           import re
 
-          log = Path("p84-r3.log").read_text(
+          log_path = Path("p84-r3.log")
+
+          if not log_path.is_file():
+              raise SystemExit("LEAN_LOG_MISSING")
+
+          log = log_path.read_text(
               encoding="utf-8"
           )
 
@@ -186,16 +224,33 @@ jobs:
                   if item.strip()
               }
 
-              if not axioms <= allowed:
+              unexpected = axioms - allowed
+
+              if unexpected:
                   raise SystemExit(
                       f"UNEXPECTED_AXIOMS: {theorem}: "
-                      f"{sorted(axioms - allowed)}"
+                      f"{sorted(unexpected)}"
                   )
 
               print(
                   "AUDITED:", theorem,
                   sorted(axioms)
               )
+
+          for name, body in reports:
+              axioms = {
+                  item.strip()
+                  for item in body.split(",")
+                  if item.strip()
+              }
+
+              unexpected = axioms - allowed
+
+              if unexpected:
+                  raise SystemExit(
+                      f"UNEXPECTED_AXIOMS_IN_{name}: "
+                      f"{sorted(unexpected)}"
+                  )
 
           if re.search(r"(?m)^.*error:", log):
               raise SystemExit("LEAN_ERROR_DETECTED")
@@ -204,4 +259,7 @@ jobs:
           PY
 
       - name: Final checkpoint
-        run: echo "P84_R3_VERIFIED"
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "P84_R3_COMPILATION_AND_AXIOM_AUDIT_PASS"
