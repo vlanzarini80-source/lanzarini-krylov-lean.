@@ -1,0 +1,229 @@
+
+name: P84.4r4a Physical Energy Mean Verification
+
+on:
+  push:
+    branches:
+      - research/p75-centered-derivative
+    paths:
+      - '**.lean'
+      - 'lean-toolchain'
+      - 'lakefile.toml'
+      - '.github/workflows/p84-4r4a-energy-mean.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Lean
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sSfL \
+            https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+          "$HOME/.elan/bin/lean" --version
+          "$HOME/.elan/bin/lake" --version
+
+      - name: Initialize Lake
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake update
+          test -f lake-manifest.json
+          echo "LAKE_INITIALIZATION_PASS"
+
+      - name: Download mathlib cache
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake exe cache get
+
+      - name: Compile physical dependency graph
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          import re
+          import subprocess
+
+          root = Path.cwd()
+          target = "P84_4r4a_PhysicalEnergyMeanZero_Probe"
+          output = root / ".lake/build/lib/lean"
+          output.mkdir(parents=True, exist_ok=True)
+
+          visited = set()
+          active = set()
+          order = []
+
+          def visit(module):
+              if module in visited:
+                  return
+              if module in active:
+                  raise RuntimeError(
+                      f"CYCLIC_IMPORT: {module}"
+                  )
+
+              source = root / (
+                  module.replace(".", "/") + ".lean"
+              )
+
+              if not source.is_file():
+                  raise RuntimeError(
+                      f"MISSING_SOURCE: {source}"
+                  )
+
+              active.add(module)
+
+              for line in source.read_text(
+                  encoding="utf-8"
+              ).splitlines():
+                  match = re.match(
+                      r"^\s*import\s+(.+?)\s*$",
+                      line
+                  )
+
+                  if match:
+                      for dependency in match.group(1).split():
+                          dep_source = root / (
+                              dependency.replace(".", "/")
+                              + ".lean"
+                          )
+                          if dep_source.is_file():
+                              visit(dependency)
+
+              active.remove(module)
+              visited.add(module)
+              order.append(module)
+
+          visit(target)
+
+          env = os.environ.copy()
+          old = env.get("LEAN_PATH", "")
+          env["LEAN_PATH"] = str(output) + (
+              os.pathsep + old if old else ""
+          )
+
+          logs = []
+
+          for module in order:
+              source = root / (
+                  module.replace(".", "/") + ".lean"
+              )
+              artifact = output / (
+                  module.replace(".", "/") + ".olean"
+              )
+
+              artifact.parent.mkdir(
+                  parents=True,
+                  exist_ok=True
+              )
+
+              print("COMPILING:", module, flush=True)
+
+              result = subprocess.run(
+                  [
+                      "lake", "env", "lean",
+                      "-o", str(artifact),
+                      str(source)
+                  ],
+                  env=env,
+                  text=True,
+                  stdout=subprocess.PIPE,
+                  stderr=subprocess.STDOUT
+              )
+
+              print(result.stdout, flush=True)
+              logs.append(result.stdout)
+
+              if result.returncode != 0:
+                  raise SystemExit(
+                      f"LEAN_COMPILATION_FAILED: {module}"
+                  )
+
+              if not artifact.is_file():
+                  raise SystemExit(
+                      f"MISSING_OLEAN: {module}"
+                  )
+
+          Path("p84-r4a.log").write_text(
+              "\n".join(logs),
+              encoding="utf-8"
+          )
+
+          print("P84_R4A_COMPILATION_PASS")
+          PY
+
+      - name: Audit theorem axioms
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          log = Path("p84-r4a.log").read_text(
+              encoding="utf-8"
+          )
+
+          theorem = (
+              "Lanzarini.p84_4r4a_energy_mean_zero"
+          )
+
+          allowed = {
+              "propext",
+              "Classical.choice",
+              "Quot.sound"
+          }
+
+          reports = re.findall(
+              r"(?m)^'([^'\n]+)' depends on axioms:"
+              r"\s*\[([^\]\n]*)\]",
+              log
+          )
+
+          matches = [
+              body for name, body in reports
+              if name == theorem
+          ]
+
+          if len(matches) != 1:
+              raise SystemExit(
+                  f"MISSING_AXIOM_REPORT: {theorem}"
+              )
+
+          for name, body in reports:
+              axioms = {
+                  x.strip()
+                  for x in body.split(",")
+                  if x.strip()
+              }
+
+              unexpected = axioms - allowed
+
+              if unexpected:
+                  raise SystemExit(
+                      f"UNEXPECTED_AXIOMS: {name}: "
+                      f"{sorted(unexpected)}"
+                  )
+
+          if re.search(r"(?m)^.*error:", log):
+              raise SystemExit("LEAN_ERROR_DETECTED")
+
+          print("AUDITED:", theorem)
+          print("P84_R4A_AXIOM_AUDIT_PASS")
+          PY
+
+      - name: Final checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "P84_R4A_VERIFIED"
