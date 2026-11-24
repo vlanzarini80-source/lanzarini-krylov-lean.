@@ -1,5 +1,4 @@
 
-import P84_4r4a_PhysicalEnergyMeanZero_Probe
 import P84_4r2a_InitialHasDerivAt_Candidate
 
 namespace Lanzarini
@@ -7,11 +6,11 @@ namespace Lanzarini
 /-!
 P84.4r4b: physical initial-velocity bridge.
 
-This checkpoint verifies the initial derivative
-of the physical Jacobi state and its equality
-with the initial centered velocity channel.
+Establishes the initial derivative of the
+physical four-site Jacobi state and its
+equality with the initial centered velocity.
 
-It does not yet establish differentiability
+This does not establish differentiability
 of the velocity channel itself.
 
 No expected Taylor coefficients.
