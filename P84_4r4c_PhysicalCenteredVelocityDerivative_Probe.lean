@@ -4,17 +4,6 @@ import P84_4r4b_PhysicalVelocityDerivative_Probe
 
 namespace Lanzarini
 
-/-!
-P84.4r4c: derivative of the physical
-centered velocity channel.
-
-Energy conservation is used along
-the complete physical evolution.
-
-No expected Taylor coefficients.
-No P79.
--/
-
 theorem p84_4r4c_energy_mean_hasDerivAt
     (p q r d e f : ℝ) :
     HasDerivAt
@@ -97,11 +86,10 @@ theorem p84_4r4c_velocity_hasDerivAt
           H j k *
             p84_4l_v p q r d e f 0 k)
         0 := by
-    simp only [Fin.sum_univ_succ]
-    exact
-      (hterm 0).add
-        ((hterm 1).add
-          ((hterm 2).add (hterm 3)))
+
+    simpa only [Fin.sum_univ_four] using
+      (((hterm 0).add (hterm 1)).add
+        (hterm 2)).add (hterm 3)
 
   have hscaled :=
     hsum.const_mul (-Complex.I)
