@@ -5,9 +5,8 @@ namespace Lanzarini
 /-!
 P84.4r6: physical second derivatives.
 
-All-time physical state derivative.
-All-time physical velocity derivative.
-Second physical state derivative at zero.
+Use the existing verified component derivative
+of the physical Jacobi evolution.
 
 No expected Taylor coefficients.
 -/
@@ -22,25 +21,18 @@ theorem p84_4r6_psi_hasDerivAt
       t := by
 
   have h :=
-    p73_jacobiState_hasDerivAt
+    p74_jacobiState_component_hasDerivAt
       4
       (p84_a d e f)
       (p84_b p q r)
-      t
-      p81_e0
-
-  have hj :=
-    h.clm_apply
-      (hasDerivAt_const t
-        (ContinuousLinearMap.proj
-          (R := ℝ) j))
+      t p81_e0 j
 
   rw [p84_4r4c_velocity_uncentered
     p q r d e f t j]
 
   simpa [p84_4l_psi, Matrix.mulVec,
     dotProduct, Finset.mul_sum, mul_assoc]
-    using hj
+    using h
 
 
 theorem p84_4r6_psi_derivative
