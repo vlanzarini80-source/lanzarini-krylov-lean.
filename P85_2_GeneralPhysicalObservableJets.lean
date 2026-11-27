@@ -13,6 +13,8 @@ Target: Theorem 8.1.
 Recursive Leibniz calculus.
 Arbitrary derivative order.
 Arbitrary finite dimension.
+
+Physical matrix multiplication bridge.
 -/
 
 /-- Physical component jet. -/
@@ -82,14 +84,15 @@ theorem p85_2_z_hasDerivAt
         (A.mulVec (f t)))
       t hv
 
-  change
-    HasDerivAt
-      (fun s : ℝ =>
-        ((A ^ k).mulVec (f s)) j)
-      ((A ^ (k + 1)).mulVec (f t)) j
-      t
+  have heq :
+      ((A ^ k).mulVec
+        (A.mulVec (f t))) j =
+      ((A ^ (k + 1)).mulVec (f t)) j := by
 
-  rw [pow_succ, ← Matrix.mulVec_mulVec]
+    rw [Matrix.mulVec_mulVec]
+    rw [pow_succ]
+
+  rw [heq] at hj
 
   exact hj
 
@@ -186,7 +189,6 @@ theorem p85_2_probabilityJet_zero
   simp [p85_2_probabilityJet,
     p85_2_pairJet, p85_2_z,
     Complex.normSq, Complex.mul_re]
-  <;> ring
 
 
 /-- Weighted physical observable jet.
