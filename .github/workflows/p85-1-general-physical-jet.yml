@@ -1,0 +1,319 @@
+
+name: P85.1 General Physical Jet Closure
+
+on:
+  push:
+    branches:
+      - research/p75-centered-derivative
+    paths:
+      - 'P85_1_GeneralPhysicalJetClosure.lean'
+      - '.github/workflows/p85-1-general-physical-jet.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Lean
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Initialize Lake
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat lean-toolchain
+          lean --version
+          if [ ! -f lake-manifest.json ]; then
+            lake update
+          fi
+          test -f lake-manifest.json
+          lake exe cache get
+
+      - name: Compile dependency closure
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          import re
+          import subprocess
+
+          root = Path.cwd()
+          target = "P85_1_GeneralPhysicalJetClosure"
+
+          output = root / ".lake/build/lib/lean"
+          output.mkdir(parents=True, exist_ok=True)
+
+          logfile = root / "p85-1.log"
+          logfile.write_text("", encoding="utf-8")
+
+          visited = set()
+          active = set()
+          order = []
+
+          def source_path(module):
+              return root / (
+                  module.replace(".", "/") + ".lean"
+              )
+
+          def visit(module):
+              if module.startswith("P79"):
+                  raise SystemExit(
+                      f"FORBIDDEN_P79: {module}"
+                  )
+
+              if module in visited:
+                  return
+
+              if module in active:
+                  raise SystemExit(
+                      f"CYCLIC_IMPORT: {module}"
+                  )
+
+              source = source_path(module)
+
+              if not source.is_file():
+                  raise SystemExit(
+                      f"MISSING_SOURCE: {module}"
+                  )
+
+              active.add(module)
+
+              for line in source.read_text(
+                  encoding="utf-8"
+              ).splitlines():
+
+                  match = re.match(
+                      r"^\s*import\s+(.+?)\s*$",
+                      line
+                  )
+
+                  if match:
+                      imports = match.group(1).split("--", 1)[0]
+
+                      for dependency in imports.split():
+
+                          if dependency.startswith("P79"):
+                              raise SystemExit(
+                                  f"FORBIDDEN_P79: {dependency}"
+                              )
+
+                          if source_path(dependency).is_file():
+                              visit(dependency)
+
+              active.remove(module)
+              visited.add(module)
+              order.append(module)
+
+          visit(target)
+
+          required = {
+              "P80_1_TrueEvolutionJets",
+              "P84_4r7a_PhysicalVelocitySecondDerivative",
+              target
+          }
+
+          if not required.issubset(set(order)):
+              raise SystemExit(
+                  "REQUIRED_DEPENDENCY_MISSING"
+              )
+
+          print("LOCAL_DEPENDENCY_ORDER:", flush=True)
+
+          for module in order:
+              print(module, flush=True)
+
+          env = os.environ.copy()
+          old = env.get("LEAN_PATH", "")
+
+          env["LEAN_PATH"] = str(output) + (
+              os.pathsep + old if old else ""
+          )
+
+          for module in order:
+
+              source = source_path(module)
+
+              artifact = output / (
+                  module.replace(".", "/") + ".olean"
+              )
+
+              artifact.parent.mkdir(
+                  parents=True, exist_ok=True
+              )
+
+              if artifact.exists():
+                  artifact.unlink()
+
+              print("COMPILING:", module, flush=True)
+
+              result = subprocess.run(
+                  [
+                      "lake", "env", "lean",
+                      "-o", str(artifact),
+                      str(source)
+                  ],
+                  env=env,
+                  text=True,
+                  stdout=subprocess.PIPE,
+                  stderr=subprocess.STDOUT
+              )
+
+              print(result.stdout, flush=True)
+
+              with logfile.open(
+                  "a", encoding="utf-8"
+              ) as log:
+                  log.write(f"\nMODULE: {module}\n")
+                  log.write(result.stdout)
+                  log.write(
+                      f"\nEXIT_CODE: {result.returncode}\n"
+                  )
+
+              if result.returncode != 0:
+                  raise SystemExit(
+                      f"LEAN_COMPILATION_FAILED: {module}"
+                  )
+
+              if not artifact.is_file():
+                  raise SystemExit(
+                      f"MISSING_OLEAN: {module}"
+                  )
+
+              if artifact.stat().st_size == 0:
+                  raise SystemExit(
+                      f"EMPTY_OLEAN: {module}"
+                  )
+
+          print("P85_1_COMPILATION_PASS")
+          PY
+
+      - name: Strict axiom audit
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          log = Path("p85-1.log").read_text(
+              encoding="utf-8"
+          )
+
+          expected = {
+              "Lanzarini.p80_1_state_iteratedDeriv",
+              "Lanzarini.p80_1_initial_derivative",
+              "Lanzarini.p85_1_projection_hasDerivAt",
+              "Lanzarini.p85_1_component_iteratedDeriv",
+              "Lanzarini.p85_1_component_initial_jet",
+              "Lanzarini.p85_1_four_site_initial_jet"
+          }
+
+          allowed = {
+              "propext",
+              "Classical.choice",
+              "Quot.sound"
+          }
+
+          reports = {}
+
+          for name, body in re.findall(
+              r"(?m)^'([^'\n]+)' depends on axioms:"
+              r"\s*\[([^\]]*)\]",
+              log
+          ):
+              axioms = {
+                  item.strip()
+                  for item in body.split(",")
+                  if item.strip()
+              }
+
+              reports.setdefault(
+                  name, []
+              ).append(axioms)
+
+          for name in re.findall(
+              r"(?m)^'([^'\n]+)' does not depend on any axioms",
+              log
+          ):
+              reports.setdefault(
+                  name, []
+              ).append(set())
+
+          for theorem in sorted(expected):
+
+              entries = reports.get(theorem, [])
+
+              if len(entries) != 1:
+                  raise SystemExit(
+                      f"MISSING_OR_DUPLICATE_AXIOM_REPORT: {theorem}"
+                  )
+
+          for name, entries in reports.items():
+
+              for axioms in entries:
+
+                  unexpected = axioms - allowed
+
+                  if unexpected:
+                      raise SystemExit(
+                          f"UNEXPECTED_AXIOMS: {name}: "
+                          f"{sorted(unexpected)}"
+                      )
+
+                  print(
+                      "AUDITED:",
+                      name,
+                      sorted(axioms)
+                  )
+
+          if re.search(r"(?m)^.*error:", log):
+              raise SystemExit(
+                  "LEAN_ERROR_DETECTED"
+              )
+
+          if re.search(
+              r"(?mi)^.*warning:.*sorry",
+              log
+          ):
+              raise SystemExit(
+                  "SORRY_WARNING_DETECTED"
+              )
+
+          if "sorryAx" in log:
+              raise SystemExit(
+                  "SORRY_AXIOM_DETECTED"
+              )
+
+          print("P85_1_AXIOM_AUDIT_PASS")
+          PY
+
+      - name: Upload verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p85-1-verification-log
+          path: p85-1.log
+          if-no-files-found: error
+
+      - name: Final checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "P85_1_COMPILATION_AND_AXIOM_AUDIT_PASS"
