@@ -1,11 +1,12 @@
 
-name: P85.4 Optimized Physical Initial Jet Evaluation
+name: P85.4 OPT2 Physical Initial Jet Evaluation
 
 on:
   push:
     branches:
       - research/p75-centered-derivative
     paths:
+      - 'p85_4_optimize.py'
       - 'P85_4_PhysicalInitialJetEvaluation.lean'
       - '.github/workflows/p85-4-physical-initial-jet-evaluation.yml'
   workflow_dispatch:
@@ -99,6 +100,7 @@ jobs:
           import subprocess
           import hashlib
           import time
+          import signal
 
           root = Path.cwd()
 
@@ -204,6 +206,11 @@ jobs:
 
                   file.write(message + "\n")
 
+          log("LOCAL_DEPENDENCY_ORDER:")
+
+          for module in order:
+              log(module)
+
           for module in order:
 
               source = source_path(module)
@@ -233,6 +240,8 @@ jobs:
 
               command = [
                   "timeout",
+                  "--foreground",
+                  "--kill-after=5s",
                   "480" if module == target else "180",
                   "lake",
                   "env",
@@ -242,17 +251,64 @@ jobs:
                   str(source)
               ]
 
+              fatal_error = False
+
               with subprocess.Popen(
                   command,
                   env=env,
                   text=True,
                   stdout=subprocess.PIPE,
                   stderr=subprocess.STDOUT,
-                  bufsize=1
+                  bufsize=1,
+                  start_new_session=True
               ) as process:
 
                   for line in process.stdout:
-                      log(line.rstrip("\n"))
+
+                      message = line.rstrip("\n")
+
+                      log(message)
+
+                      if (
+                          re.search(
+                              r"(?:^|:\s)error:",
+                              message
+                          )
+                          or "sorryAx" in message
+                          or re.search(
+                              r"warning:.*sorry",
+                              message,
+                              re.IGNORECASE
+                          )
+                      ):
+
+                          fatal_error = True
+
+                          log(
+                              f"FAIL_FAST_TRIGGERED: {module}"
+                          )
+
+                          try:
+                              os.killpg(
+                                  process.pid,
+                                  signal.SIGTERM
+                              )
+                          except ProcessLookupError:
+                              pass
+
+                          try:
+                              process.wait(timeout=5)
+                          except subprocess.TimeoutExpired:
+
+                              try:
+                                  os.killpg(
+                                      process.pid,
+                                      signal.SIGKILL
+                                  )
+                              except ProcessLookupError:
+                                  pass
+
+                          break
 
                   code = process.wait()
 
@@ -263,7 +319,12 @@ jobs:
                   f"{time.monotonic()-started:.2f}"
               )
 
-              if code == 124:
+              if fatal_error:
+                  raise SystemExit(
+                      f"LEAN_FIRST_ERROR: {module}"
+                  )
+
+              if code in (124, 137):
                   raise SystemExit(
                       f"COMPUTATION_TIMEOUT: {module}"
                   )
@@ -414,19 +475,30 @@ jobs:
                   "LEAN_ERROR_DETECTED"
               )
 
+          if "P85_4_OPT_COMPILATION_PASS" not in log:
+              raise SystemExit(
+                  "COMPILATION_MARKER_MISSING"
+              )
+
           commit = subprocess.check_output(
               ["git", "rev-parse", "HEAD"],
               text=True
           ).strip()
 
           receipt = {
-              "checkpoint": "P85.4-OPT",
+              "checkpoint": "P85.4-OPT2",
               "commit": commit,
               "lean_compilation": True,
               "axiom_audit": True,
               "original_theorems": 17,
               "generated_theorems": len(generated),
               "expected_theorems": len(expected),
+              "optimizer_sha256":
+                  hashlib.sha256(
+                      Path(
+                          "p85_4_optimize.py"
+                      ).read_bytes()
+                  ).hexdigest(),
               "optimized_source_sha256":
                   hashlib.sha256(
                       Path(
@@ -479,4 +551,4 @@ jobs:
           test -s p85-4-audit.json
           test -s p85-4-optimized-source.lean
 
-          echo "P85_4_OPT_COMPILATION_AND_AXIOM_AUDIT_PASS"
+          echo "P85_4_OPT2_COMPILATION_AND_AXIOM_AUDIT_PASS"
