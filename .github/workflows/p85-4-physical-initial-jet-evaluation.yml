@@ -1,5 +1,5 @@
 
-name: P85.4 Physical Initial Jet Evaluation
+name: P85.4 Optimized Physical Initial Jet Evaluation
 
 on:
   push:
@@ -13,10 +13,14 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: p85-4-optimized
+  cancel-in-progress: true
+
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 25
 
     steps:
       - name: Checkout repository
@@ -26,14 +30,34 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
           git rev-parse HEAD | tee p85-4.log
 
-          test -f P85_3_GeneralPhysicalVarianceAndDeficitJets.lean
+          test -f p85_4_optimize.py
           test -f P85_4_PhysicalInitialJetEvaluation.lean
+          test -f P85_3_GeneralPhysicalVarianceAndDeficitJets.lean
 
           sha256sum \
-            P85_3_GeneralPhysicalVarianceAndDeficitJets.lean \
+            p85_4_optimize.py \
             P85_4_PhysicalInitialJetEvaluation.lean \
+            | tee -a p85-4.log
+
+      - name: Generate optimized symbolic evaluator
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python3 -m pip install sympy==1.14.0
+
+          python3 -u p85_4_optimize.py \
+            | tee -a p85-4.log
+
+          test -s p85-4-generated-theorems.txt
+
+          cp P85_4_PhysicalInitialJetEvaluation.lean \
+            p85-4-optimized-source.lean
+
+          sha256sum p85-4-optimized-source.lean \
             | tee -a p85-4.log
 
       - name: Install Lean
@@ -59,19 +83,22 @@ jobs:
           fi
 
           test -f lake-manifest.json
+
           lake exe cache get
 
-      - name: Compile complete dependency closure
+      - name: Compile with live diagnostics
+        timeout-minutes: 18
         shell: bash
         run: |
           set -euo pipefail
 
-          python3 - <<'PY'
+          python3 -u - <<'PY'
           from pathlib import Path
           import os
           import re
-          import hashlib
           import subprocess
+          import hashlib
+          import time
 
           root = Path.cwd()
 
@@ -126,11 +153,11 @@ jobs:
 
                   if match:
 
-                      imports = match.group(1).split(
+                      dependencies = match.group(1).split(
                           "--", 1
-                      )[0]
+                      )[0].split()
 
-                      for dependency in imports.split():
+                      for dependency in dependencies:
 
                           if dependency.startswith("P79"):
                               raise SystemExit(
@@ -159,11 +186,6 @@ jobs:
                   "REQUIRED_DEPENDENCY_MISSING"
               )
 
-          print("LOCAL_DEPENDENCY_ORDER:", flush=True)
-
-          for module in order:
-              print(module, flush=True)
-
           env = os.environ.copy()
 
           old = env.get("LEAN_PATH", "")
@@ -171,6 +193,16 @@ jobs:
           env["LEAN_PATH"] = str(output) + (
               os.pathsep + old if old else ""
           )
+
+          def log(message):
+
+              print(message, flush=True)
+
+              with logfile.open(
+                  "a", encoding="utf-8"
+              ) as file:
+
+                  file.write(message + "\n")
 
           for module in order:
 
@@ -188,57 +220,55 @@ jobs:
               if artifact.exists():
                   artifact.unlink()
 
-              digest = hashlib.sha256(
-                  source.read_bytes()
-              ).hexdigest()
+              log(f"COMPILING: {module}")
 
-              print("COMPILING:", module, flush=True)
-              print("SOURCE_SHA256:", digest, flush=True)
+              log(
+                  "SOURCE_SHA256: " +
+                  hashlib.sha256(
+                      source.read_bytes()
+                  ).hexdigest()
+              )
 
-              result = subprocess.run(
-                  [
-                      "lake",
-                      "env",
-                      "lean",
-                      "-o",
-                      str(artifact),
-                      str(source)
-                  ],
+              started = time.monotonic()
+
+              command = [
+                  "timeout",
+                  "480" if module == target else "180",
+                  "lake",
+                  "env",
+                  "lean",
+                  "-o",
+                  str(artifact),
+                  str(source)
+              ]
+
+              with subprocess.Popen(
+                  command,
                   env=env,
                   text=True,
                   stdout=subprocess.PIPE,
-                  stderr=subprocess.STDOUT
+                  stderr=subprocess.STDOUT,
+                  bufsize=1
+              ) as process:
+
+                  for line in process.stdout:
+                      log(line.rstrip("\n"))
+
+                  code = process.wait()
+
+              log(f"EXIT_CODE: {code}")
+
+              log(
+                  f"ELAPSED_SECONDS: "
+                  f"{time.monotonic()-started:.2f}"
               )
 
-              print(result.stdout, flush=True)
-
-              with logfile.open(
-                  "a",
-                  encoding="utf-8"
-              ) as log:
-
-                  log.write(
-                      f"\nMODULE: {module}\n"
+              if code == 124:
+                  raise SystemExit(
+                      f"COMPUTATION_TIMEOUT: {module}"
                   )
 
-                  log.write(
-                      f"SOURCE_SHA256: {digest}\n"
-                  )
-
-                  log.write(result.stdout)
-
-                  log.write(
-                      f"\nEXIT_CODE: {result.returncode}\n"
-                  )
-
-              if result.returncode != 0:
-
-                  print("LEAN_ERRORS:")
-
-                  for line in result.stdout.splitlines():
-                      if "error:" in line:
-                          print(line)
-
+              if code != 0:
                   raise SystemExit(
                       f"LEAN_COMPILATION_FAILED: {module}"
                   )
@@ -253,10 +283,12 @@ jobs:
                       f"EMPTY_OLEAN: {module}"
                   )
 
-          print("P85_4_COMPILATION_PASS")
+              log(f"MODULE_PASS: {module}")
+
+          log("P85_4_OPT_COMPILATION_PASS")
           PY
 
-      - name: Strict physical theorem axiom audit
+      - name: Strict axiom audit
         shell: bash
         run: |
           set -euo pipefail
@@ -266,12 +298,13 @@ jobs:
           import re
           import json
           import subprocess
+          import hashlib
 
           log = Path("p85-4.log").read_text(
               encoding="utf-8"
           )
 
-          names = [
+          original_names = [
               "p85_4_stateJet_power",
               "p85_4_stateJet_physical",
               "p85_4_complexPair_bridge",
@@ -293,8 +326,23 @@ jobs:
 
           expected = {
               "Lanzarini." + name
-              for name in names
+              for name in original_names
           }
+
+          generated = set(
+              Path(
+                  "p85-4-generated-theorems.txt"
+              ).read_text(
+                  encoding="utf-8"
+              ).splitlines()
+          )
+
+          if len(generated) != 70:
+              raise SystemExit(
+                  "UNEXPECTED_GENERATED_THEOREM_COUNT"
+              )
+
+          expected.update(generated)
 
           allowed = {
               "propext",
@@ -329,13 +377,11 @@ jobs:
                   name, []
               ).append(set())
 
-          for theorem in sorted(expected):
+          for name in sorted(expected):
 
-              entries = reports.get(theorem, [])
-
-              if len(entries) != 1:
+              if len(reports.get(name, [])) != 1:
                   raise SystemExit(
-                      f"MISSING_OR_DUPLICATE_REPORT: {theorem}"
+                      f"MISSING_OR_DUPLICATE_REPORT: {name}"
                   )
 
           for name, entries in reports.items():
@@ -350,23 +396,23 @@ jobs:
                           f"{sorted(unexpected)}"
                       )
 
-                  print(
-                      "AUDITED:",
-                      name,
-                      sorted(axioms)
-                  )
-
-          if re.search(r"(?m)^.*error:", log):
-              raise SystemExit("LEAN_ERROR_DETECTED")
+          if "sorryAx" in log:
+              raise SystemExit(
+                  "SORRY_AXIOM_DETECTED"
+              )
 
           if re.search(
               r"(?mi)^.*warning:.*sorry",
               log
           ):
-              raise SystemExit("SORRY_WARNING_DETECTED")
+              raise SystemExit(
+                  "SORRY_WARNING_DETECTED"
+              )
 
-          if "sorryAx" in log:
-              raise SystemExit("SORRY_AXIOM_DETECTED")
+          if re.search(r"(?m)^.*error:", log):
+              raise SystemExit(
+                  "LEAN_ERROR_DETECTED"
+              )
 
           commit = subprocess.check_output(
               ["git", "rev-parse", "HEAD"],
@@ -374,18 +420,25 @@ jobs:
           ).strip()
 
           receipt = {
-              "checkpoint": "P85.4",
+              "checkpoint": "P85.4-OPT",
               "commit": commit,
               "lean_compilation": True,
               "axiom_audit": True,
+              "original_theorems": 17,
+              "generated_theorems": len(generated),
               "expected_theorems": len(expected),
+              "optimized_source_sha256":
+                  hashlib.sha256(
+                      Path(
+                          "p85-4-optimized-source.lean"
+                      ).read_bytes()
+                  ).hexdigest(),
               "audited_theorems": {
                   name: sorted(reports[name][0])
                   for name in sorted(expected)
               },
               "four_site_lower_cancellations_verified": True,
               "four_site_eighth_derivative_verified": True,
-              "four_site_variance_second_verified": True,
               "normalized_limit_verified": False,
               "asymptotic_remainder_verified": False,
               "general_theorem_8_1_verified": False,
@@ -398,25 +451,32 @@ jobs:
               encoding="utf-8"
           )
 
-          print("P85_4_AXIOM_AUDIT_PASS")
+          print(
+              "EXPECTED_THEOREMS_AUDITED:",
+              len(expected)
+          )
+
+          print("P85_4_OPT_AXIOM_AUDIT_PASS")
           PY
 
       - name: Upload verification evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: p85-4-verification-evidence
+          name: p85-4-optimized-evidence
           path: |
             p85-4.log
             p85-4-audit.json
-          if-no-files-found: error
+            p85-4-optimized-source.lean
+            p85-4-generated-theorems.txt
+          if-no-files-found: warn
 
       - name: Final checkpoint
         shell: bash
         run: |
           set -euo pipefail
 
-          test -s p85-4.log
           test -s p85-4-audit.json
+          test -s p85-4-optimized-source.lean
 
-          echo "P85_4_COMPILATION_AND_AXIOM_AUDIT_PASS"
+          echo "P85_4_OPT_COMPILATION_AND_AXIOM_AUDIT_PASS"
