@@ -1,0 +1,425 @@
+
+name: P85.4 OPT3-C Real Probability Jets
+
+on:
+  push:
+    branches:
+      - research/p75-centered-derivative
+    paths:
+      - 'P85_4opt3c_RealProbabilityJets.lean'
+      - '.github/workflows/p85-4-opt3c-real-probability.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p85-4-opt3c
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Lean
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          curl -sSfL \
+            https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Initialize Mathlib
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cat lean-toolchain
+          lean --version
+
+          if [ ! -f lake-manifest.json ]; then
+            lake update
+          fi
+
+          test -f lake-manifest.json
+          lake exe cache get
+
+      - name: Compile probability jets with live diagnostics
+        timeout-minutes: 15
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python3 -u - <<'PY'
+          import os
+          import re
+          import time
+          import hashlib
+          import subprocess
+          from pathlib import Path
+
+          root = Path.cwd()
+          target = "P85_4opt3c_RealProbabilityJets"
+
+          out = root / ".lake/build/lib/lean"
+          out.mkdir(parents=True, exist_ok=True)
+
+          logpath = root / "p85-opt3c.log"
+          logpath.write_text("", encoding="utf8")
+
+          def log(msg):
+              print(msg, flush=True)
+              with logpath.open("a", encoding="utf8") as f:
+                  f.write(msg + "\n")
+
+          order = []
+          visited = set()
+          active = set()
+
+          def source(module):
+              return root / (
+                  module.replace(".", "/") + ".lean"
+              )
+
+          def visit(module):
+              if module.startswith("P79"):
+                  raise SystemExit(
+                      "FORBIDDEN_DEPENDENCY: " + module
+                  )
+
+              if module in visited:
+                  return
+
+              if module in active:
+                  raise SystemExit(
+                      "CYCLIC_IMPORT: " + module
+                  )
+
+              active.add(module)
+              path = source(module)
+
+              if not path.is_file():
+                  raise SystemExit(
+                      "MISSING_SOURCE: " + module
+                  )
+
+              for line in path.read_text(
+                  encoding="utf8"
+              ).splitlines():
+
+                  match = re.match(
+                      r"^\s*import\s+(.+?)\s*$",
+                      line
+                  )
+
+                  if match:
+                      deps = match.group(1).split("--", 1)[0]
+
+                      for dep in deps.split():
+
+                          if dep.startswith("P79"):
+                              raise SystemExit(
+                                  "FORBIDDEN_DEPENDENCY: " + dep
+                              )
+
+                          if source(dep).is_file():
+                              visit(dep)
+
+              active.remove(module)
+              visited.add(module)
+              order.append(module)
+
+          visit(target)
+
+          required = {
+              target,
+              "P85_4opt3b_RealPhaseSeparation",
+              "P85_4opt3a_InitialStateIsolation",
+              "P85_2_GeneralPhysicalObservableJets",
+              "P85_1_GeneralPhysicalJetClosure",
+              "P80_1_TrueEvolutionJets"
+          }
+
+          if not required.issubset(visited):
+              raise SystemExit(
+                  "REQUIRED_DEPENDENCY_MISSING: "
+                  + str(sorted(required - visited))
+              )
+
+          env = os.environ.copy()
+
+          env["LEAN_PATH"] = str(out) + (
+              os.pathsep + env["LEAN_PATH"]
+              if env.get("LEAN_PATH") else ""
+          )
+
+          log("LOCAL_DEPENDENCY_ORDER:")
+
+          for module in order:
+              log(module)
+
+          for module in order:
+
+              path = source(module)
+
+              artifact = out / (
+                  module.replace(".", "/") + ".olean"
+              )
+
+              artifact.parent.mkdir(
+                  parents=True, exist_ok=True
+              )
+
+              if artifact.exists():
+                  artifact.unlink()
+
+              log("COMPILING: " + module)
+
+              log(
+                  "SOURCE_SHA256: " +
+                  hashlib.sha256(
+                      path.read_bytes()
+                  ).hexdigest()
+              )
+
+              started = time.monotonic()
+
+              command = [
+                  "timeout",
+                  "--kill-after=5s",
+                  "90s" if module == target else "180s",
+                  "lake", "env", "lean",
+                  "-o", str(artifact),
+                  str(path)
+              ]
+
+              fatal = False
+
+              with subprocess.Popen(
+                  command,
+                  env=env,
+                  text=True,
+                  stdout=subprocess.PIPE,
+                  stderr=subprocess.STDOUT,
+                  bufsize=1
+              ) as process:
+
+                  for line in process.stdout:
+
+                      message = line.rstrip("\n")
+                      log(message)
+
+                      if (
+                          re.search(
+                              r"(?:^|:\s)error:",
+                              message
+                          )
+                          or "sorryAx" in message
+                          or re.search(
+                              r"warning:.*sorry",
+                              message,
+                              re.IGNORECASE
+                          )
+                      ):
+                          if not fatal:
+                              log(
+                                  "LEAN_FIRST_ERROR: "
+                                  + module
+                              )
+
+                          fatal = True
+
+                  code = process.wait()
+
+              log(f"EXIT_CODE: {code}")
+
+              log(
+                  "ELAPSED_SECONDS: "
+                  f"{time.monotonic()-started:.2f}"
+              )
+
+              if fatal or code != 0:
+                  raise SystemExit(
+                      "COMPILATION_FAILED: " + module
+                  )
+
+              if (
+                  not artifact.is_file()
+                  or artifact.stat().st_size == 0
+              ):
+                  raise SystemExit(
+                      "MISSING_OLEAN: " + module
+                  )
+
+              log("MODULE_PASS: " + module)
+
+          log("OPT3C_COMPILATION_PASS")
+          PY
+
+      - name: Strict axiom audit
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PY'
+          import re
+          import json
+          import hashlib
+          import subprocess
+          from pathlib import Path
+
+          log = Path("p85-opt3c.log").read_text(
+              encoding="utf8"
+          )
+
+          names = [
+              "p85_opt3c_phase_zero",
+              "p85_opt3c_phase_period_left",
+              "p85_opt3c_phase_period_right",
+              "p85_opt3c_real_product",
+              "p85_opt3c_physical_component",
+              "p85_opt3c_pair_binomial",
+              "p85_opt3c_probability_bridge",
+              "p85_opt3c_physical_probability"
+          ]
+
+          expected = {
+              "Lanzarini." + name
+              for name in names
+          }
+
+          allowed = {
+              "propext",
+              "Classical.choice",
+              "Quot.sound"
+          }
+
+          reports = {}
+
+          for name, body in re.findall(
+              r"(?m)^'([^'\n]+)' depends on axioms:"
+              r"\s*\[([^\]]*)\]",
+              log
+          ):
+              axioms = {
+                  a.strip()
+                  for a in body.split(",")
+                  if a.strip()
+              }
+
+              reports.setdefault(
+                  name, []
+              ).append(axioms)
+
+          for name in re.findall(
+              r"(?m)^'([^'\n]+)' does not depend on any axioms",
+              log
+          ):
+              reports.setdefault(
+                  name, []
+              ).append(set())
+
+          for name in expected:
+
+              if len(reports.get(name, [])) != 1:
+                  raise SystemExit(
+                      "MISSING_OR_DUPLICATE_AUDIT: "
+                      + name
+                  )
+
+          for name, entries in reports.items():
+
+              for axioms in entries:
+
+                  if axioms - allowed:
+                      raise SystemExit(
+                          "FORBIDDEN_AXIOMS: " + name
+                      )
+
+          if "sorryAx" in log:
+              raise SystemExit(
+                  "SORRY_AXIOM_DETECTED"
+              )
+
+          if re.search(
+              r"warning:.*sorry",
+              log,
+              re.IGNORECASE
+          ):
+              raise SystemExit(
+                  "SORRY_WARNING_DETECTED"
+              )
+
+          if re.search(r"(?m)^.*error:", log):
+              raise SystemExit(
+                  "LEAN_ERROR_DETECTED"
+              )
+
+          if "OPT3C_COMPILATION_PASS" not in log:
+              raise SystemExit(
+                  "COMPILATION_MARKER_MISSING"
+              )
+
+          source = Path(
+              "P85_4opt3c_RealProbabilityJets.lean"
+          )
+
+          receipt = {
+              "checkpoint": "P85.4-OPT3-C",
+              "commit": subprocess.check_output(
+                  ["git", "rev-parse", "HEAD"],
+                  text=True
+              ).strip(),
+              "source_sha256": hashlib.sha256(
+                  source.read_bytes()
+              ).hexdigest(),
+              "lean_compilation": True,
+              "axiom_audit": True,
+              "audited_theorems": {
+                  name: sorted(reports[name][0])
+                  for name in sorted(expected)
+              },
+              "phase_periodicity_verified": True,
+              "general_binomial_identity_verified": True,
+              "physical_probability_bridge_verified": True,
+              "eighth_derivative_verified": False,
+              "general_theorem_8_1_verified": False,
+              "doi_full_validation": False
+          }
+
+          Path("p85-opt3c-audit.json").write_text(
+              json.dumps(receipt, indent=2) + "\n",
+              encoding="utf8"
+          )
+
+          print("AUDITED_THEOREMS:", len(expected))
+          print("OPT3C_AXIOM_AUDIT_PASS")
+          PY
+
+      - name: Upload verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p85-opt3c-evidence
+          path: |
+            p85-opt3c.log
+            p85-opt3c-audit.json
+            P85_4opt3c_RealProbabilityJets.lean
+          if-no-files-found: warn
+
+      - name: Final checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -s p85-opt3c-audit.json
+
+          echo "P85_4_OPT3C_COMPILATION_AND_AXIOM_AUDIT_PASS"
