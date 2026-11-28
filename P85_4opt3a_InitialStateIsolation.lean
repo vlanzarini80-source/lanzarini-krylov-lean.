@@ -6,9 +6,10 @@ namespace Lanzarini
 set_option maxHeartbeats 500000
 
 /-!
-P85.4 OPT3-A
+P85.4 OPT3-A FIX1
 
-Isolated initial state and physical matrix action.
+Physical state recursion.
+Real and imaginary normalization.
 
 No expected deficit coefficients.
 No P79.
@@ -118,10 +119,23 @@ theorem p85_opt3_state_two
   rw [p85_opt3_state_one]
   rw [p85_opt3_generator_action]
 
-  ext i
+  funext j
 
-  fin_cases i <;>
-    simp [← mul_assoc, Complex.I_mul_I] <;>
+  fin_cases j <;>
+    apply Complex.ext <;>
+    simp [
+      pow_two,
+      Complex.mul_re,
+      Complex.mul_im,
+      Complex.add_re,
+      Complex.add_im,
+      Complex.neg_re,
+      Complex.neg_im,
+      Complex.ofReal_re,
+      Complex.ofReal_im,
+      Complex.I_re,
+      Complex.I_im
+    ] <;>
     ring
 
 #print axioms p85_opt3_state_two
